@@ -1,0 +1,39 @@
+name: semantic
+on:
+  push:
+    branches:
+      - main
+      - next
+
+permissions:
+  contents: read # for checkout
+
+jobs:
+  release:
+    name: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to be able to publish a GitHub release
+      issues: write # to be able to comment on released issues
+      pull-requests: write # to be able to comment on released pull requests
+      id-token: write # to enable use of OIDC for npm provenance
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: setup node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+      - name: generate-token
+        id: generate_token
+        uses: tibdex/github-app-token@v2
+        with:
+          app_id: ${{ secrets.BOT2_APP_ID }}
+          private_key: ${{ secrets.BOT2_APP_PEM }}
+          revoke: true
+      - name: release
+        uses: cycjimmy/semantic-release-action@v4
+        env:
+          GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}

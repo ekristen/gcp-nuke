@@ -1,0 +1,12 @@
+.idea
+dist
+releases
+.envrc
+.envrc*
+.token
+.creds*
+config/*.yaml
+config.yaml
+test-*.yaml
+config*.yaml
+cosign.key

@@ -1,0 +1,85 @@
+{
+    "extends": [
+        "config:recommended"
+    ],
+    "vulnerabilityAlerts": {
+        "labels": ["security"],
+        "automerge": true,
+        "assignees": ["@ekristen"]
+    },
+    "osvVulnerabilityAlerts": true,
+    "packageRules": [
+        {
+            "matchUpdateTypes": [
+                "minor",
+                "patch"
+            ],
+            "matchCurrentVersion": "!/^0/",
+            "automerge": true
+        },
+        {
+            "matchDatasources": [
+                "go",
+                "docker"
+            ],
+            "groupName": "kubernetes",
+            "groupSlug": "kubernetes",
+            "matchPackagePatterns": [
+                "^k8s.io/"
+            ],
+            "matchPackageNames": [
+                "bitnami/kubectl"
+            ]
+        },
+        {
+            "matchManagers": [
+                "dockerfile"
+            ],
+            "matchUpdateTypes": [
+                "pin",
+                "digest"
+            ],
+            "automerge": true,
+            "labels": ["patch"]
+        },
+        {
+            "matchPackagePatterns": [
+                "^golang.*"
+            ],
+            "groupName": "golang",
+            "groupSlug": "golang"
+        },
+        {
+            "matchFileNames": [
+                ".github/workflows/*.yml"
+            ],
+            "matchDepTypes": [
+                "action"
+            ],
+            "matchCurrentVersion": "!/^0/",
+            "automerge": true,
+            "labels": ["bot/skip-changelog"]
+        }
+    ],
+    "regexManagers": [
+        {
+            "fileMatch": [
+                ".*.go$"
+            ],
+            "matchStrings": [
+                "\"(?<currentValue>.*)\" \/\/ renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\s"
+            ],
+            "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
+        },
+        {
+            "fileMatch": [
+                "^.github/workflows/.*"
+            ],
+            "matchStrings": [
+                "go-version: (?<currentValue>.*?).x\n"
+            ],
+            "depNameTemplate": "golang",
+            "datasourceTemplate": "docker"
+        }
+    ]
+}

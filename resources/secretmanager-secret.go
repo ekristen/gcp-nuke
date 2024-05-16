@@ -1,0 +1,108 @@
+package resources
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"github.com/gotidy/ptr"
+	"strings"
+	"time"
+
+	"github.com/sirupsen/logrus"
+
+	"google.golang.org/api/iterator"
+
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
+
+	liberror "github.com/ekristen/libnuke/pkg/errors"
+	"github.com/ekristen/libnuke/pkg/registry"
+	"github.com/ekristen/libnuke/pkg/resource"
+	"github.com/ekristen/libnuke/pkg/types"
+
+	"github.com/ekristen/gcp-nuke/pkg/nuke"
+)
+
+const SecretManagerSecretResource = "SecretManagerSecret"
+
+func init() {
+	registry.Register(&registry.Registration{
+		Name:   SecretManagerSecretResource,
+		Scope:  nuke.Project,
+		Lister: &SecretManagerSecretLister{},
+	})
+}
+
+type SecretManagerSecretLister struct {
+	svc *secretmanager.Client
+}
+
+func (l *SecretManagerSecretLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
+	opts := o.(*nuke.ListerOpts)
+	if *opts.Region != "global" {
+		return nil, liberror.ErrSkipRequest("resource is global")
+	}
+
+	var resources []resource.Resource
+
+	if l.svc == nil {
+		var err error
+		l.svc, err = secretmanager.NewRESTClient(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	req := &secretmanagerpb.ListSecretsRequest{
+		Parent: fmt.Sprintf("projects/%s", *opts.Project),
+	}
+	it := l.svc.ListSecrets(ctx, req)
+	for {
+		resp, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			logrus.WithError(err).Error("unable to iterate networks")
+			break
+		}
+
+		nameParts := strings.Split(resp.Name, "/")
+		name := nameParts[len(nameParts)-1]
+
+		resources = append(resources, &SecretManagerSecret{
+			svc:        l.svc,
+			FullName:   ptr.String(resp.Name),
+			Name:       ptr.String(name),
+			Project:    opts.Project,
+			CreateTime: resp.CreateTime.AsTime(),
+			Labels:     resp.Labels,
+		})
+	}
+
+	return resources, nil
+}
+
+type SecretManagerSecret struct {
+	svc        *secretmanager.Client
+	Project    *string
+	Region     *string
+	FullName   *string
+	Name       *string
+	CreateTime time.Time
+	Labels     map[string]string
+}
+
+func (r *SecretManagerSecret) Remove(ctx context.Context) error {
+	return r.svc.DeleteSecret(ctx, &secretmanagerpb.DeleteSecretRequest{
+		Name: *r.FullName,
+	})
+}
+
+func (r *SecretManagerSecret) Properties() types.Properties {
+	return types.NewPropertiesFromStruct(r)
+}
+
+func (r *SecretManagerSecret) String() string {
+	return *r.Name
+}

@@ -1,0 +1,120 @@
+release:
+  github:
+    owner: ekristen
+    name: gcp-nuke
+env:
+  - REGISTRY=ghcr.io
+  - IMAGE=ekristen/gcp-nuke
+builds:
+  - id: gcp-nuke
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s
+      - -w
+      - -extldflags="-static"
+      - -X '{{ .ModulePath }}/pkg/common.SUMMARY=v{{ .Version }}'
+      - -X '{{ .ModulePath }}/pkg/common.BRANCH={{ .Branch }}'
+      - -X '{{ .ModulePath }}/pkg/common.VERSION={{ .Tag }}'
+      - -X '{{ .ModulePath }}/pkg/common.COMMIT={{ .Commit }}'
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    hooks:
+      post:
+        - cmd: |
+            {{- if eq .Os "darwin" -}} 
+            quill sign-and-notarize "{{ .Path }}" --dry-run={{ .IsSnapshot }} --ad-hoc={{ .IsSnapshot }} -vv
+            {{- else -}}
+            true
+            {{- end -}}
+          env:
+            - QUILL_LOG_FILE=/tmp/quill-{{ .Target }}.log
+sboms:
+  - artifacts: archive
+archives:
+  - id: gcp-nuke
+    builds:
+      - gcp-nuke
+    name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}{{ .Arm }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+dockers:
+  - id: linux-amd64
+    ids:
+      - gcp-nuke
+    use: buildx
+    goos: linux
+    goarch: amd64
+    dockerfile: Dockerfile
+    image_templates:
+      - '{{ .Env.REGISTRY }}/{{ .Env.IMAGE }}:v{{ .Version }}-amd64'
+      - '{{ .Env.REGISTRY }}/{{ .Env.IMAGE }}:{{ replace .Branch "/" "-" }}-{{ .ShortCommit }}-amd64-{{ .Timestamp }}'
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--target=goreleaser"
+      - "--pull"
+      - "--build-arg=PROJECT_NAME={{.ProjectName}}"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - '--label=org.opencontainers.image.source={{replace (replace (replace .GitURL "git@" "https://") ".git" "") "github.com:" "github.com/"}}'
+
+  - id: linux-arm64
+    ids:
+      - gcp-nuke
+    use: buildx
+    goos: linux
+    goarch: arm64
+    dockerfile: Dockerfile
+    image_templates:
+      - '{{ .Env.REGISTRY }}/{{ .Env.IMAGE }}:v{{ .Version }}-arm64'
+      - '{{ .Env.REGISTRY }}/{{ .Env.IMAGE }}:{{ replace .Branch "/" "-" }}-{{ .ShortCommit }}-arm64-{{ .Timestamp }}'
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--target=goreleaser"
+      - "--pull"
+      - "--build-arg=PROJECT_NAME={{.ProjectName}}"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - '--label=org.opencontainers.image.source={{replace (replace (replace .GitURL "git@" "https://") ".git" "") "github.com:" "github.com/"}}'
+docker_manifests:
+  - name_template: '{{ .Env.REGISTRY }}/{{ .Env.IMAGE }}:v{{ .Version }}'
+    image_templates:
+      - '{{ .Env.REGISTRY }}/{{ .Env.IMAGE }}:v{{ .Version }}-amd64'
+      - '{{ .Env.REGISTRY }}/{{ .Env.IMAGE }}:v{{ .Version }}-arm64'
+  - name_template: '{{ .Env.REGISTRY }}/{{ .Env.IMAGE }}:{{ replace .Branch "/" "-" }}-{{ .ShortCommit }}-{{ .Timestamp }}'
+    image_templates:
+      - '{{ .Env.REGISTRY }}/{{ .Env.IMAGE }}:{{ replace .Branch "/" "-" }}-{{ .ShortCommit }}-amd64-{{ .Timestamp }}'
+      - '{{ .Env.REGISTRY }}/{{ .Env.IMAGE }}:{{ replace .Branch "/" "-" }}-{{ .ShortCommit }}-arm64-{{ .Timestamp }}'
+signs:
+  - ids:
+      - default
+      - darwin
+    cmd: cosign
+    signature: "${artifact}.sig"
+    certificate: "${artifact}.pem"
+    args: ["sign-blob", "--yes", "--oidc-provider=github", "--oidc-issuer=https://token.actions.githubusercontent.com", "--output-certificate=${certificate}", "--output-signature=${signature}", "${artifact}"]
+    artifacts: all
+docker_signs:
+  - ids:
+      - default
+    artifacts: all
+    cmd: cosign
+    args: ["sign", "--yes", "--oidc-provider=github", "--oidc-issuer=https://token.actions.githubusercontent.com", "--output-certificate=${certificate}", "--output-signature=${signature}", "${artifact}"]
+checksum:
+  name_template: "checksums.txt"
+snapshot:
+  name_template: '{{ trimprefix .Summary "v" }}'
+# We are skipping changelog because we are using semantic release
+changelog:
+  skip: true
