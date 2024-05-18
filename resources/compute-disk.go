@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/gotidy/ptr"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 
@@ -68,11 +69,17 @@ func (l *ComputeDiskLister) List(ctx context.Context, o interface{}) ([]resource
 				break
 			}
 
+			typeParts := strings.Split(resp.GetType(), "/")
+			typeName := typeParts[len(typeParts)-1]
+
 			resources = append(resources, &ComputeDisk{
 				svc:     l.svc,
 				Name:    resp.Name,
-				Project: opts.Project,
+				project: opts.Project,
 				Zone:    ptr.String(zone),
+				Arch:    resp.Architecture,
+				Size:    resp.SizeGb,
+				Type:    ptr.String(typeName),
 				Labels:  resp.Labels,
 			})
 		}
@@ -83,16 +90,19 @@ func (l *ComputeDiskLister) List(ctx context.Context, o interface{}) ([]resource
 
 type ComputeDisk struct {
 	svc     *compute.DisksClient
-	Project *string
-	Region  *string
+	project *string
+	region  *string
 	Name    *string
 	Zone    *string
+	Arch    *string
+	Size    *int64
+	Type    *string
 	Labels  map[string]string
 }
 
 func (r *ComputeDisk) Remove(ctx context.Context) error {
 	_, err := r.svc.Delete(ctx, &computepb.DeleteDiskRequest{
-		Project: *r.Project,
+		Project: *r.project,
 		Zone:    *r.Zone,
 		Disk:    *r.Name,
 	})

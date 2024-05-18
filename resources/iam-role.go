@@ -47,15 +47,14 @@ func (l *IAMRoleLister) List(ctx context.Context, o interface{}) ([]resource.Res
 		}
 	}
 
-	// NOTE: you might have to modify the code below to actually work, this currently does not
-	// inspect the aws sdk instead is a jumping off point
-	pageToken := ""
-	req := &adminpb.ListRolesRequest{
-		Parent:    fmt.Sprintf("projects/%s", *opts.Project),
-		PageToken: pageToken,
-	}
+	var nextPageToken string
 
 	for {
+		req := &adminpb.ListRolesRequest{
+			Parent:    fmt.Sprintf("projects/%s", *opts.Project),
+			PageToken: nextPageToken,
+		}
+
 		resp, err := l.svc.ListRoles(ctx, req)
 		if err != nil {
 			return nil, err
@@ -66,7 +65,7 @@ func (l *IAMRoleLister) List(ctx context.Context, o interface{}) ([]resource.Res
 			roleName := roleParts[len(roleParts)-1]
 			resources = append(resources, &IAMRole{
 				svc:     l.svc,
-				Project: opts.Project,
+				project: opts.Project,
 				Name:    ptr.String(roleName),
 				Etag:    role.Etag,
 				Stage:   ptr.String(role.GetStage().String()),
@@ -78,7 +77,7 @@ func (l *IAMRoleLister) List(ctx context.Context, o interface{}) ([]resource.Res
 			break
 		}
 
-		req.PageToken = resp.GetNextPageToken()
+		nextPageToken = resp.GetNextPageToken()
 	}
 
 	return resources, nil
@@ -86,7 +85,7 @@ func (l *IAMRoleLister) List(ctx context.Context, o interface{}) ([]resource.Res
 
 type IAMRole struct {
 	svc     *iamadmin.IamClient
-	Project *string
+	project *string
 	Name    *string
 	Stage   *string
 	Etag    []byte
@@ -95,7 +94,7 @@ type IAMRole struct {
 
 func (r *IAMRole) Remove(ctx context.Context) error {
 	_, err := r.svc.DeleteRole(ctx, &adminpb.DeleteRoleRequest{
-		Name: fmt.Sprintf("projects/%s/roles/%s", *r.Project, *r.Name),
+		Name: fmt.Sprintf("projects/%s/roles/%s", *r.project, *r.Name),
 		Etag: r.Etag,
 	})
 	return err

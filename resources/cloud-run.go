@@ -52,8 +52,6 @@ func (l *CloudRunLister) List(ctx context.Context, o interface{}) ([]resource.Re
 		}
 	}
 
-	// NOTE: you might have to modify the code below to actually work, this currently does not
-	// inspect the aws sdk instead is a jumping off point
 	req := &runpb.ListServicesRequest{
 		Parent: fmt.Sprintf("projects/%s/locations/%s", *opts.Project, *opts.Region),
 	}

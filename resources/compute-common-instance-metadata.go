@@ -58,7 +58,7 @@ func (l *ComputeCommonInstanceMetadataLister) List(ctx context.Context, o interf
 
 	resources = append(resources, &ComputeCommonInstanceMetadata{
 		svc:         l.svc,
-		Project:     proj.Name,
+		project:     proj.Name,
 		Fingerprint: proj.CommonInstanceMetadata.Fingerprint,
 		Items:       proj.CommonInstanceMetadata.Items,
 	})
@@ -69,21 +69,25 @@ func (l *ComputeCommonInstanceMetadataLister) List(ctx context.Context, o interf
 type ComputeCommonInstanceMetadata struct {
 	svc         *compute.ProjectsClient
 	removeOp    *compute.Operation
-	Project     *string
+	project     *string
 	Fingerprint *string
 	Items       []*computepb.Items
 }
 
 func (r *ComputeCommonInstanceMetadata) Filter() error {
-	if *r.Fingerprint == "n0oRtEB90Lw=" {
-		return fmt.Errorf("already in default configuration")
+	if len(r.Items) == 0 {
+		return fmt.Errorf("common instance metadata is empty")
 	}
+	if len(r.Items) == 1 && *r.Items[0].Key == "enable-oslogin" && *r.Items[0].Value == "true" {
+		return fmt.Errorf("common instance metadata is default")
+	}
+
 	return nil
 }
 
 func (r *ComputeCommonInstanceMetadata) Remove(ctx context.Context) (err error) {
 	r.removeOp, err = r.svc.SetCommonInstanceMetadata(ctx, &computepb.SetCommonInstanceMetadataProjectRequest{
-		Project: *r.Project,
+		Project: *r.project,
 		MetadataResource: &computepb.Metadata{
 			Items: []*computepb.Items{
 				{

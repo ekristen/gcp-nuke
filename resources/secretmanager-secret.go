@@ -72,9 +72,9 @@ func (l *SecretManagerSecretLister) List(ctx context.Context, o interface{}) ([]
 
 		resources = append(resources, &SecretManagerSecret{
 			svc:        l.svc,
-			FullName:   ptr.String(resp.Name),
+			fullName:   ptr.String(resp.Name),
 			Name:       ptr.String(name),
-			Project:    opts.Project,
+			project:    opts.Project,
 			CreateTime: resp.CreateTime.AsTime(),
 			Labels:     resp.Labels,
 		})
@@ -85,9 +85,9 @@ func (l *SecretManagerSecretLister) List(ctx context.Context, o interface{}) ([]
 
 type SecretManagerSecret struct {
 	svc        *secretmanager.Client
-	Project    *string
-	Region     *string
-	FullName   *string
+	project    *string
+	region     *string
+	fullName   *string
 	Name       *string
 	CreateTime time.Time
 	Labels     map[string]string
@@ -95,7 +95,7 @@ type SecretManagerSecret struct {
 
 func (r *SecretManagerSecret) Remove(ctx context.Context) error {
 	return r.svc.DeleteSecret(ctx, &secretmanagerpb.DeleteSecretRequest{
-		Name: *r.FullName,
+		Name: *r.fullName,
 	})
 }
 

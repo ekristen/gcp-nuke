@@ -61,8 +61,8 @@ func (l *CloudSQLInstanceLister) List(ctx context.Context, o interface{}) ([]res
 
 		resources = append(resources, &CloudSQLInstance{
 			svc:              l.svc,
-			Project:          opts.Project,
-			Region:           opts.Region,
+			project:          opts.Project,
+			region:           opts.Region,
 			Name:             ptr.String(instance.Name),
 			State:            ptr.String(instance.State),
 			Labels:           instance.Settings.UserLabels,
@@ -80,8 +80,8 @@ type CloudSQLInstance struct {
 	deleteOp *sqladmin.Operation
 	settings *settings.Setting
 
-	Project         *string
-	Region          *string
+	project         *string
+	region          *string
 	Name            *string
 	State           *string
 	Labels          map[string]string
@@ -100,7 +100,7 @@ func (r *CloudSQLInstance) Remove(ctx context.Context) (err error) {
 		return disableErr
 	}
 
-	r.deleteOp, err = r.svc.Instances.Delete(*r.Project, *r.Name).Context(ctx).Do()
+	r.deleteOp, err = r.svc.Instances.Delete(*r.project, *r.Name).Context(ctx).Do()
 	return err
 }
 
@@ -117,7 +117,7 @@ func (r *CloudSQLInstance) HandleWait(ctx context.Context) error {
 		return nil
 	}
 
-	if op, err := r.svc.Operations.Get(*r.Project, r.deleteOp.Name).Context(ctx).Do(); err == nil {
+	if op, err := r.svc.Operations.Get(*r.project, r.deleteOp.Name).Context(ctx).Do(); err == nil {
 		if op.Status == "DONE" {
 			if op.Error != nil {
 				return fmt.Errorf("delete error on '%s': %s", op.TargetLink, op.Error.Errors[0].Message)
@@ -135,7 +135,7 @@ func (r *CloudSQLInstance) disableDeletionProtection(ctx context.Context) error 
 		logrus.Trace("disabling deletion protection")
 
 		r.instanceSettings.DeletionProtectionEnabled = false
-		op, err := r.svc.Instances.Update(*r.Project, *r.Name, &sqladmin.DatabaseInstance{
+		op, err := r.svc.Instances.Update(*r.project, *r.Name, &sqladmin.DatabaseInstance{
 			Settings: r.instanceSettings,
 		}).Context(ctx).Do()
 		if err != nil {
@@ -143,7 +143,7 @@ func (r *CloudSQLInstance) disableDeletionProtection(ctx context.Context) error 
 		}
 
 		for {
-			op, err = r.svc.Operations.Get(*r.Project, op.Name).Context(ctx).Do()
+			op, err = r.svc.Operations.Get(*r.project, op.Name).Context(ctx).Do()
 			if err != nil {
 				return err
 			}

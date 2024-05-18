@@ -56,8 +56,6 @@ func (l *IAMServiceAccountLister) List(ctx context.Context, o interface{}) ([]re
 		}
 	}
 
-	// NOTE: you might have to modify the code below to actually work, this currently does not
-	// inspect the aws sdk instead is a jumping off point
 	req := &adminpb.ListServiceAccountsRequest{
 		Name: fmt.Sprintf("projects/%s", *opts.Project),
 	}
@@ -77,9 +75,10 @@ func (l *IAMServiceAccountLister) List(ctx context.Context, o interface{}) ([]re
 
 		resources = append(resources, &IAMServiceAccount{
 			svc:         l.svc,
-			Project:     opts.Project,
+			project:     opts.Project,
+			fullName:    ptr.String(resp.Name),
+			ID:          ptr.String(resp.UniqueId),
 			Name:        ptr.String(name),
-			FullName:    ptr.String(resp.Name),
 			Description: ptr.String(resp.Description),
 		})
 	}
@@ -90,10 +89,11 @@ func (l *IAMServiceAccountLister) List(ctx context.Context, o interface{}) ([]re
 type IAMServiceAccount struct {
 	svc         *iamadmin.IamClient
 	settings    *settings.Setting
-	Project     *string
-	Region      *string
+	project     *string
+	region      *string
+	fullName    *string
+	ID          *string
 	Name        *string
-	FullName    *string `property:"-"`
 	Description *string
 }
 
@@ -111,7 +111,7 @@ func (r *IAMServiceAccount) Filter() error {
 
 func (r *IAMServiceAccount) Remove(ctx context.Context) error {
 	return r.svc.DeleteServiceAccount(ctx, &adminpb.DeleteServiceAccountRequest{
-		Name: *r.Name,
+		Name: *r.fullName,
 	})
 }
 

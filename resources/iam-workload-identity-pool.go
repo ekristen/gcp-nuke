@@ -79,11 +79,13 @@ func (l *IAMWorkloadIdentityPoolLister) List(ctx context.Context, o interface{})
 	for _, pool := range workloadIdentityPools {
 		poolNameParts := strings.Split(pool.Name, "/")
 		poolName := poolNameParts[len(poolNameParts)-1]
+
 		resources = append(resources, &IAMWorkloadIdentityPool{
-			svc:     l.svc,
-			Project: opts.Project,
-			Region:  opts.Region,
-			Name:    ptr.String(poolName),
+			svc:      l.svc,
+			project:  opts.Project,
+			region:   opts.Region,
+			fullName: ptr.String(pool.Name),
+			Name:     ptr.String(poolName),
 		})
 	}
 
@@ -91,14 +93,15 @@ func (l *IAMWorkloadIdentityPoolLister) List(ctx context.Context, o interface{})
 }
 
 type IAMWorkloadIdentityPool struct {
-	svc     *iam.Service
-	Project *string
-	Region  *string
-	Name    *string
+	svc      *iam.Service
+	project  *string
+	region   *string
+	fullName *string
+	Name     *string
 }
 
 func (r *IAMWorkloadIdentityPool) Remove(ctx context.Context) error {
-	_, err := r.svc.Projects.Locations.WorkloadIdentityPools.Delete(*r.Name).Context(ctx).Do()
+	_, err := r.svc.Projects.Locations.WorkloadIdentityPools.Delete(*r.fullName).Context(ctx).Do()
 	return err
 }
 

@@ -30,8 +30,8 @@ type FirebaseWebAppLister struct {
 
 func (l *FirebaseWebAppLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
 	opts := o.(*nuke.ListerOpts)
-	if *opts.Region == "global" {
-		return nil, liberror.ErrSkipRequest("resource is regional")
+	if *opts.Region != "global" {
+		return nil, liberror.ErrSkipRequest("resource is global")
 	}
 
 	var resources []resource.Resource
@@ -51,10 +51,13 @@ func (l *FirebaseWebAppLister) List(ctx context.Context, o interface{}) ([]resou
 
 	for _, app := range resp.Apps {
 		resources = append(resources, &FirebaseWebApp{
-			svc:     l.svc,
-			Project: opts.Project,
-			Region:  opts.Region,
-			Name:    ptr.String(app.Name),
+			svc:         l.svc,
+			project:     opts.Project,
+			region:      opts.Region,
+			fullName:    ptr.String(app.Name),
+			DisplayName: ptr.String(app.DisplayName),
+			AppID:       ptr.String(app.AppId),
+			State:       ptr.String(app.State),
 		})
 	}
 
@@ -62,14 +65,17 @@ func (l *FirebaseWebAppLister) List(ctx context.Context, o interface{}) ([]resou
 }
 
 type FirebaseWebApp struct {
-	svc     *firebase.Service
-	Project *string
-	Region  *string
-	Name    *string
+	svc         *firebase.Service
+	project     *string
+	region      *string
+	fullName    *string
+	DisplayName *string
+	AppID       *string
+	State       *string
 }
 
 func (r *FirebaseWebApp) Remove(ctx context.Context) error {
-	_, err := r.svc.Projects.WebApps.Remove(*r.Name, &firebase.RemoveWebAppRequest{
+	_, err := r.svc.Projects.WebApps.Remove(*r.fullName, &firebase.RemoveWebAppRequest{
 		AllowMissing: true,
 		Immediate:    true,
 	}).Context(ctx).Do()
@@ -81,5 +87,5 @@ func (r *FirebaseWebApp) Properties() types.Properties {
 }
 
 func (r *FirebaseWebApp) String() string {
-	return *r.Name
+	return *r.DisplayName
 }

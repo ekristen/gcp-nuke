@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gotidy/ptr"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 
@@ -51,43 +52,97 @@ func (l *KMSKeyLister) List(ctx context.Context, o interface{}) ([]resource.Reso
 		}
 	}
 
-	// NOTE: you might have to modify the code below to actually work, this currently does not
-	// inspect the aws sdk instead is a jumping off point
 	req := &kmspb.ListKeyRingsRequest{
 		Parent: fmt.Sprintf("projects/%s/locations/%s", *opts.Project, *opts.Region),
 	}
 	it := l.svc.ListKeyRings(ctx, req)
 	for {
-		resp, err := it.Next()
+		keyRing, err := it.Next()
 		if errors.Is(err, iterator.Done) {
 			break
 		}
 		if err != nil {
-			logrus.WithError(err).Error("unable to iterate networks")
+			logrus.WithError(err).Error("unable to iterate kms-key")
 			break
 		}
 
-		resources = append(resources, &KMSKey{
-			svc:     l.svc,
-			Name:    ptr.String(resp.Name),
-			Project: opts.Project,
-		})
+		reqKeys := &kmspb.ListCryptoKeysRequest{
+			Parent: keyRing.Name,
+		}
+		itKeys := l.svc.ListCryptoKeys(ctx, reqKeys)
+		for {
+			cryptoKey, err := itKeys.Next()
+			if errors.Is(err, iterator.Done) {
+				break
+			}
+			if err != nil {
+				logrus.WithError(err).Error("unable to iterate kms-key")
+				break
+			}
+
+			nameParts := strings.Split(cryptoKey.Name, "/")
+			name := nameParts[len(nameParts)-1]
+
+			keyringNameParts := strings.Split(keyRing.Name, "/")
+			keyringName := keyringNameParts[len(keyringNameParts)-1]
+
+			reqPrimaryVersion := &kmspb.GetCryptoKeyVersionRequest{
+				Name: cryptoKey.Primary.Name,
+			}
+			keyVersion, err := l.svc.GetCryptoKeyVersion(ctx, reqPrimaryVersion)
+			if err != nil {
+				logrus.WithError(err).Error("unable to get primary key version")
+				break
+			}
+
+			resources = append(resources, &KMSKey{
+				svc:      l.svc,
+				project:  opts.Project,
+				fullName: ptr.String(keyVersion.Name),
+				Name:     ptr.String(name),
+				Keyring:  ptr.String(keyringName),
+				State:    ptr.String(keyVersion.State.String()),
+			})
+		}
 	}
 
 	return resources, nil
 }
 
 type KMSKey struct {
-	svc     *kms.KeyManagementClient
-	Project *string
-	Region  *string
-	Name    *string
+	svc      *kms.KeyManagementClient
+	project  *string
+	region   *string
+	fullName *string
+	Name     *string
+	Keyring  *string
+	State    *string
 }
 
 func (r *KMSKey) Remove(ctx context.Context) error {
+	/*
+		_, err := r.svc.UpdateCryptoKey(ctx, &kmspb.UpdateCryptoKeyRequest{
+			CryptoKey: &kmspb.CryptoKey{
+				Name: *r.fullName,
+				DestroyScheduledDuration: &durationpb.Duration{
+					Seconds: 0,
+					Nanos:   0,
+				},
+			},
+			UpdateMask: &fieldmaskpb.FieldMask{
+				Paths: []string{"destroy_scheduled_duration"},
+			},
+		})
+		if err != nil {
+			logrus.WithError(err).Debug("unable to update crypto key")
+			return err
+		}
+	*/
+
 	reqKeyVersions := &kmspb.ListCryptoKeyVersionsRequest{
-		Parent: *r.Name,
+		Parent: *r.fullName,
 	}
+
 	itKeyVersions := r.svc.ListCryptoKeyVersions(ctx, reqKeyVersions)
 	for {
 		respKeyVersions, err := itKeyVersions.Next()
@@ -95,7 +150,7 @@ func (r *KMSKey) Remove(ctx context.Context) error {
 			break
 		}
 		if err != nil {
-			logrus.WithError(err).Error("unable to iterate networks")
+			logrus.WithError(err).Error("unable to iterate key version")
 			break
 		}
 
@@ -112,6 +167,13 @@ func (r *KMSKey) Remove(ctx context.Context) error {
 		}
 	}
 
+	return nil
+}
+
+func (r *KMSKey) Filter() error {
+	if *r.State == kmspb.CryptoKeyVersion_DESTROY_SCHEDULED.String() {
+		return fmt.Errorf("key is already scheduled for destruction")
+	}
 	return nil
 }
 

@@ -49,8 +49,6 @@ func (l *ComputeFirewallLister) List(ctx context.Context, o interface{}) ([]reso
 		}
 	}
 
-	// NOTE: you might have to modify the code below to actually work, this currently does not
-	// inspect the aws sdk instead is a jumping off point
 	req := &computepb.ListFirewallsRequest{
 		Project: *opts.Project,
 	}

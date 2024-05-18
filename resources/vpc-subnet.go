@@ -3,8 +3,10 @@ package resources
 import (
 	"context"
 	"errors"
-
+	"fmt"
+	"github.com/gotidy/ptr"
 	"github.com/sirupsen/logrus"
+	"strings"
 
 	"google.golang.org/api/iterator"
 
@@ -71,11 +73,18 @@ func (l *VPCSubnetLister) List(ctx context.Context, o interface{}) ([]resource.R
 			break
 		}
 
+		networkParts := strings.Split(resp.GetNetwork(), "/")
+		networkName := networkParts[len(networkParts)-1]
+
+		// TODO: query network to determine if auto-subnet
 		resources = append(resources, &VPCSubnet{
-			svc:     l.svc,
-			Name:    resp.Name,
-			Project: opts.Project,
-			Region:  opts.Region,
+			svc:       l.svc,
+			Name:      resp.Name,
+			project:   opts.Project,
+			region:    opts.Region,
+			Network:   ptr.String(networkName),
+			IPV4Range: resp.IpCidrRange,
+			IPV6Range: resp.Ipv6CidrRange,
 		})
 	}
 
@@ -83,16 +92,26 @@ func (l *VPCSubnetLister) List(ctx context.Context, o interface{}) ([]resource.R
 }
 
 type VPCSubnet struct {
-	svc     *compute.SubnetworksClient
-	Project *string
-	Name    *string
-	Region  *string
+	svc       *compute.SubnetworksClient
+	project   *string
+	region    *string
+	Name      *string
+	Network   *string
+	IPV4Range *string
+	IPV6Range *string
+}
+
+func (r *VPCSubnet) Filter() error {
+	if *r.Name == "default" && strings.HasSuffix(*r.IPV4Range, "/20") {
+		return fmt.Errorf("cannot remove default auto-subnet")
+	}
+	return nil
 }
 
 func (r *VPCSubnet) Remove(ctx context.Context) error {
 	_, err := r.svc.Delete(ctx, &computepb.DeleteSubnetworkRequest{
-		Project:    *r.Project,
-		Region:     *r.Region,
+		Project:    *r.project,
+		Region:     *r.region,
 		Subnetwork: *r.Name,
 	})
 	return err
@@ -100,4 +119,8 @@ func (r *VPCSubnet) Remove(ctx context.Context) error {
 
 func (r *VPCSubnet) Properties() types.Properties {
 	return types.NewPropertiesFromStruct(r)
+}
+
+func (r *VPCSubnet) String() string {
+	return *r.Name
 }

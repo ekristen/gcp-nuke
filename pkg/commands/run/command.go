@@ -3,23 +3,24 @@ package run
 import (
 	"context"
 	"fmt"
-	"github.com/ekristen/gcp-nuke/pkg/gcputil"
-	"github.com/ekristen/gcp-nuke/pkg/nuke"
-	"github.com/ekristen/libnuke/pkg/scanner"
-	"github.com/ekristen/libnuke/pkg/types"
-	"github.com/gotidy/ptr"
 	"slices"
 	"strings"
 	"time"
 
+	"github.com/gotidy/ptr"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 
-	"github.com/ekristen/gcp-nuke/pkg/commands/global"
-	"github.com/ekristen/gcp-nuke/pkg/common"
 	libconfig "github.com/ekristen/libnuke/pkg/config"
 	libnuke "github.com/ekristen/libnuke/pkg/nuke"
 	"github.com/ekristen/libnuke/pkg/registry"
+	"github.com/ekristen/libnuke/pkg/scanner"
+	"github.com/ekristen/libnuke/pkg/types"
+
+	"github.com/ekristen/gcp-nuke/pkg/commands/global"
+	"github.com/ekristen/gcp-nuke/pkg/common"
+	"github.com/ekristen/gcp-nuke/pkg/gcputil"
+	"github.com/ekristen/gcp-nuke/pkg/nuke"
 )
 
 func execute(c *cli.Context) error {
@@ -30,10 +31,6 @@ func execute(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-
-	//if !gcp.HasOrganizations() {
-	//	return fmt.Errorf("no organizations found")
-	//}
 
 	if !gcp.HasProjects() {
 		return fmt.Errorf("no projects found")
@@ -86,83 +83,6 @@ func execute(c *cli.Context) error {
 		nil,
 		nil,
 	)
-
-	/*
-			tenantConfig := parsedConfig.Accounts[c.String("tenant-id")]
-			tenantResourceTypes := types.ResolveResourceTypes(
-				registry.GetNamesForScope(nuke.Organization),
-				[]types.Collection{
-					n.Parameters.Includes,
-					parsedConfig.ResourceTypes.GetIncludes(),
-					tenantConfig.ResourceTypes.GetIncludes(),
-				},
-				[]types.Collection{
-					n.Parameters.Excludes,
-					parsedConfig.ResourceTypes.Excludes,
-					tenantConfig.ResourceTypes.Excludes,
-				},
-				nil,
-				nil,
-			)
-
-			subResourceTypes := types.ResolveResourceTypes(
-				registry.GetNamesForScope(nuke.Project),
-				[]types.Collection{
-					n.Parameters.Includes,
-					parsedConfig.ResourceTypes.GetIncludes(),
-					tenantConfig.ResourceTypes.GetIncludes(),
-				},
-				[]types.Collection{
-					n.Parameters.Excludes,
-					parsedConfig.ResourceTypes.Excludes,
-					tenantConfig.ResourceTypes.Excludes,
-				},
-				nil,
-				nil,
-			)
-
-			if slices.Contains(parsedConfig.Regions, "global") {
-				if err := n.RegisterScanner(nuke.Organization, scanner.New("tenant/all", tenantResourceTypes, &nuke.ListerOpts{})); err != nil {
-					return err
-				}
-			}
-
-			logrus.Debug("registering scanner for tenant subscription resources")
-			for _, subscriptionId := range tenant.SubscriptionIds {
-				logrus.Debug("registering scanner for subscription resources")
-				if err := n.RegisterScanner(nuke.Subscription, libnuke.NewScanner("tenant/sub", subResourceTypes, &nuke.ListerOpts{
-					Authorizers:    tenant.Authorizers,
-					TenantId:       tenant.ID,
-					SubscriptionId: subscriptionId,
-				})); err != nil {
-					return err
-				}
-			}
-
-
-		for _, region := range parsedConfig.Regions {
-			if region == "global" {
-				continue
-			}
-
-			for _, subscriptionId := range tenant.SubscriptionIds {
-				logrus.Debug("registering scanner for subscription resources")
-
-				for i, resourceGroup := range tenant.ResourceGroups[subscriptionId] {
-					logrus.Debugf("registering scanner for resource group resources: rg/%s", resourceGroup)
-					if err := n.RegisterScanner(nuke.ResourceGroup, libnuke.NewScanner(fmt.Sprintf("%s/rg%d", region, i), rgResourceTypes, &nuke.ListerOpts{
-						Authorizers:    tenant.Authorizers,
-						TenantId:       tenant.ID,
-						SubscriptionId: subscriptionId,
-						ResourceGroup:  resourceGroup,
-						Location:       region,
-					})); err != nil {
-						return err
-					}
-				}
-			}
-		}
-	*/
 
 	// GCP rest clients have to be closed, this ensures that they are closed properly
 	defer func() {
@@ -239,24 +159,17 @@ func init() {
 			Usage: "actually run the removal of the resources after discovery",
 		},
 		&cli.BoolFlag{
-			Name:    "no-prompt",
-			Usage:   "disable prompting for verification to run",
-			Aliases: []string{"force"},
+			Name:  "no-prompt",
+			Usage: "disable prompting for verification to run",
 		},
 		&cli.IntFlag{
-			Name:    "prompt-delay",
-			Usage:   "seconds to delay after prompt before running (minimum: 3 seconds)",
-			Value:   10,
-			Aliases: []string{"force-sleep"},
+			Name:  "prompt-delay",
+			Usage: "seconds to delay after prompt before running (minimum: 3 seconds)",
+			Value: 10,
 		},
 		&cli.StringSliceFlag{
 			Name:  "feature-flag",
 			Usage: "enable experimental behaviors that may not be fully tested or supported",
-		},
-		&cli.StringFlag{
-			Name:    "credentials-file",
-			Usage:   "the credentials file to use for authentication",
-			EnvVars: []string{"GOOGLE_CREDENTIALS"},
 		},
 		&cli.StringFlag{
 			Name:     "project-id",
@@ -268,7 +181,7 @@ func init() {
 	cmd := &cli.Command{
 		Name:    "run",
 		Aliases: []string{"nuke"},
-		Usage:   "run nuke against a GCP project to remove all configured resources",
+		Usage:   "run nuke against a GCP project to remove all resources",
 		Flags:   append(flags, global.Flags()...),
 		Before:  global.Before,
 		Action:  execute,

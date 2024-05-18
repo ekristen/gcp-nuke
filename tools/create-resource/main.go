@@ -37,7 +37,7 @@ const {{.Combined}}Resource = "{{.Combined}}"
 func init() {
 	registry.Register(&registry.Registration{
 		Name:   {{.Combined}}Resource,
-		Scope:  nuke.Project,
+		Scope:  nuke.project,
 		Lister: &{{.Combined}}Lister{},
 	})
 }
@@ -48,7 +48,7 @@ type {{.Combined}}Lister struct{
 
 func (l *{{.Combined}}Lister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
 	opts := o.(*nuke.ListerOpts)
-	if *opts.Region == "global" {
+	if *opts.region == "global" {
 		return nil, liberror.ErrSkipRequest("resource is regional")
 	}
 
@@ -65,7 +65,7 @@ func (l *{{.Combined}}Lister) List(ctx context.Context, o interface{}) ([]resour
 	// NOTE: you might have to modify the code below to actually work, this currently does not 
 	// inspect the google go sdk instead is a jumping off point
 	req := &{{.Service}}pb.List{{.ResourceTypeTitlePlural}}Request{
-		Project: *opts.Project,
+		project: *opts.project,
 	}
 	it := l.svc.List(ctx, req)
 	for {
@@ -81,7 +81,7 @@ func (l *{{.Combined}}Lister) List(ctx context.Context, o interface{}) ([]resour
 		resources = append(resources, &{{.Combined}}{
 			svc:     l.svc,
 			Name:    resp.Name,
-			Project: opts.Project,
+			project: opts.project,
 		})
 	}
 
@@ -90,14 +90,14 @@ func (l *{{.Combined}}Lister) List(ctx context.Context, o interface{}) ([]resour
 
 type {{.Combined}} struct {
 	svc  *{{.Service}}.{{.ResourceTypeTitlePlural}}Client
-	Project *string
-	Region *string
+	project *string
+	region *string
 	Name *string
 }
 
 func (r *{{.Combined}}) Remove(ctx context.Context) error {
 	_, err := r.svc.Delete(ctx, &{{.Service}}pb.Delete{{.ResourceTypeTitle}}Request{
-		Project: *r.Project,		
+		project: *r.project,		
 		Name: *r.Name,
 	})
 	return err

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gotidy/ptr"
+	"google.golang.org/genproto/googleapis/cloud/location"
+	"slices"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -33,7 +35,8 @@ func init() {
 }
 
 type CloudFunctionLister struct {
-	svc *functions.CloudFunctionsClient
+	svc       *functions.CloudFunctionsClient
+	locations []string
 }
 
 func (l *CloudFunctionLister) Close() {
@@ -58,10 +61,30 @@ func (l *CloudFunctionLister) List(ctx context.Context, o interface{}) ([]resour
 		}
 
 		// TODO: determine locations, cache and skip locations not supported
+		it := l.svc.ListLocations(ctx, &location.ListLocationsRequest{
+			Name: fmt.Sprintf("projects/%s", *opts.Project),
+		})
+		for {
+			resp, err := it.Next()
+			if errors.Is(err, iterator.Done) {
+				break
+			}
+			if err != nil {
+				return nil, err
+			}
+
+			l.locations = append(l.locations, resp.Name)
+		}
+	}
+
+	parent := fmt.Sprintf("projects/%s/locations/%s", *opts.Project, *opts.Region)
+
+	if !slices.Contains(l.locations, parent) {
+		return nil, liberror.ErrSkipRequest(fmt.Sprintf("location %s not supported", *opts.Region))
 	}
 
 	req := &functionspb.ListFunctionsRequest{
-		Parent: fmt.Sprintf("projects/%s/locations/%s", *opts.Project, *opts.Region),
+		Parent: parent,
 	}
 	it := l.svc.ListFunctions(ctx, req)
 	for {
