@@ -112,7 +112,6 @@ func (l *KMSKeyLister) List(ctx context.Context, o interface{}) ([]resource.Reso
 type KMSKey struct {
 	svc      *kms.KeyManagementClient
 	project  *string
-	region   *string
 	fullName *string
 	Name     *string
 	Keyring  *string
@@ -120,25 +119,6 @@ type KMSKey struct {
 }
 
 func (r *KMSKey) Remove(ctx context.Context) error {
-	/*
-		_, err := r.svc.UpdateCryptoKey(ctx, &kmspb.UpdateCryptoKeyRequest{
-			CryptoKey: &kmspb.CryptoKey{
-				Name: *r.fullName,
-				DestroyScheduledDuration: &durationpb.Duration{
-					Seconds: 0,
-					Nanos:   0,
-				},
-			},
-			UpdateMask: &fieldmaskpb.FieldMask{
-				Paths: []string{"destroy_scheduled_duration"},
-			},
-		})
-		if err != nil {
-			logrus.WithError(err).Debug("unable to update crypto key")
-			return err
-		}
-	*/
-
 	reqKeyVersions := &kmspb.ListCryptoKeyVersionsRequest{
 		Parent: *r.fullName,
 	}

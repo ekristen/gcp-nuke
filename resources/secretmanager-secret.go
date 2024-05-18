@@ -86,7 +86,6 @@ func (l *SecretManagerSecretLister) List(ctx context.Context, o interface{}) ([]
 type SecretManagerSecret struct {
 	svc        *secretmanager.Client
 	project    *string
-	region     *string
 	fullName   *string
 	Name       *string
 	CreateTime time.Time

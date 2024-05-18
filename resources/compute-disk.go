@@ -74,8 +74,9 @@ func (l *ComputeDiskLister) List(ctx context.Context, o interface{}) ([]resource
 
 			resources = append(resources, &ComputeDisk{
 				svc:     l.svc,
-				Name:    resp.Name,
 				project: opts.Project,
+				region:  opts.Region,
+				Name:    resp.Name,
 				Zone:    ptr.String(zone),
 				Arch:    resp.Architecture,
 				Size:    resp.SizeGb,

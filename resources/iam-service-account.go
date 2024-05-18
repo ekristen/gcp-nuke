@@ -90,7 +90,6 @@ type IAMServiceAccount struct {
 	svc         *iamadmin.IamClient
 	settings    *settings.Setting
 	project     *string
-	region      *string
 	fullName    *string
 	ID          *string
 	Name        *string
