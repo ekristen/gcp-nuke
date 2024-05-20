@@ -48,7 +48,7 @@ type {{.Combined}}Lister struct{
 
 func (l *{{.Combined}}Lister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
 	opts := o.(*nuke.ListerOpts)
-	if *opts.region == "global" {
+	if *opts.Region == "global" {
 		return nil, liberror.ErrSkipRequest("resource is regional")
 	}
 
@@ -97,7 +97,7 @@ type {{.Combined}} struct {
 
 func (r *{{.Combined}}) Remove(ctx context.Context) error {
 	_, err := r.svc.Delete(ctx, &{{.Service}}pb.Delete{{.ResourceTypeTitle}}Request{
-		project: *r.project,		
+		project: *r.Project,		
 		Name: *r.Name,
 	})
 	return err
