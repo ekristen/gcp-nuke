@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/gotidy/ptr"
 
 	firebase "firebase.google.com/go"
+
 	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
@@ -33,7 +35,7 @@ func init() {
 }
 
 type FirebaseRealtimeDatabaseLister struct {
-	svc *gcputil.FirebaseDBClient
+	svc *gcputil.FirebaseDatabaseService
 }
 
 func (l *FirebaseRealtimeDatabaseLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
@@ -46,7 +48,7 @@ func (l *FirebaseRealtimeDatabaseLister) List(ctx context.Context, o interface{}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = gcputil.NewFirebaseDBClient(ctx)
+		l.svc, err = gcputil.NewFirebaseDatabaseService(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -56,6 +58,9 @@ func (l *FirebaseRealtimeDatabaseLister) List(ctx context.Context, o interface{}
 	if !slices.Contains(supportedRegions, *opts.Region) {
 		return nil, liberror.ErrSkipRequest("region is not supported")
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
 
 	resp, err := l.svc.ListDatabaseInstances(ctx, fmt.Sprintf("projects/%s/locations/%s", *opts.Project, *opts.Region))
 	if err != nil {
@@ -87,7 +92,7 @@ func (l *FirebaseRealtimeDatabaseLister) List(ctx context.Context, o interface{}
 }
 
 type FirebaseRealtimeDatabase struct {
-	svc      *gcputil.FirebaseDBClient
+	svc      *gcputil.FirebaseDatabaseService
 	settings *settings.Setting
 	Project  *string
 	Region   *string
