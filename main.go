@@ -28,7 +28,7 @@ func main() {
 
 	app := cli.NewApp()
 	app.Name = path.Base(os.Args[0])
-	app.Usage = "remove everything from an azure tenant"
+	app.Usage = "remove everything from a GCP project"
 	app.Version = common.AppVersion.Summary
 	app.Authors = []*cli.Author{
 		{
