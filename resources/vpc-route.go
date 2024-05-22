@@ -45,7 +45,7 @@ func (l *VPCRouteLister) List(ctx context.Context, o interface{}) ([]resource.Re
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewRoutesRESTClient(ctx)
+		l.svc, err = compute.NewRoutesRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

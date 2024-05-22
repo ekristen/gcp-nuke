@@ -52,7 +52,7 @@ func (l *VPCSubnetLister) List(ctx context.Context, o interface{}) ([]resource.R
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewSubnetworksRESTClient(ctx)
+		l.svc, err = compute.NewSubnetworksRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

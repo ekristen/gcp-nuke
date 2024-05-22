@@ -38,7 +38,7 @@ func (l *FirebaseWebAppLister) List(ctx context.Context, o interface{}) ([]resou
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = firebase.NewService(ctx)
+		l.svc, err = firebase.NewService(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

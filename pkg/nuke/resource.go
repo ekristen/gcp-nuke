@@ -1,6 +1,8 @@
 package nuke
 
 import (
+	"google.golang.org/api/option"
+
 	"github.com/ekristen/libnuke/pkg/registry"
 )
 
@@ -11,7 +13,8 @@ const (
 )
 
 type ListerOpts struct {
-	Project *string
-	Region  *string
-	Zones   []string
+	Project       *string
+	Region        *string
+	Zones         []string
+	ClientOptions []option.ClientOption
 }

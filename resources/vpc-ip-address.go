@@ -44,7 +44,7 @@ func (l *VPCIPAddressLister) List(ctx context.Context, o interface{}) ([]resourc
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewAddressesRESTClient(ctx)
+		l.svc, err = compute.NewAddressesRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

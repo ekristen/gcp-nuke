@@ -45,7 +45,7 @@ func (l *ComputeDiskLister) List(ctx context.Context, o interface{}) ([]resource
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewDisksRESTClient(ctx)
+		l.svc, err = compute.NewDisksRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

@@ -42,7 +42,7 @@ func (l *VPCRouterLister) List(ctx context.Context, o interface{}) ([]resource.R
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewRoutersRESTClient(ctx)
+		l.svc, err = compute.NewRoutersRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

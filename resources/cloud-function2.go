@@ -52,7 +52,7 @@ func (l *CloudFunction2Lister) List(ctx context.Context, o interface{}) ([]resou
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = functions.NewFunctionRESTClient(ctx)
+		l.svc, err = functions.NewFunctionRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

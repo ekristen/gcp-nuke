@@ -3,13 +3,20 @@ package gcputil
 import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
+	credentials "cloud.google.com/go/iam/credentials/apiv1"
+	"cloud.google.com/go/iam/credentials/apiv1/credentialspb"
 	"context"
 	"errors"
+	"fmt"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/oauth2"
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/iterator"
+	"google.golang.org/api/option"
+	"google.golang.org/protobuf/types/known/durationpb"
 	"log"
 	"strings"
+	"time"
 )
 
 type Organization struct {
@@ -35,7 +42,12 @@ type GCP struct {
 	Projects      []*Project
 	Regions       []string
 
+	ProjectID string
+
 	zones map[string][]string
+
+	tokenSource   oauth2.TokenSource
+	clientOptions []option.ClientOption
 }
 
 func (g *GCP) HasOrganizations() bool {
@@ -56,15 +68,60 @@ func (g *GCP) GetZones(region string) []string {
 	return g.zones[region]
 }
 
-func New(ctx context.Context, projectID string) (*GCP, error) {
+func (g *GCP) ImpersonateServiceAccount(ctx context.Context, targetServiceAccount string) error {
+	credsClient, err := credentials.NewIamCredentialsClient(ctx)
+	if err != nil {
+		return err
+	}
+	defer credsClient.Close()
+
+	req := &credentialspb.GenerateAccessTokenRequest{
+		Name:  fmt.Sprintf("projects/-/serviceAccounts/%s", targetServiceAccount),
+		Scope: []string{"https://www.googleapis.com/auth/cloud-platform"},
+		Lifetime: &durationpb.Duration{
+			Seconds: int64(time.Hour.Seconds()), // 1 hour
+		},
+	}
+	resp, err := credsClient.GenerateAccessToken(ctx, req)
+	if err != nil {
+		return err
+	}
+
+	// Create a new authenticated client using the impersonated access token
+	g.tokenSource = oauth2.StaticTokenSource(&oauth2.Token{
+		AccessToken: resp.AccessToken,
+	})
+
+	g.clientOptions = append(g.clientOptions, option.WithTokenSource(g.tokenSource))
+
+	return nil
+}
+
+func (g *GCP) GetClientOptions() []option.ClientOption {
+	return g.clientOptions
+}
+
+func (g *GCP) ID() string {
+	return g.ProjectID
+}
+
+func New(ctx context.Context, projectID, impersonateServiceAccount string) (*GCP, error) {
 	gcp := &GCP{
 		Organizations: make([]*Organization, 0),
 		Projects:      make([]*Project, 0),
 		Regions:       []string{"global"},
+		ProjectID:     projectID,
 		zones:         make(map[string][]string),
+		clientOptions: make([]option.ClientOption, 0),
 	}
 
-	service, err := cloudresourcemanager.NewService(ctx)
+	if impersonateServiceAccount != "" {
+		if err := gcp.ImpersonateServiceAccount(ctx, impersonateServiceAccount); err != nil {
+			return nil, err
+		}
+	}
+
+	service, err := cloudresourcemanager.NewService(ctx, gcp.GetClientOptions()...)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +167,7 @@ func New(ctx context.Context, projectID string) (*GCP, error) {
 		return nil, err
 	}
 
-	c, err := compute.NewRegionsRESTClient(ctx)
+	c, err := compute.NewRegionsRESTClient(ctx, gcp.GetClientOptions()...)
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}

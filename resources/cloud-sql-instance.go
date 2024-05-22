@@ -43,7 +43,7 @@ func (l *CloudSQLInstanceLister) List(ctx context.Context, o interface{}) ([]res
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = sqladmin.NewService(ctx)
+		l.svc, err = sqladmin.NewService(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

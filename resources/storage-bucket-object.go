@@ -43,7 +43,7 @@ func (l *StorageBucketObjectLister) List(ctx context.Context, o interface{}) ([]
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = storage.NewClient(ctx)
+		l.svc, err = storage.NewClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

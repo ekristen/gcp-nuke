@@ -48,7 +48,7 @@ func (l *FirebaseRealtimeDatabaseLister) List(ctx context.Context, o interface{}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = gcputil.NewFirebaseDatabaseService(ctx)
+		l.svc, err = gcputil.NewFirebaseDatabaseService(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

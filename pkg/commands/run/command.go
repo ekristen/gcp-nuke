@@ -27,7 +27,7 @@ func execute(c *cli.Context) error {
 	ctx, cancel := context.WithCancel(c.Context)
 	defer cancel()
 
-	gcp, err := gcputil.New(ctx, c.String("project-id"))
+	gcp, err := gcputil.New(ctx, c.String("project-id"), c.String("impersonate-service-account"))
 	if err != nil {
 		return err
 	}
@@ -67,6 +67,10 @@ func execute(c *cli.Context) error {
 	n := libnuke.New(params, filters, parsedConfig.Settings)
 
 	n.SetRunSleep(5 * time.Second)
+	n.RegisterVersion(fmt.Sprintf("> %s", common.AppVersion.String()))
+
+	p := &nuke.Prompt{Parameters: params, GCP: gcp}
+	n.RegisterPrompt(p.Prompt)
 
 	projectResourceTypes := types.ResolveResourceTypes(
 		registry.GetNamesForScope(nuke.Project),
@@ -121,9 +125,10 @@ func execute(c *cli.Context) error {
 	// Register the scanners for each region that is defined in the configuration.
 	for _, regionName := range parsedConfig.Regions {
 		if err := n.RegisterScanner(nuke.Project, scanner.New(regionName, projectResourceTypes, &nuke.ListerOpts{
-			Project: ptr.String(projectID),
-			Region:  ptr.String(regionName),
-			Zones:   gcp.GetZones(regionName),
+			Project:       ptr.String(projectID),
+			Region:        ptr.String(regionName),
+			Zones:         gcp.GetZones(regionName),
+			ClientOptions: gcp.GetClientOptions(),
 		})); err != nil {
 			return err
 		}
@@ -168,13 +173,20 @@ func init() {
 			Value: 10,
 		},
 		&cli.StringSliceFlag{
-			Name:  "feature-flag",
-			Usage: "enable experimental behaviors that may not be fully tested or supported",
+			Name:    "feature-flag",
+			Usage:   "enable experimental behaviors that may not be fully tested or supported",
+			EnvVars: []string{"GCP_NUKE_FEATURE_FLAGS"},
 		},
 		&cli.StringFlag{
 			Name:     "project-id",
 			Usage:    "which GCP project should be nuked",
+			EnvVars:  []string{"GCP_NUKE_PROJECT_ID"},
 			Required: true,
+		},
+		&cli.StringFlag{
+			Name:    "impersonate-service-account",
+			Usage:   "impersonate a service account for all API calls",
+			EnvVars: []string{"GCP_NUKE_IMPERSONATE_SERVICE_ACCOUNT"},
 		},
 	}
 

@@ -47,7 +47,7 @@ func (l *SecretManagerSecretLister) List(ctx context.Context, o interface{}) ([]
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = secretmanager.NewRESTClient(ctx)
+		l.svc, err = secretmanager.NewRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

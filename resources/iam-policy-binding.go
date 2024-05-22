@@ -43,7 +43,7 @@ func (l *IAMPolicyBindingLister) List(ctx context.Context, o interface{}) ([]res
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = cloudresourcemanager.NewService(ctx)
+		l.svc, err = cloudresourcemanager.NewService(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -135,7 +135,6 @@ func (r *IAMPolicyBinding) Remove(ctx context.Context) error {
 		}
 	}
 
-	// Set the updated IAM policy with an update mask
 	_, err = r.svc.Projects.SetIamPolicy(fmt.Sprintf("projects/%s", *r.project), &cloudresourcemanager.SetIamPolicyRequest{
 		Policy: policy,
 	}).Context(ctx).Do()

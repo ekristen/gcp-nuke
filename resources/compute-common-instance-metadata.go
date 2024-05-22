@@ -41,7 +41,7 @@ func (l *ComputeCommonInstanceMetadataLister) List(ctx context.Context, o interf
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewProjectsRESTClient(ctx)
+		l.svc, err = compute.NewProjectsRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

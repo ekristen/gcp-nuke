@@ -52,7 +52,7 @@ func (l *StorageBucketLister) Close() {
 func (l *StorageBucketLister) ListBuckets(ctx context.Context, opts *nuke.ListerOpts) ([]*storage.BucketAttrs, error) {
 	if l.svc == nil {
 		var err error
-		l.svc, err = storage.NewClient(ctx)
+		l.svc, err = storage.NewClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

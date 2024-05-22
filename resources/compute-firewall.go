@@ -43,7 +43,7 @@ func (l *ComputeFirewallLister) List(ctx context.Context, o interface{}) ([]reso
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewFirewallsRESTClient(ctx)
+		l.svc, err = compute.NewFirewallsRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

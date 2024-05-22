@@ -30,7 +30,7 @@ type IAMWorkloadIdentityPoolLister struct {
 func (l *IAMWorkloadIdentityPoolLister) ListPools(ctx context.Context, opts *nuke.ListerOpts) ([]*iam.WorkloadIdentityPool, error) {
 	if l.svc == nil {
 		var err error
-		l.svc, err = iam.NewService(ctx)
+		l.svc, err = iam.NewService(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

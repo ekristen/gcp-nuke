@@ -46,7 +46,7 @@ func (l *KMSKeyLister) List(ctx context.Context, o interface{}) ([]resource.Reso
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = kms.NewKeyManagementRESTClient(ctx)
+		l.svc, err = kms.NewKeyManagementRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
