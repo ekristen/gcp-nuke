@@ -1,24 +1,28 @@
 package gcputil
 
 import (
-	compute "cloud.google.com/go/compute/apiv1"
-	"cloud.google.com/go/compute/apiv1/computepb"
-	credentials "cloud.google.com/go/iam/credentials/apiv1"
-	"cloud.google.com/go/iam/credentials/apiv1/credentialspb"
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"strings"
+	"time"
+
 	"github.com/sirupsen/logrus"
+
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+
+	"cloud.google.com/go/compute/apiv1"
+	"cloud.google.com/go/compute/apiv1/computepb"
+	"cloud.google.com/go/iam/credentials/apiv1"
+	"cloud.google.com/go/iam/credentials/apiv1/credentialspb"
+
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"google.golang.org/api/serviceusage/v1"
 	"google.golang.org/protobuf/types/known/durationpb"
-	"log"
-	"strings"
-	"time"
 )
 
 type Organization struct {
