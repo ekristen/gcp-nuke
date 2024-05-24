@@ -15,7 +15,6 @@ import (
 
 	"cloud.google.com/go/storage"
 
-	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/types"
@@ -78,12 +77,12 @@ func (l *StorageBucketLister) ListBuckets(ctx context.Context, opts *nuke.Lister
 }
 
 func (l *StorageBucketLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
-	opts := o.(*nuke.ListerOpts)
-	if *opts.Region == "global" {
-		return nil, liberror.ErrSkipRequest("resource is regional")
-	}
-
 	var resources []resource.Resource
+
+	opts := o.(*nuke.ListerOpts)
+	if err := opts.BeforeList(nuke.Regional, "storage.googleapis.com"); err != nil {
+		return resources, err
+	}
 
 	buckets, err := l.ListBuckets(ctx, opts)
 	if err != nil {

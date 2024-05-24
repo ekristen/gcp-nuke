@@ -10,9 +10,11 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	"google.golang.org/api/serviceusage/v1"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"log"
 	"strings"
@@ -41,6 +43,7 @@ type GCP struct {
 	Organizations []*Organization
 	Projects      []*Project
 	Regions       []string
+	APIS          []string
 
 	ProjectID string
 
@@ -103,6 +106,14 @@ func (g *GCP) GetClientOptions() []option.ClientOption {
 
 func (g *GCP) ID() string {
 	return g.ProjectID
+}
+
+func (g *GCP) GetEnabledAPIs() []string {
+	return g.APIS
+}
+
+func (g *GCP) GetCredentials(ctx context.Context) (*google.Credentials, error) {
+	return google.FindDefaultCredentials(ctx)
 }
 
 func New(ctx context.Context, projectID, impersonateServiceAccount string) (*GCP, error) {
@@ -198,6 +209,24 @@ func New(ctx context.Context, projectID, impersonateServiceAccount string) (*GCP
 			zoneShort := strings.Split(z, "/")[len(strings.Split(z, "/"))-1]
 			gcp.zones[resp.GetName()] = append(gcp.zones[resp.GetName()], zoneShort)
 		}
+	}
+
+	serviceUsage, err := serviceusage.NewService(ctx, gcp.GetClientOptions()...)
+	if err != nil {
+		return nil, err
+	}
+
+	suReq := serviceUsage.Services.
+		List(fmt.Sprintf("projects/%s", projectID)).
+		Filter("state:ENABLED")
+
+	if suErr := suReq.Pages(ctx, func(page *serviceusage.ListServicesResponse) error {
+		for _, svc := range page.Services {
+			gcp.APIS = append(gcp.APIS, svc.Config.Name)
+		}
+		return nil
+	}); suErr != nil {
+		return nil, suErr
 	}
 
 	return gcp, nil

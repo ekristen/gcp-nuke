@@ -128,6 +128,7 @@ func execute(c *cli.Context) error {
 			Project:       ptr.String(projectID),
 			Region:        ptr.String(regionName),
 			Zones:         gcp.GetZones(regionName),
+			EnabledAPIs:   gcp.GetEnabledAPIs(),
 			ClientOptions: gcp.GetClientOptions(),
 		})); err != nil {
 			return err

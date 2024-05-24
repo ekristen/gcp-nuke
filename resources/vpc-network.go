@@ -40,11 +40,11 @@ func (l *VPCNetworkLister) Close() {
 }
 
 func (l *VPCNetworkLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
-	opts := o.(*nuke.ListerOpts)
-	resources := make([]resource.Resource, 0)
+	var resources []resource.Resource
 
-	if *opts.Region != "global" {
-		return nil, liberror.ErrSkipRequest("resource is global")
+	opts := o.(*nuke.ListerOpts)
+	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com"); err != nil {
+		return resources, err
 	}
 
 	if l.svc == nil {

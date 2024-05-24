@@ -10,6 +10,7 @@ import (
 	"github.com/ekristen/gcp-nuke/pkg/common"
 
 	_ "github.com/ekristen/gcp-nuke/pkg/commands/list"
+	_ "github.com/ekristen/gcp-nuke/pkg/commands/project"
 	_ "github.com/ekristen/gcp-nuke/pkg/commands/run"
 
 	_ "github.com/ekristen/gcp-nuke/resources"
@@ -39,7 +40,7 @@ func main() {
 
 	app.Commands = common.GetCommands()
 	app.CommandNotFound = func(context *cli.Context, command string) {
-		logrus.Fatalf("Command %s not found.", command)
+		logrus.Fatalf("command %s not found.", command)
 	}
 
 	if err := app.Run(os.Args); err != nil {
