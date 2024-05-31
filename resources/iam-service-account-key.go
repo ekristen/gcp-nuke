@@ -88,7 +88,6 @@ func (l *IAMServiceAccountKeyLister) List(ctx context.Context, o interface{}) ([
 type IAMServiceAccountKey struct {
 	svc                 *iamadmin.IamClient
 	project             *string
-	region              *string
 	name                *string
 	ID                  *string
 	Algorithm           *string
