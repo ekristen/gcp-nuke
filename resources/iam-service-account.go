@@ -96,11 +96,23 @@ type IAMServiceAccount struct {
 }
 
 func (r *IAMServiceAccount) Filter() error {
+	isDefaultServiceAccount := false
 	deleteDefaultServiceAccounts := false
 	if r.settings != nil && r.settings.Get("DeleteDefaultServiceAccounts").(bool) {
 		deleteDefaultServiceAccounts = true
 	}
-	if !strings.Contains(*r.Name, ".iam.gserviceaccount.com") && !deleteDefaultServiceAccounts {
+
+	if !strings.Contains(*r.Name, ".iam.gserviceaccount.com") {
+		isDefaultServiceAccount = true
+	}
+	if strings.HasPrefix(*r.Name, "project-service-account@") {
+		isDefaultServiceAccount = true
+	}
+	if strings.HasPrefix(*r.Name, "firebase-adminsdk-") {
+		isDefaultServiceAccount = true
+	}
+
+	if isDefaultServiceAccount && !deleteDefaultServiceAccounts {
 		return fmt.Errorf("will not remove default service account")
 	}
 
