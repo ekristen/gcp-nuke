@@ -39,14 +39,8 @@ type IAMServiceAccountLister struct {
 	svc *iamadmin.IamClient
 }
 
-func (l *IAMServiceAccountLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
-	var resources []resource.Resource
-
-	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Global, "iam.googleapis.com"); err != nil {
-		return resources, err
-	}
-
+func (l *IAMServiceAccountLister) ListServiceAccounts(
+	ctx context.Context, opts *nuke.ListerOpts) ([]*adminpb.ServiceAccount, error) {
 	if l.svc == nil {
 		var err error
 		l.svc, err = iamadmin.NewIamClient(ctx, opts.ClientOptions...)
@@ -54,6 +48,8 @@ func (l *IAMServiceAccountLister) List(ctx context.Context, o interface{}) ([]re
 			return nil, err
 		}
 	}
+
+	var serviceAccounts []*adminpb.ServiceAccount
 
 	req := &adminpb.ListServiceAccountsRequest{
 		Name: fmt.Sprintf("projects/%s", *opts.Project),
@@ -65,20 +61,40 @@ func (l *IAMServiceAccountLister) List(ctx context.Context, o interface{}) ([]re
 			break
 		}
 		if err != nil {
-			logrus.WithError(err).Error("unable to iterate networks")
+			logrus.WithError(err).Error("unable to iterate service accounts")
 			break
 		}
 
-		nameParts := strings.Split(resp.Name, "/")
+		serviceAccounts = append(serviceAccounts, resp)
+	}
+
+	return serviceAccounts, nil
+}
+
+func (l *IAMServiceAccountLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
+	var resources []resource.Resource
+
+	opts := o.(*nuke.ListerOpts)
+	if err := opts.BeforeList(nuke.Global, "iam.googleapis.com"); err != nil {
+		return resources, err
+	}
+
+	serviceAccounts, err := l.ListServiceAccounts(ctx, opts)
+	if err != nil {
+		return resources, err
+	}
+
+	for _, serviceAccount := range serviceAccounts {
+		nameParts := strings.Split(serviceAccount.Name, "/")
 		name := nameParts[len(nameParts)-1]
 
 		resources = append(resources, &IAMServiceAccount{
 			svc:         l.svc,
 			project:     opts.Project,
-			fullName:    ptr.String(resp.Name),
-			ID:          ptr.String(resp.UniqueId),
+			fullName:    ptr.String(serviceAccount.Name),
+			ID:          ptr.String(serviceAccount.UniqueId),
 			Name:        ptr.String(name),
-			Description: ptr.String(resp.Description),
+			Description: ptr.String(serviceAccount.Description),
 		})
 	}
 
