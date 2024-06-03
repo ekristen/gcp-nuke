@@ -118,38 +118,21 @@ type KMSKey struct {
 }
 
 func (r *KMSKey) Remove(ctx context.Context) error {
-	reqKeyVersions := &kmspb.ListCryptoKeyVersionsRequest{
-		Parent: *r.fullName,
+	reqKeyVersion := &kmspb.DestroyCryptoKeyVersionRequest{
+		Name: *r.fullName,
 	}
-
-	itKeyVersions := r.svc.ListCryptoKeyVersions(ctx, reqKeyVersions)
-	for {
-		respKeyVersions, err := itKeyVersions.Next()
-		if errors.Is(err, iterator.Done) {
-			break
-		}
-		if err != nil {
-			logrus.WithError(err).Error("unable to iterate key version")
-			break
-		}
-
-		if isDestroyed(respKeyVersions) {
-			continue
-		}
-
-		reqKeyVersion := &kmspb.DestroyCryptoKeyVersionRequest{
-			Name: respKeyVersions.Name,
-		}
-		_, err = r.svc.DestroyCryptoKeyVersion(ctx, reqKeyVersion)
-		if err != nil {
-			return err
-		}
+	_, err := r.svc.DestroyCryptoKeyVersion(ctx, reqKeyVersion)
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
 func (r *KMSKey) Filter() error {
+	if *r.State == kmspb.CryptoKeyVersion_DESTROYED.String() {
+		return fmt.Errorf("key is already destroyed")
+	}
 	if *r.State == kmspb.CryptoKeyVersion_DESTROY_SCHEDULED.String() {
 		return fmt.Errorf("key is already scheduled for destruction")
 	}
@@ -162,13 +145,4 @@ func (r *KMSKey) Properties() types.Properties {
 
 func (r *KMSKey) String() string {
 	return *r.Name
-}
-
-// isDestroyed checks if a key version is destroyed
-func isDestroyed(keyVersion *kmspb.CryptoKeyVersion) bool {
-	if keyVersion == nil {
-		return true
-	}
-	return keyVersion.State == kmspb.CryptoKeyVersion_DESTROYED ||
-		keyVersion.State == kmspb.CryptoKeyVersion_DESTROY_SCHEDULED
 }
