@@ -83,7 +83,7 @@ type CloudSQLInstance struct {
 	region          *string
 	Name            *string
 	State           *string
-	Labels          map[string]string
+	Labels          map[string]string `property:"tagPrefix=label"`
 	CreationDate    *string
 	DatabaseVersion *string
 

@@ -95,9 +95,9 @@ type CloudFunction2 struct {
 	removeOp *functions.DeleteFunctionOperation
 	Project  *string
 	Region   *string
-	FullName *string `property:"-"`
-	Name     *string `property:"Name"`
-	Labels   map[string]string
+	FullName *string           `property:"-"`
+	Name     *string           `property:"Name"`
+	Labels   map[string]string `property:"tagPrefix=label"`
 	State    *string
 }
 

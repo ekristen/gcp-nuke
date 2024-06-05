@@ -32,6 +32,10 @@ func init() {
 		Settings: []string{
 			"DeleteDefaultServiceAccounts",
 		},
+		DependsOn: []string{
+			IAMServiceAccountKeyResource,
+			IAMPolicyBindingResource,
+		},
 	})
 }
 

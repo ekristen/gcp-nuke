@@ -97,7 +97,7 @@ type ComputeDisk struct {
 	Arch    *string
 	Size    *int64
 	Type    *string
-	Labels  map[string]string
+	Labels  map[string]string `property:"tagPrefix=label"`
 }
 
 func (r *ComputeDisk) Remove(ctx context.Context) error {

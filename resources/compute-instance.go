@@ -87,7 +87,7 @@ type ComputeInstance struct {
 	Name              *string
 	Zone              *string
 	CreationTimestamp *string
-	Labels            map[string]string
+	Labels            map[string]string `property:"tagPrefix=label"`
 }
 
 func (r *ComputeInstance) Remove(ctx context.Context) error {

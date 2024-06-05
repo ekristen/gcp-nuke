@@ -60,7 +60,6 @@ func (l *CloudFunctionLister) List(ctx context.Context, o interface{}) ([]resour
 			return nil, err
 		}
 
-		// TODO: determine locations, cache and skip locations not supported
 		it := l.svc.ListLocations(ctx, &location.ListLocationsRequest{
 			Name: fmt.Sprintf("projects/%s", *opts.Project),
 		})
@@ -102,10 +101,10 @@ func (l *CloudFunctionLister) List(ctx context.Context, o interface{}) ([]resour
 
 		resources = append(resources, &CloudFunction{
 			svc:      l.svc,
-			FullName: ptr.String(resp.Name),
+			project:  opts.Project,
+			region:   opts.Region,
+			fullName: ptr.String(resp.Name),
 			Name:     ptr.String(name),
-			Project:  opts.Project,
-			Region:   opts.Region,
 			Labels:   resp.Labels,
 			Status:   ptr.String(resp.Status.String()),
 		})
@@ -117,17 +116,17 @@ func (l *CloudFunctionLister) List(ctx context.Context, o interface{}) ([]resour
 type CloudFunction struct {
 	svc      *functions.CloudFunctionsClient
 	removeOp *functions.DeleteFunctionOperation
-	Project  *string
-	Region   *string
-	FullName *string `property:"-"`
-	Name     *string `property:"Name"`
+	project  *string
+	region   *string
+	fullName *string
+	Name     *string
 	Status   *string
-	Labels   map[string]string
+	Labels   map[string]string `property:"tagPrefix=label"`
 }
 
 func (r *CloudFunction) Remove(ctx context.Context) (err error) {
 	r.removeOp, err = r.svc.DeleteFunction(ctx, &functionspb.DeleteFunctionRequest{
-		Name: *r.FullName,
+		Name: *r.fullName,
 	})
 	if err != nil && strings.Contains(err.Error(), "proto") && strings.Contains(err.Error(), "missing") {
 		err = nil

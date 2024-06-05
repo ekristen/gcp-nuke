@@ -135,7 +135,7 @@ type StorageBucket struct {
 	project     *string
 	region      *string
 	Name        *string
-	Labels      map[string]string
+	Labels      map[string]string `property:"tagPrefix=label"`
 	MultiRegion *bool
 }
 

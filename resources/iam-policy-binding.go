@@ -126,8 +126,9 @@ func (r *IAMPolicyBinding) Remove(ctx context.Context) error {
 	for _, binding := range policy.Bindings {
 		if binding.Role == r.Role {
 			for i, member := range binding.Members {
-				if member == r.Member {
-					// remove current index from slice
+				// if the member matches specifically, or if the member is a deleted member
+				// was set to be removed initially, then we are going to remove it now.
+				if member == r.Member || member == fmt.Sprintf("deleted:%s", r.Member) {
 					binding.Members = append(binding.Members[:i], binding.Members[i+1:]...)
 				}
 			}

@@ -88,7 +88,7 @@ type CloudRun struct {
 	Region   *string
 	FullName *string
 	Name     *string
-	Labels   map[string]string
+	Labels   map[string]string `property:"tagPrefix=label"`
 }
 
 func (r *CloudRun) Filter() error {

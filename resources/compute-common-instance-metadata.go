@@ -70,7 +70,7 @@ type ComputeCommonInstanceMetadata struct {
 	removeOp    *compute.Operation
 	project     *string
 	Fingerprint *string
-	Items       []*computepb.Items
+	Items       []*computepb.Items `property:"tagPrefix=item"`
 }
 
 func (r *ComputeCommonInstanceMetadata) Filter() error {

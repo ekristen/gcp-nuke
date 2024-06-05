@@ -88,7 +88,7 @@ type SecretManagerSecret struct {
 	fullName   *string
 	Name       *string
 	CreateTime time.Time
-	Labels     map[string]string
+	Labels     map[string]string `property:"tagPrefix=label"`
 }
 
 func (r *SecretManagerSecret) Remove(ctx context.Context) error {
