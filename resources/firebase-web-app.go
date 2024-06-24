@@ -6,7 +6,6 @@ import (
 	"github.com/gotidy/ptr"
 	"google.golang.org/api/firebase/v1beta1"
 
-	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/types"
@@ -29,16 +28,16 @@ type FirebaseWebAppLister struct {
 }
 
 func (l *FirebaseWebAppLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
-	opts := o.(*nuke.ListerOpts)
-	if *opts.Region == "global" {
-		return nil, liberror.ErrSkipRequest("resource is regional")
-	}
-
 	var resources []resource.Resource
+
+	opts := o.(*nuke.ListerOpts)
+	if err := opts.BeforeList(nuke.Global, "firebase.googleapis.com"); err != nil {
+		return resources, err
+	}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = firebase.NewService(ctx)
+		l.svc, err = firebase.NewService(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -51,10 +50,13 @@ func (l *FirebaseWebAppLister) List(ctx context.Context, o interface{}) ([]resou
 
 	for _, app := range resp.Apps {
 		resources = append(resources, &FirebaseWebApp{
-			svc:     l.svc,
-			Project: opts.Project,
-			Region:  opts.Region,
-			Name:    ptr.String(app.Name),
+			svc:         l.svc,
+			project:     opts.Project,
+			region:      opts.Region,
+			fullName:    ptr.String(app.Name),
+			DisplayName: ptr.String(app.DisplayName),
+			AppID:       ptr.String(app.AppId),
+			State:       ptr.String(app.State),
 		})
 	}
 
@@ -62,14 +64,17 @@ func (l *FirebaseWebAppLister) List(ctx context.Context, o interface{}) ([]resou
 }
 
 type FirebaseWebApp struct {
-	svc     *firebase.Service
-	Project *string
-	Region  *string
-	Name    *string
+	svc         *firebase.Service
+	project     *string
+	region      *string
+	fullName    *string
+	DisplayName *string
+	AppID       *string
+	State       *string
 }
 
 func (r *FirebaseWebApp) Remove(ctx context.Context) error {
-	_, err := r.svc.Projects.WebApps.Remove(*r.Name, &firebase.RemoveWebAppRequest{
+	_, err := r.svc.Projects.WebApps.Remove(*r.fullName, &firebase.RemoveWebAppRequest{
 		AllowMissing: true,
 		Immediate:    true,
 	}).Context(ctx).Do()
@@ -81,5 +86,5 @@ func (r *FirebaseWebApp) Properties() types.Properties {
 }
 
 func (r *FirebaseWebApp) String() string {
-	return *r.Name
+	return *r.DisplayName
 }

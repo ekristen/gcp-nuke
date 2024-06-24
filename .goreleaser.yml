@@ -2,6 +2,7 @@ release:
   github:
     owner: ekristen
     name: gcp-nuke
+  prerelease: auto
 env:
   - REGISTRY=ghcr.io
   - IMAGE=ekristen/gcp-nuke

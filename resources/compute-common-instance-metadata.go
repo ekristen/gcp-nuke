@@ -9,7 +9,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"strings"
 
-	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/types"
@@ -32,16 +31,16 @@ type ComputeCommonInstanceMetadataLister struct {
 }
 
 func (l *ComputeCommonInstanceMetadataLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
-	opts := o.(*nuke.ListerOpts)
-	if *opts.Region != "global" {
-		return nil, liberror.ErrSkipRequest("resource is global")
-	}
-
 	var resources []resource.Resource
+
+	opts := o.(*nuke.ListerOpts)
+	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com"); err != nil {
+		return resources, err
+	}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewProjectsRESTClient(ctx)
+		l.svc, err = compute.NewProjectsRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -58,7 +57,7 @@ func (l *ComputeCommonInstanceMetadataLister) List(ctx context.Context, o interf
 
 	resources = append(resources, &ComputeCommonInstanceMetadata{
 		svc:         l.svc,
-		Project:     proj.Name,
+		project:     proj.Name,
 		Fingerprint: proj.CommonInstanceMetadata.Fingerprint,
 		Items:       proj.CommonInstanceMetadata.Items,
 	})
@@ -69,21 +68,25 @@ func (l *ComputeCommonInstanceMetadataLister) List(ctx context.Context, o interf
 type ComputeCommonInstanceMetadata struct {
 	svc         *compute.ProjectsClient
 	removeOp    *compute.Operation
-	Project     *string
+	project     *string
 	Fingerprint *string
-	Items       []*computepb.Items
+	Items       []*computepb.Items `property:"tagPrefix=item"`
 }
 
 func (r *ComputeCommonInstanceMetadata) Filter() error {
-	if *r.Fingerprint == "n0oRtEB90Lw=" {
-		return fmt.Errorf("already in default configuration")
+	if len(r.Items) == 0 {
+		return fmt.Errorf("common instance metadata is empty")
 	}
+	if len(r.Items) == 1 && *r.Items[0].Key == "enable-oslogin" && *r.Items[0].Value == "true" {
+		return fmt.Errorf("common instance metadata is default")
+	}
+
 	return nil
 }
 
 func (r *ComputeCommonInstanceMetadata) Remove(ctx context.Context) (err error) {
 	r.removeOp, err = r.svc.SetCommonInstanceMetadata(ctx, &computepb.SetCommonInstanceMetadataProjectRequest{
-		Project: *r.Project,
+		Project: *r.project,
 		MetadataResource: &computepb.Metadata{
 			Items: []*computepb.Items{
 				{

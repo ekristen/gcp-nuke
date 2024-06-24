@@ -11,7 +11,6 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 
-	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/types"
@@ -34,16 +33,16 @@ type ComputeInstanceLister struct {
 }
 
 func (l *ComputeInstanceLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
-	opts := o.(*nuke.ListerOpts)
-	if *opts.Region == "global" {
-		return nil, liberror.ErrSkipRequest("resource is regional and zonal")
-	}
-
 	var resources []resource.Resource
+
+	opts := o.(*nuke.ListerOpts)
+	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com"); err != nil {
+		return resources, err
+	}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewInstancesRESTClient(ctx)
+		l.svc, err = compute.NewInstancesRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -88,7 +87,7 @@ type ComputeInstance struct {
 	Name              *string
 	Zone              *string
 	CreationTimestamp *string
-	Labels            map[string]string
+	Labels            map[string]string `property:"tagPrefix=label"`
 }
 
 func (r *ComputeInstance) Remove(ctx context.Context) error {

@@ -14,7 +14,6 @@ import (
 	"cloud.google.com/go/functions/apiv2"
 	"cloud.google.com/go/functions/apiv2/functionspb"
 
-	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/types"
@@ -43,16 +42,16 @@ func (l *CloudFunction2Lister) Close() {
 }
 
 func (l *CloudFunction2Lister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
-	opts := o.(*nuke.ListerOpts)
-	if *opts.Region == "global" {
-		return nil, liberror.ErrSkipRequest("resource is regional")
-	}
-
 	var resources []resource.Resource
+
+	opts := o.(*nuke.ListerOpts)
+	if err := opts.BeforeList(nuke.Regional, "cloudfunctions.googleapis.com"); err != nil {
+		return resources, err
+	}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = functions.NewFunctionRESTClient(ctx)
+		l.svc, err = functions.NewFunctionRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -96,9 +95,9 @@ type CloudFunction2 struct {
 	removeOp *functions.DeleteFunctionOperation
 	Project  *string
 	Region   *string
-	FullName *string `property:"-"`
-	Name     *string `property:"Name"`
-	Labels   map[string]string
+	FullName *string           `property:"-"`
+	Name     *string           `property:"Name"`
+	Labels   map[string]string `property:"tagPrefix=label"`
 	State    *string
 }
 

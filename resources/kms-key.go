@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gotidy/ptr"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 
@@ -13,7 +14,6 @@ import (
 	kms "cloud.google.com/go/kms/apiv1"
 	"cloud.google.com/go/kms/apiv1/kmspb"
 
-	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/types"
@@ -36,82 +36,106 @@ type KMSKeyLister struct {
 }
 
 func (l *KMSKeyLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
-	opts := o.(*nuke.ListerOpts)
-	if *opts.Region == "global" {
-		return nil, liberror.ErrSkipRequest("resource is regional")
-	}
-
 	var resources []resource.Resource
+
+	opts := o.(*nuke.ListerOpts)
+	if err := opts.BeforeList(nuke.Regional, "cloudkms.googleapis.com"); err != nil {
+		return resources, err
+	}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = kms.NewKeyManagementRESTClient(ctx)
+		l.svc, err = kms.NewKeyManagementRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	// NOTE: you might have to modify the code below to actually work, this currently does not
-	// inspect the aws sdk instead is a jumping off point
 	req := &kmspb.ListKeyRingsRequest{
 		Parent: fmt.Sprintf("projects/%s/locations/%s", *opts.Project, *opts.Region),
 	}
 	it := l.svc.ListKeyRings(ctx, req)
 	for {
-		resp, err := it.Next()
+		keyRing, err := it.Next()
 		if errors.Is(err, iterator.Done) {
 			break
 		}
 		if err != nil {
-			logrus.WithError(err).Error("unable to iterate networks")
+			logrus.WithError(err).Error("unable to iterate kms-key")
 			break
 		}
 
-		resources = append(resources, &KMSKey{
-			svc:     l.svc,
-			Name:    ptr.String(resp.Name),
-			Project: opts.Project,
-		})
+		reqKeys := &kmspb.ListCryptoKeysRequest{
+			Parent: keyRing.Name,
+		}
+		itKeys := l.svc.ListCryptoKeys(ctx, reqKeys)
+		for {
+			cryptoKey, err := itKeys.Next()
+			if errors.Is(err, iterator.Done) {
+				break
+			}
+			if err != nil {
+				logrus.WithError(err).Error("unable to iterate kms-key")
+				break
+			}
+
+			nameParts := strings.Split(cryptoKey.Name, "/")
+			name := nameParts[len(nameParts)-1]
+
+			keyringNameParts := strings.Split(keyRing.Name, "/")
+			keyringName := keyringNameParts[len(keyringNameParts)-1]
+
+			reqPrimaryVersion := &kmspb.GetCryptoKeyVersionRequest{
+				Name: cryptoKey.Primary.Name,
+			}
+			keyVersion, err := l.svc.GetCryptoKeyVersion(ctx, reqPrimaryVersion)
+			if err != nil {
+				logrus.WithError(err).Error("unable to get primary key version")
+				break
+			}
+
+			resources = append(resources, &KMSKey{
+				svc:      l.svc,
+				project:  opts.Project,
+				fullName: ptr.String(keyVersion.Name),
+				Name:     ptr.String(name),
+				Keyring:  ptr.String(keyringName),
+				State:    ptr.String(keyVersion.State.String()),
+			})
+		}
 	}
 
 	return resources, nil
 }
 
 type KMSKey struct {
-	svc     *kms.KeyManagementClient
-	Project *string
-	Region  *string
-	Name    *string
+	svc      *kms.KeyManagementClient
+	project  *string
+	fullName *string
+	Name     *string
+	Keyring  *string
+	State    *string
 }
 
 func (r *KMSKey) Remove(ctx context.Context) error {
-	reqKeyVersions := &kmspb.ListCryptoKeyVersionsRequest{
-		Parent: *r.Name,
+	reqKeyVersion := &kmspb.DestroyCryptoKeyVersionRequest{
+		Name: *r.fullName,
 	}
-	itKeyVersions := r.svc.ListCryptoKeyVersions(ctx, reqKeyVersions)
-	for {
-		respKeyVersions, err := itKeyVersions.Next()
-		if errors.Is(err, iterator.Done) {
-			break
-		}
-		if err != nil {
-			logrus.WithError(err).Error("unable to iterate networks")
-			break
-		}
-
-		if isDestroyed(respKeyVersions) {
-			continue
-		}
-
-		reqKeyVersion := &kmspb.DestroyCryptoKeyVersionRequest{
-			Name: respKeyVersions.Name,
-		}
-		_, err = r.svc.DestroyCryptoKeyVersion(ctx, reqKeyVersion)
-		if err != nil {
-			return err
-		}
+	_, err := r.svc.DestroyCryptoKeyVersion(ctx, reqKeyVersion)
+	if err != nil {
+		return err
 	}
 
+	return nil
+}
+
+func (r *KMSKey) Filter() error {
+	if *r.State == kmspb.CryptoKeyVersion_DESTROYED.String() {
+		return fmt.Errorf("key is already destroyed")
+	}
+	if *r.State == kmspb.CryptoKeyVersion_DESTROY_SCHEDULED.String() {
+		return fmt.Errorf("key is already scheduled for destruction")
+	}
 	return nil
 }
 
@@ -121,13 +145,4 @@ func (r *KMSKey) Properties() types.Properties {
 
 func (r *KMSKey) String() string {
 	return *r.Name
-}
-
-// isDestroyed checks if a key version is destroyed
-func isDestroyed(keyVersion *kmspb.CryptoKeyVersion) bool {
-	if keyVersion == nil {
-		return true
-	}
-	return keyVersion.State == kmspb.CryptoKeyVersion_DESTROYED ||
-		keyVersion.State == kmspb.CryptoKeyVersion_DESTROY_SCHEDULED
 }

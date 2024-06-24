@@ -13,7 +13,6 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 
-	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/types"
@@ -36,16 +35,16 @@ type VPCRouteLister struct {
 }
 
 func (l *VPCRouteLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
-	opts := o.(*nuke.ListerOpts)
-	if *opts.Region != "global" {
-		return nil, liberror.ErrSkipRequest("resource is global")
-	}
-
 	var resources []resource.Resource
+
+	opts := o.(*nuke.ListerOpts)
+	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com"); err != nil {
+		return resources, err
+	}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewRoutesRESTClient(ctx)
+		l.svc, err = compute.NewRoutesRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

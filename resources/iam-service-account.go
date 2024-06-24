@@ -15,7 +15,6 @@ import (
 	iamadmin "cloud.google.com/go/iam/admin/apiv1"
 	"cloud.google.com/go/iam/admin/apiv1/adminpb"
 
-	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/types"
@@ -33,6 +32,10 @@ func init() {
 		Settings: []string{
 			"DeleteDefaultServiceAccounts",
 		},
+		DependsOn: []string{
+			IAMServiceAccountKeyResource,
+			IAMPolicyBindingResource,
+		},
 	})
 }
 
@@ -40,24 +43,18 @@ type IAMServiceAccountLister struct {
 	svc *iamadmin.IamClient
 }
 
-func (l *IAMServiceAccountLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
-	opts := o.(*nuke.ListerOpts)
-	if *opts.Region != "global" {
-		return nil, liberror.ErrSkipRequest("resource is global")
-	}
-
-	var resources []resource.Resource
-
+func (l *IAMServiceAccountLister) ListServiceAccounts(
+	ctx context.Context, opts *nuke.ListerOpts) ([]*adminpb.ServiceAccount, error) {
 	if l.svc == nil {
 		var err error
-		l.svc, err = iamadmin.NewIamClient(ctx)
+		l.svc, err = iamadmin.NewIamClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	// NOTE: you might have to modify the code below to actually work, this currently does not
-	// inspect the aws sdk instead is a jumping off point
+	var serviceAccounts []*adminpb.ServiceAccount
+
 	req := &adminpb.ListServiceAccountsRequest{
 		Name: fmt.Sprintf("projects/%s", *opts.Project),
 	}
@@ -68,19 +65,40 @@ func (l *IAMServiceAccountLister) List(ctx context.Context, o interface{}) ([]re
 			break
 		}
 		if err != nil {
-			logrus.WithError(err).Error("unable to iterate networks")
+			logrus.WithError(err).Error("unable to iterate service accounts")
 			break
 		}
 
-		nameParts := strings.Split(resp.Name, "/")
+		serviceAccounts = append(serviceAccounts, resp)
+	}
+
+	return serviceAccounts, nil
+}
+
+func (l *IAMServiceAccountLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
+	var resources []resource.Resource
+
+	opts := o.(*nuke.ListerOpts)
+	if err := opts.BeforeList(nuke.Global, "iam.googleapis.com"); err != nil {
+		return resources, err
+	}
+
+	serviceAccounts, err := l.ListServiceAccounts(ctx, opts)
+	if err != nil {
+		return resources, err
+	}
+
+	for _, serviceAccount := range serviceAccounts {
+		nameParts := strings.Split(serviceAccount.Name, "/")
 		name := nameParts[len(nameParts)-1]
 
 		resources = append(resources, &IAMServiceAccount{
 			svc:         l.svc,
-			Project:     opts.Project,
+			project:     opts.Project,
+			fullName:    ptr.String(serviceAccount.Name),
+			ID:          ptr.String(serviceAccount.UniqueId),
 			Name:        ptr.String(name),
-			FullName:    ptr.String(resp.Name),
-			Description: ptr.String(resp.Description),
+			Description: ptr.String(serviceAccount.Description),
 		})
 	}
 
@@ -90,19 +108,31 @@ func (l *IAMServiceAccountLister) List(ctx context.Context, o interface{}) ([]re
 type IAMServiceAccount struct {
 	svc         *iamadmin.IamClient
 	settings    *settings.Setting
-	Project     *string
-	Region      *string
+	project     *string
+	fullName    *string
+	ID          *string
 	Name        *string
-	FullName    *string `property:"-"`
 	Description *string
 }
 
 func (r *IAMServiceAccount) Filter() error {
+	isDefaultServiceAccount := false
 	deleteDefaultServiceAccounts := false
-	if r.settings != nil && r.settings.Get("DeleteDefaultServiceAccounts").(bool) {
+	if r.settings.GetBool("DeleteDefaultServiceAccounts") {
 		deleteDefaultServiceAccounts = true
 	}
-	if !strings.Contains(*r.Name, ".iam.gserviceaccount.com") && !deleteDefaultServiceAccounts {
+
+	if !strings.Contains(*r.Name, ".iam.gserviceaccount.com") {
+		isDefaultServiceAccount = true
+	}
+	if strings.HasPrefix(*r.Name, "project-service-account@") {
+		isDefaultServiceAccount = true
+	}
+	if strings.HasPrefix(*r.Name, "firebase-adminsdk-") {
+		isDefaultServiceAccount = true
+	}
+
+	if isDefaultServiceAccount && !deleteDefaultServiceAccounts {
 		return fmt.Errorf("will not remove default service account")
 	}
 
@@ -111,7 +141,7 @@ func (r *IAMServiceAccount) Filter() error {
 
 func (r *IAMServiceAccount) Remove(ctx context.Context) error {
 	return r.svc.DeleteServiceAccount(ctx, &adminpb.DeleteServiceAccountRequest{
-		Name: *r.Name,
+		Name: *r.fullName,
 	})
 }
 

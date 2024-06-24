@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gotidy/ptr"
+	"google.golang.org/genproto/googleapis/cloud/location"
+	"slices"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -33,7 +35,8 @@ func init() {
 }
 
 type CloudFunctionLister struct {
-	svc *functions.CloudFunctionsClient
+	svc       *functions.CloudFunctionsClient
+	locations []string
 }
 
 func (l *CloudFunctionLister) Close() {
@@ -43,25 +46,44 @@ func (l *CloudFunctionLister) Close() {
 }
 
 func (l *CloudFunctionLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
-	opts := o.(*nuke.ListerOpts)
-	if *opts.Region == "global" {
-		return nil, liberror.ErrSkipRequest("resource is regional")
-	}
-
 	var resources []resource.Resource
+
+	opts := o.(*nuke.ListerOpts)
+	if err := opts.BeforeList(nuke.Regional, "cloudfunctions.googleapis.com"); err != nil {
+		return resources, err
+	}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = functions.NewCloudFunctionsRESTClient(ctx)
+		l.svc, err = functions.NewCloudFunctionsRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
 
-		// TODO: determine locations, cache and skip locations not supported
+		it := l.svc.ListLocations(ctx, &location.ListLocationsRequest{
+			Name: fmt.Sprintf("projects/%s", *opts.Project),
+		})
+		for {
+			resp, err := it.Next()
+			if errors.Is(err, iterator.Done) {
+				break
+			}
+			if err != nil {
+				return nil, err
+			}
+
+			l.locations = append(l.locations, resp.Name)
+		}
+	}
+
+	parent := fmt.Sprintf("projects/%s/locations/%s", *opts.Project, *opts.Region)
+
+	if !slices.Contains(l.locations, parent) {
+		return nil, liberror.ErrSkipRequest(fmt.Sprintf("location %s not supported", *opts.Region))
 	}
 
 	req := &functionspb.ListFunctionsRequest{
-		Parent: fmt.Sprintf("projects/%s/locations/%s", *opts.Project, *opts.Region),
+		Parent: parent,
 	}
 	it := l.svc.ListFunctions(ctx, req)
 	for {
@@ -79,10 +101,10 @@ func (l *CloudFunctionLister) List(ctx context.Context, o interface{}) ([]resour
 
 		resources = append(resources, &CloudFunction{
 			svc:      l.svc,
-			FullName: ptr.String(resp.Name),
+			project:  opts.Project,
+			region:   opts.Region,
+			fullName: ptr.String(resp.Name),
 			Name:     ptr.String(name),
-			Project:  opts.Project,
-			Region:   opts.Region,
 			Labels:   resp.Labels,
 			Status:   ptr.String(resp.Status.String()),
 		})
@@ -94,17 +116,17 @@ func (l *CloudFunctionLister) List(ctx context.Context, o interface{}) ([]resour
 type CloudFunction struct {
 	svc      *functions.CloudFunctionsClient
 	removeOp *functions.DeleteFunctionOperation
-	Project  *string
-	Region   *string
-	FullName *string `property:"-"`
-	Name     *string `property:"Name"`
+	project  *string
+	region   *string
+	fullName *string
+	Name     *string
 	Status   *string
-	Labels   map[string]string
+	Labels   map[string]string `property:"tagPrefix=label"`
 }
 
 func (r *CloudFunction) Remove(ctx context.Context) (err error) {
 	r.removeOp, err = r.svc.DeleteFunction(ctx, &functionspb.DeleteFunctionRequest{
-		Name: *r.FullName,
+		Name: *r.fullName,
 	})
 	if err != nil && strings.Contains(err.Error(), "proto") && strings.Contains(err.Error(), "missing") {
 		err = nil

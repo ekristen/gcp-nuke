@@ -3,7 +3,6 @@ package resources
 import (
 	"context"
 	"github.com/ekristen/gcp-nuke/pkg/nuke"
-	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/types"
@@ -27,16 +26,16 @@ type IAMWorkloadIdentityPoolProviderLister struct {
 }
 
 func (l *IAMWorkloadIdentityPoolProviderLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
-	opts := o.(*nuke.ListerOpts)
-	if *opts.Region != "global" {
-		return nil, liberror.ErrSkipRequest("resource is global")
-	}
-
 	var resources []resource.Resource
+
+	opts := o.(*nuke.ListerOpts)
+	if err := opts.BeforeList(nuke.Global, "iam.googleapis.com"); err != nil {
+		return resources, err
+	}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = iam.NewService(ctx)
+		l.svc, err = iam.NewService(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -48,8 +47,6 @@ func (l *IAMWorkloadIdentityPoolProviderLister) List(ctx context.Context, o inte
 		return nil, err
 	}
 
-	// NOTE: you might have to modify the code below to actually work, this currently does not
-	// inspect the aws sdk instead is a jumping off point
 	for _, workloadIdentityPool := range workloadIdentityPools {
 		var nextPageToken string
 
@@ -73,8 +70,9 @@ func (l *IAMWorkloadIdentityPoolProviderLister) List(ctx context.Context, o inte
 
 				resources = append(resources, &IAMWorkloadIdentityPoolProvider{
 					svc:         l.svc,
-					Project:     opts.Project,
-					Region:      opts.Region,
+					project:     opts.Project,
+					region:      opts.Region,
+					fullName:    ptr.String(provider.Name),
 					Name:        ptr.String(providerName),
 					Pool:        ptr.String(poolName),
 					Disabled:    ptr.Bool(provider.Disabled),
@@ -95,8 +93,9 @@ func (l *IAMWorkloadIdentityPoolProviderLister) List(ctx context.Context, o inte
 
 type IAMWorkloadIdentityPoolProvider struct {
 	svc         *iam.Service
-	Project     *string
-	Region      *string
+	project     *string
+	region      *string
+	fullName    *string
 	Name        *string
 	Pool        *string
 	Disabled    *bool
@@ -105,7 +104,7 @@ type IAMWorkloadIdentityPoolProvider struct {
 }
 
 func (r *IAMWorkloadIdentityPoolProvider) Remove(ctx context.Context) error {
-	_, err := r.svc.Projects.Locations.WorkloadIdentityPools.Delete(*r.Name).Context(ctx).Do()
+	_, err := r.svc.Projects.Locations.WorkloadIdentityPools.Providers.Delete(*r.fullName).Context(ctx).Do()
 	return err
 }
 

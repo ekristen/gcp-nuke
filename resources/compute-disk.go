@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/gotidy/ptr"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 
@@ -12,7 +13,6 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 
-	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/types"
@@ -35,16 +35,16 @@ type ComputeDiskLister struct {
 }
 
 func (l *ComputeDiskLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
-	opts := o.(*nuke.ListerOpts)
-	if *opts.Region == "global" {
-		return nil, liberror.ErrSkipRequest("resource is regional")
-	}
-
 	var resources []resource.Resource
+
+	opts := o.(*nuke.ListerOpts)
+	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com"); err != nil {
+		return resources, err
+	}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewDisksRESTClient(ctx)
+		l.svc, err = compute.NewDisksRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -68,11 +68,18 @@ func (l *ComputeDiskLister) List(ctx context.Context, o interface{}) ([]resource
 				break
 			}
 
+			typeParts := strings.Split(resp.GetType(), "/")
+			typeName := typeParts[len(typeParts)-1]
+
 			resources = append(resources, &ComputeDisk{
 				svc:     l.svc,
+				project: opts.Project,
+				region:  opts.Region,
 				Name:    resp.Name,
-				Project: opts.Project,
 				Zone:    ptr.String(zone),
+				Arch:    resp.Architecture,
+				Size:    resp.SizeGb,
+				Type:    ptr.String(typeName),
 				Labels:  resp.Labels,
 			})
 		}
@@ -83,16 +90,19 @@ func (l *ComputeDiskLister) List(ctx context.Context, o interface{}) ([]resource
 
 type ComputeDisk struct {
 	svc     *compute.DisksClient
-	Project *string
-	Region  *string
+	project *string
+	region  *string
 	Name    *string
 	Zone    *string
-	Labels  map[string]string
+	Arch    *string
+	Size    *int64
+	Type    *string
+	Labels  map[string]string `property:"tagPrefix=label"`
 }
 
 func (r *ComputeDisk) Remove(ctx context.Context) error {
 	_, err := r.svc.Delete(ctx, &computepb.DeleteDiskRequest{
-		Project: *r.Project,
+		Project: *r.project,
 		Zone:    *r.Zone,
 		Disk:    *r.Name,
 	})

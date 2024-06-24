@@ -10,6 +10,7 @@ import (
 	"github.com/ekristen/gcp-nuke/pkg/common"
 
 	_ "github.com/ekristen/gcp-nuke/pkg/commands/list"
+	_ "github.com/ekristen/gcp-nuke/pkg/commands/project"
 	_ "github.com/ekristen/gcp-nuke/pkg/commands/run"
 
 	_ "github.com/ekristen/gcp-nuke/resources"
@@ -28,7 +29,7 @@ func main() {
 
 	app := cli.NewApp()
 	app.Name = path.Base(os.Args[0])
-	app.Usage = "remove everything from an azure tenant"
+	app.Usage = "remove everything from a GCP project"
 	app.Version = common.AppVersion.Summary
 	app.Authors = []*cli.Author{
 		{
@@ -39,7 +40,7 @@ func main() {
 
 	app.Commands = common.GetCommands()
 	app.CommandNotFound = func(context *cli.Context, command string) {
-		logrus.Fatalf("Command %s not found.", command)
+		logrus.Fatalf("command %s not found.", command)
 	}
 
 	if err := app.Run(os.Args); err != nil {

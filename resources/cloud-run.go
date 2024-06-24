@@ -14,7 +14,6 @@ import (
 	"cloud.google.com/go/run/apiv2"
 	"cloud.google.com/go/run/apiv2/runpb"
 
-	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/types"
@@ -37,23 +36,21 @@ type CloudRunLister struct {
 }
 
 func (l *CloudRunLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
-	opts := o.(*nuke.ListerOpts)
-	if *opts.Region == "global" {
-		return nil, liberror.ErrSkipRequest("resource is regional")
-	}
-
 	var resources []resource.Resource
+
+	opts := o.(*nuke.ListerOpts)
+	if err := opts.BeforeList(nuke.Regional, "run.googleapis.com"); err != nil {
+		return resources, err
+	}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = run.NewServicesClient(ctx)
+		l.svc, err = run.NewServicesClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	// NOTE: you might have to modify the code below to actually work, this currently does not
-	// inspect the aws sdk instead is a jumping off point
 	req := &runpb.ListServicesRequest{
 		Parent: fmt.Sprintf("projects/%s/locations/%s", *opts.Project, *opts.Region),
 	}
@@ -91,7 +88,7 @@ type CloudRun struct {
 	Region   *string
 	FullName *string
 	Name     *string
-	Labels   map[string]string
+	Labels   map[string]string `property:"tagPrefix=label"`
 }
 
 func (r *CloudRun) Filter() error {

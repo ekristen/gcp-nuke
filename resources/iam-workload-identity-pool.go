@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/ekristen/gcp-nuke/pkg/nuke"
-	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/types"
@@ -30,7 +29,7 @@ type IAMWorkloadIdentityPoolLister struct {
 func (l *IAMWorkloadIdentityPoolLister) ListPools(ctx context.Context, opts *nuke.ListerOpts) ([]*iam.WorkloadIdentityPool, error) {
 	if l.svc == nil {
 		var err error
-		l.svc, err = iam.NewService(ctx)
+		l.svc, err = iam.NewService(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -64,12 +63,12 @@ func (l *IAMWorkloadIdentityPoolLister) ListPools(ctx context.Context, opts *nuk
 }
 
 func (l *IAMWorkloadIdentityPoolLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
-	opts := o.(*nuke.ListerOpts)
-	if *opts.Region != "global" {
-		return nil, liberror.ErrSkipRequest("resource is global")
-	}
-
 	var resources []resource.Resource
+
+	opts := o.(*nuke.ListerOpts)
+	if err := opts.BeforeList(nuke.Global, "iam.googleapis.com"); err != nil {
+		return resources, err
+	}
 
 	workloadIdentityPools, err := l.ListPools(ctx, opts)
 	if err != nil {
@@ -79,11 +78,13 @@ func (l *IAMWorkloadIdentityPoolLister) List(ctx context.Context, o interface{})
 	for _, pool := range workloadIdentityPools {
 		poolNameParts := strings.Split(pool.Name, "/")
 		poolName := poolNameParts[len(poolNameParts)-1]
+
 		resources = append(resources, &IAMWorkloadIdentityPool{
-			svc:     l.svc,
-			Project: opts.Project,
-			Region:  opts.Region,
-			Name:    ptr.String(poolName),
+			svc:      l.svc,
+			project:  opts.Project,
+			region:   opts.Region,
+			fullName: ptr.String(pool.Name),
+			Name:     ptr.String(poolName),
 		})
 	}
 
@@ -91,14 +92,15 @@ func (l *IAMWorkloadIdentityPoolLister) List(ctx context.Context, o interface{})
 }
 
 type IAMWorkloadIdentityPool struct {
-	svc     *iam.Service
-	Project *string
-	Region  *string
-	Name    *string
+	svc      *iam.Service
+	project  *string
+	region   *string
+	fullName *string
+	Name     *string
 }
 
 func (r *IAMWorkloadIdentityPool) Remove(ctx context.Context) error {
-	_, err := r.svc.Projects.Locations.WorkloadIdentityPools.Delete(*r.Name).Context(ctx).Do()
+	_, err := r.svc.Projects.Locations.WorkloadIdentityPools.Delete(*r.fullName).Context(ctx).Do()
 	return err
 }
 

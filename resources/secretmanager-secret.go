@@ -15,7 +15,6 @@ import (
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 
-	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/types"
@@ -38,16 +37,16 @@ type SecretManagerSecretLister struct {
 }
 
 func (l *SecretManagerSecretLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
-	opts := o.(*nuke.ListerOpts)
-	if *opts.Region != "global" {
-		return nil, liberror.ErrSkipRequest("resource is global")
-	}
-
 	var resources []resource.Resource
+
+	opts := o.(*nuke.ListerOpts)
+	if err := opts.BeforeList(nuke.Global, "secretmanager.googleapis.com"); err != nil {
+		return resources, err
+	}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = secretmanager.NewRESTClient(ctx)
+		l.svc, err = secretmanager.NewRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -72,9 +71,9 @@ func (l *SecretManagerSecretLister) List(ctx context.Context, o interface{}) ([]
 
 		resources = append(resources, &SecretManagerSecret{
 			svc:        l.svc,
-			FullName:   ptr.String(resp.Name),
+			fullName:   ptr.String(resp.Name),
 			Name:       ptr.String(name),
-			Project:    opts.Project,
+			project:    opts.Project,
 			CreateTime: resp.CreateTime.AsTime(),
 			Labels:     resp.Labels,
 		})
@@ -85,17 +84,16 @@ func (l *SecretManagerSecretLister) List(ctx context.Context, o interface{}) ([]
 
 type SecretManagerSecret struct {
 	svc        *secretmanager.Client
-	Project    *string
-	Region     *string
-	FullName   *string
+	project    *string
+	fullName   *string
 	Name       *string
 	CreateTime time.Time
-	Labels     map[string]string
+	Labels     map[string]string `property:"tagPrefix=label"`
 }
 
 func (r *SecretManagerSecret) Remove(ctx context.Context) error {
 	return r.svc.DeleteSecret(ctx, &secretmanagerpb.DeleteSecretRequest{
-		Name: *r.FullName,
+		Name: *r.fullName,
 	})
 }
 

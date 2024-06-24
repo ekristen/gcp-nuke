@@ -1,21 +1,18 @@
 package resources
 
 import (
+	compute "cloud.google.com/go/compute/apiv1"
+	"cloud.google.com/go/compute/apiv1/computepb"
 	"context"
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"google.golang.org/api/iterator"
-
-	compute "cloud.google.com/go/compute/apiv1"
-	"cloud.google.com/go/compute/apiv1/computepb"
-
+	"github.com/ekristen/gcp-nuke/pkg/nuke"
 	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/types"
-
-	"github.com/ekristen/gcp-nuke/pkg/nuke"
+	"github.com/sirupsen/logrus"
+	"google.golang.org/api/iterator"
 )
 
 const VPCNetworkResource = "VPCNetwork"
@@ -43,16 +40,16 @@ func (l *VPCNetworkLister) Close() {
 }
 
 func (l *VPCNetworkLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
-	opts := o.(*nuke.ListerOpts)
-	resources := make([]resource.Resource, 0)
+	var resources []resource.Resource
 
-	if *opts.Region != "global" {
-		return nil, liberror.ErrSkipRequest("resource is global")
+	opts := o.(*nuke.ListerOpts)
+	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com"); err != nil {
+		return resources, err
 	}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewNetworksRESTClient(ctx)
+		l.svc, err = compute.NewNetworksRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -74,8 +71,8 @@ func (l *VPCNetworkLister) List(ctx context.Context, o interface{}) ([]resource.
 
 		resources = append(resources, &VPCNetwork{
 			svc:     l.svc,
+			project: opts.Project,
 			Name:    resp.Name,
-			Project: opts.Project,
 		})
 	}
 
@@ -85,17 +82,29 @@ func (l *VPCNetworkLister) List(ctx context.Context, o interface{}) ([]resource.
 type VPCNetwork struct {
 	svc      *compute.NetworksClient
 	removeOp *compute.Operation
-	Project  *string
+	project  *string
 	Name     *string
 }
 
 func (r *VPCNetwork) Remove(ctx context.Context) error {
 	var err error
 	r.removeOp, err = r.svc.Delete(ctx, &computepb.DeleteNetworkRequest{
-		Project: *r.Project,
+		Project: *r.project,
 		Network: *r.Name,
 	})
-	return err
+	if err != nil {
+		return err
+	}
+
+	return r.HandleWait(ctx)
+}
+
+func (r *VPCNetwork) Properties() types.Properties {
+	return types.NewPropertiesFromStruct(r)
+}
+
+func (r *VPCNetwork) String() string {
+	return *r.Name
 }
 
 // HandleWait is a hook into the libnuke resource lifecycle to allow for waiting on a resource to be removed
@@ -112,6 +121,10 @@ func (r *VPCNetwork) HandleWait(ctx context.Context) error {
 		return err
 	}
 
+	if !r.removeOp.Done() {
+		return liberror.ErrWaitResource("waiting for operation to complete")
+	}
+
 	if r.removeOp.Done() {
 		if r.removeOp.Proto().GetError() != nil {
 			removeErr := fmt.Errorf("delete error on '%s': %s", r.removeOp.Proto().GetTargetLink(), r.removeOp.Proto().GetHttpErrorMessage())
@@ -121,8 +134,4 @@ func (r *VPCNetwork) HandleWait(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-func (r *VPCNetwork) Properties() types.Properties {
-	return types.NewPropertiesFromStruct(r)
 }

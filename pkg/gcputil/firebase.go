@@ -5,16 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/api/option"
+	"google.golang.org/api/option/internaloption"
+	htransport "google.golang.org/api/transport/http"
 	"io"
 	"net/http"
-
-	"golang.org/x/oauth2/google"
 )
 
-// FirebaseDBClient is a client to interact with the Firebase Realtime Database API
-type FirebaseDBClient struct {
-	httpClient *http.Client
-}
+const basePath = "https://firebasedatabase.googleapis.com/"
+const basePathTemplate = "https://firebasedatabase.UNIVERSE_DOMAIN/"
+const mtlsBasePath = "https://firebasedatabase.mtls.googleapis.com/"
 
 // DatabaseInstance represents a Firebase Realtime Database instance
 type DatabaseInstance struct {
@@ -25,26 +25,41 @@ type DatabaseInstance struct {
 	State       string `json:"state"`
 }
 
-// NewFirebaseDBClient creates a new Firebase Realtime Database client to interact with the
+// NewFirebaseDatabaseService creates a new Firebase Realtime Database client to interact with the
 // https://firebasedatabase.googleapis.com endpoints as there is no official golang client library
-func NewFirebaseDBClient(ctx context.Context) (*FirebaseDBClient, error) {
-	client, err := google.DefaultClient(ctx,
+func NewFirebaseDatabaseService(ctx context.Context, opts ...option.ClientOption) (*FirebaseDatabaseService, error) {
+	scopesOption := internaloption.WithDefaultScopes(
 		"https://www.googleapis.com/auth/cloud-platform",
 		"https://www.googleapis.com/auth/cloud-platform.read-only",
 		"https://www.googleapis.com/auth/firebase",
 		"https://www.googleapis.com/auth/firebase.readonly",
 	)
+	// NOTE: prepend, so we don't override user-specified scopes.
+	opts = append([]option.ClientOption{scopesOption}, opts...)
+	opts = append(opts, internaloption.WithDefaultEndpointTemplate(basePathTemplate))
+	opts = append(opts, internaloption.WithDefaultMTLSEndpoint(mtlsBasePath))
+	opts = append(opts, internaloption.EnableNewAuthLibrary())
+	client, endpoint, err := htransport.NewClient(ctx, opts...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse JWT from credentials: %v", err)
+		return nil, err
 	}
 
-	return &FirebaseDBClient{
-		httpClient: client,
-	}, nil
+	s := &FirebaseDatabaseService{client: client, BasePath: basePath}
+	if endpoint != "" {
+		s.BasePath = endpoint
+	}
+
+	return s, nil
+}
+
+type FirebaseDatabaseService struct {
+	client    *http.Client
+	BasePath  string // API endpoint base URL
+	UserAgent string // optional additional User-Agent fragment
 }
 
 // ListDatabaseRegions lists Firebase Realtime Database regions
-func (c *FirebaseDBClient) ListDatabaseRegions() []string {
+func (s *FirebaseDatabaseService) ListDatabaseRegions() []string {
 	return []string{
 		"us-central1",
 		"europe-west1",
@@ -53,8 +68,8 @@ func (c *FirebaseDBClient) ListDatabaseRegions() []string {
 }
 
 // ListDatabaseInstances lists Firebase Realtime Database instances
-func (c *FirebaseDBClient) ListDatabaseInstances(ctx context.Context, parent string) ([]*DatabaseInstance, error) {
-	url1 := fmt.Sprintf("https://firebasedatabase.googleapis.com/v1beta/%s/instances", parent)
+func (s *FirebaseDatabaseService) ListDatabaseInstances(ctx context.Context, parent string) ([]*DatabaseInstance, error) {
+	url1 := fmt.Sprintf("%sv1beta/%s/instances", s.BasePath, parent)
 	logrus.Tracef("url: %s", url1)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url1, nil)
@@ -62,7 +77,7 @@ func (c *FirebaseDBClient) ListDatabaseInstances(ctx context.Context, parent str
 		return nil, fmt.Errorf("error creating request: %v", err)
 	}
 
-	resp, err := c.httpClient.Do(req)
+	resp, err := s.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error requesting database instances: %v", err)
 	}
@@ -84,8 +99,8 @@ func (c *FirebaseDBClient) ListDatabaseInstances(ctx context.Context, parent str
 }
 
 // DeleteDatabaseInstance deletes a Firebase Realtime Database instance
-func (c *FirebaseDBClient) DeleteDatabaseInstance(ctx context.Context, parent, name string) error {
-	url := fmt.Sprintf("https://firebasedatabase.googleapis.com/v1beta/%s/instances/%s", parent, name)
+func (s *FirebaseDatabaseService) DeleteDatabaseInstance(ctx context.Context, parent, name string) error {
+	url := fmt.Sprintf("%sv1beta/%s/instances/%s", s.BasePath, parent, name)
 	logrus.Tracef("url: %s", url)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
@@ -93,7 +108,7 @@ func (c *FirebaseDBClient) DeleteDatabaseInstance(ctx context.Context, parent, n
 		return fmt.Errorf("error creating request: %v", err)
 	}
 
-	resp, err := c.httpClient.Do(req)
+	resp, err := s.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("error deleting database instance: %v", err)
 	}
@@ -107,8 +122,8 @@ func (c *FirebaseDBClient) DeleteDatabaseInstance(ctx context.Context, parent, n
 }
 
 // DisableDatabaseInstance disables a Firebase Realtime Database instance
-func (c *FirebaseDBClient) DisableDatabaseInstance(ctx context.Context, parent, name string) error {
-	url := fmt.Sprintf("https://firebasedatabase.googleapis.com/v1beta/%s/instances/%s:disable", parent, name)
+func (s *FirebaseDatabaseService) DisableDatabaseInstance(ctx context.Context, parent, name string) error {
+	url := fmt.Sprintf("%sv1beta/%s/instances/%s:disable", s.BasePath, parent, name)
 	logrus.Tracef("url: %s", url)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
@@ -116,7 +131,7 @@ func (c *FirebaseDBClient) DisableDatabaseInstance(ctx context.Context, parent, 
 		return fmt.Errorf("error creating request: %v", err)
 	}
 
-	resp, err := c.httpClient.Do(req)
+	resp, err := s.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("error disabling database instance: %v", err)
 	}
