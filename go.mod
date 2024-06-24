@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	cloud.google.com/go/compute v1.26.0
-	github.com/ekristen/libnuke v0.14.3-0.20240604222203-e5306c7eb43c
+	github.com/ekristen/libnuke v0.17.1
 	github.com/fatih/color v1.17.0
 	github.com/gotidy/ptr v1.4.0
 	github.com/sirupsen/logrus v1.9.3

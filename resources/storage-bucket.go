@@ -140,13 +140,9 @@ type StorageBucket struct {
 }
 
 func (r *StorageBucket) Filter() error {
-	deleteGoogleManagedBuckets := false
 	managedByCloudFunctions := false
 	managedByWho := ""
 
-	if r.settings != nil {
-		deleteGoogleManagedBuckets = r.settings.Get("DeleteGoogleManagedBuckets").(bool)
-	}
 	if r.Labels != nil {
 		if v, ok := r.Labels["goog-managed-by"]; ok {
 			managedByCloudFunctions = true
@@ -154,7 +150,7 @@ func (r *StorageBucket) Filter() error {
 		}
 	}
 
-	if managedByCloudFunctions && !deleteGoogleManagedBuckets {
+	if managedByCloudFunctions && !r.settings.GetBool("DeleteGoogleManagedBuckets") {
 		return fmt.Errorf("bucket is managed by %s", managedByWho)
 	}
 

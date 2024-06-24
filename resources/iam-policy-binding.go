@@ -102,13 +102,7 @@ type IAMPolicyBinding struct {
 }
 
 func (r *IAMPolicyBinding) Filter() error {
-	deleteGoogleManaged := false
-
-	if r.settings != nil {
-		deleteGoogleManaged = r.settings.Get("DeleteGoogleManaged").(bool)
-	}
-
-	if r.GoogleManaged && !deleteGoogleManaged {
+	if r.GoogleManaged && !r.settings.GetBool("DeleteGoogleManaged") {
 		return fmt.Errorf("binding is managed by Google")
 	}
 

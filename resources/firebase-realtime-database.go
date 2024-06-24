@@ -148,7 +148,7 @@ func (r *FirebaseRealtimeDatabase) EmptyDefaultDatabase(ctx context.Context) err
 	}
 
 	// If the setting is not enabled, then we just skip
-	if !r.settings.Get("EmptyDefaultDatabase").(bool) {
+	if !r.settings.GetBool("EmptyDefaultDatabase") {
 		return nil
 	}
 

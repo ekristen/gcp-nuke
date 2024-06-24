@@ -130,7 +130,7 @@ func (r *CloudSQLInstance) HandleWait(ctx context.Context) error {
 }
 
 func (r *CloudSQLInstance) disableDeletionProtection(ctx context.Context) error {
-	if r.settings != nil && r.settings.Get("DisableDeletionProtection").(bool) {
+	if r.settings.GetBool("DisableDeletionProtection") {
 		logrus.Trace("disabling deletion protection")
 
 		r.instanceSettings.DeletionProtectionEnabled = false

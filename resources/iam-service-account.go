@@ -118,7 +118,7 @@ type IAMServiceAccount struct {
 func (r *IAMServiceAccount) Filter() error {
 	isDefaultServiceAccount := false
 	deleteDefaultServiceAccounts := false
-	if r.settings != nil && r.settings.Get("DeleteDefaultServiceAccounts").(bool) {
+	if r.settings.GetBool("DeleteDefaultServiceAccounts") {
 		deleteDefaultServiceAccounts = true
 	}
 
