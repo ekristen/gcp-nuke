@@ -59,6 +59,8 @@ cloud.google.com/go/secretmanager v1.13.0 h1:nQ/Ca2Gzm/OEP8tr1hiFdHRi5wAnAmsm9qT
 cloud.google.com/go/secretmanager v1.13.0/go.mod h1:yWdfNmM2sLIiyv6RM6VqWKeBV7CdS0SO3ybxJJRhBEs=
 cloud.google.com/go/secretmanager v1.13.3 h1:VqUVYY3U6uFXOhPdZgAoZH9m8E6p7eK02TsDRj2SBf4=
 cloud.google.com/go/secretmanager v1.13.3/go.mod h1:e45+CxK0w6GaL4hS+KabgQskl4RdSS30b+HRf0TH0kk=
+cloud.google.com/go/secretmanager v1.13.4 h1:pizLSVUkZ8RdeQL5Vswj/3ujVC4kSY5eTxAWyMwQ1uc=
+cloud.google.com/go/secretmanager v1.13.4/go.mod h1:SjKHs6rx0ELUqfbRWrWq4e7SiNKV7QMWZtvZsQm3k5w=
 cloud.google.com/go/storage v1.41.0 h1:RusiwatSu6lHeEXe3kglxakAmAbfV+rhtPqA6i8RBx0=
 cloud.google.com/go/storage v1.41.0/go.mod h1:J1WCa/Z2FcgdEDuPUY8DxT5I+d9mFKsCepp5vR6Sq80=
 firebase.google.com/go v3.13.0+incompatible h1:3TdYC3DDi6aHn20qoRkxwGqNgdjtblwVAyRLQwGn/+4=

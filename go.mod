@@ -9,7 +9,7 @@ require (
 	cloud.google.com/go/iam v1.1.11
 	cloud.google.com/go/kms v1.18.3
 	cloud.google.com/go/run v1.3.10
-	cloud.google.com/go/secretmanager v1.13.3
+	cloud.google.com/go/secretmanager v1.13.4
 	cloud.google.com/go/storage v1.41.0
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/ekristen/libnuke v0.17.1
