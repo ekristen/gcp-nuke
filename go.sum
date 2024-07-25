@@ -33,6 +33,8 @@ cloud.google.com/go/container v1.37.2 h1:g5zm1SUBZ+q7IvtI5hM/6xcpf2C/bFfN2EXzS07
 cloud.google.com/go/container v1.37.2/go.mod h1:2ly7zpBmWtYjjuoB3fHyq8Gqrxaj2NIwzwVRpUcKYXk=
 cloud.google.com/go/container v1.37.3 h1:FCKTPz9OtId4LzB7dXzp+bDP4G0vlQOdUSYn2MddF38=
 cloud.google.com/go/container v1.37.3/go.mod h1:XKwtVfsTBsnZ9Ve1Pw2wkjk5kSjJqsHl3oBrbbi4w/M=
+cloud.google.com/go/container v1.38.0 h1:GP5zLamfvPZeOTifnGBSER/br76D5eJ97xhcXXrh5tM=
+cloud.google.com/go/container v1.38.0/go.mod h1:U0uPBvkVWOJGY/0qTVuPS7NeafFEUsHSPqT5pB8+fCY=
 cloud.google.com/go/firestore v1.15.0 h1:/k8ppuWOtNuDHt2tsRV42yI21uaGnKDEQnRFeBpbFF8=
 cloud.google.com/go/firestore v1.15.0/go.mod h1:GWOxFXcv8GZUtYpWHw/w6IuYNux/BtmeVTMmjrm4yhk=
 cloud.google.com/go/functions v1.16.2 h1:83bd2lCgtu2nLbX2jrqsrQhIs7VuVA1N6Op5syeRVIg=
