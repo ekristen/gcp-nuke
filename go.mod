@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	cloud.google.com/go/compute v1.27.5
-	cloud.google.com/go/container v1.38.0
+	cloud.google.com/go/container v1.38.1
 	cloud.google.com/go/functions v1.16.6
 	cloud.google.com/go/iam v1.1.12
 	cloud.google.com/go/kms v1.18.4
