@@ -7,7 +7,7 @@ require (
 	cloud.google.com/go/container v1.38.1
 	cloud.google.com/go/functions v1.16.6
 	cloud.google.com/go/iam v1.1.13
-	cloud.google.com/go/kms v1.18.4
+	cloud.google.com/go/kms v1.18.5
 	cloud.google.com/go/run v1.4.0
 	cloud.google.com/go/secretmanager v1.13.5
 	cloud.google.com/go/storage v1.43.0
