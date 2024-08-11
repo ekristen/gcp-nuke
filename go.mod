@@ -17,7 +17,7 @@ require (
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/gotidy/ptr v1.4.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/urfave/cli/v2 v2.27.3
+	github.com/urfave/cli/v2 v2.27.4
 	golang.org/x/oauth2 v0.22.0
 	golang.org/x/text v0.17.0
 	google.golang.org/api v0.191.0
