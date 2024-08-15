@@ -33,7 +33,7 @@ type ListerOpts struct {
 func (o *ListerOpts) BeforeList(geo Geography, service string) error {
 	log := logrus.WithField("geo", geo).
 		WithField("service", service).
-		WithField("hooke", "true")
+		WithField("hook", "true")
 
 	if geo == Global && *o.Region != "global" {
 		log.Trace("before-list: skipping resource, global")
