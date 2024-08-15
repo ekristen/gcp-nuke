@@ -71,8 +71,6 @@ func (l *ComputeBackendServiceLister) listGlobal(ctx context.Context, opts *nuke
 		}
 	}
 
-	// NOTE: you might have to modify the code below to actually work, this currently does not
-	// inspect the google go sdk instead is a jumping off point
 	req := &computepb.ListBackendServicesRequest{
 		Project: *opts.Project,
 	}
