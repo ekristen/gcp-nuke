@@ -15,6 +15,8 @@ cloud.google.com/go/firestore v1.16.0 h1:YwmDHcyrxVRErWcgxunzEaZxtNbc8QoFYA/JOEw
 cloud.google.com/go/firestore v1.16.0/go.mod h1:+22v/7p+WNBSQwdSwP57vz47aZiY+HrDkrOsJNhk7rg=
 cloud.google.com/go/functions v1.17.0 h1:vrYGAUIvB+YW1D8nR79FHRalKOTGoQ5GUCjgOfH0VhQ=
 cloud.google.com/go/functions v1.17.0/go.mod h1:r8uxxI35hdP2slfTjGJvx04NRy8sP/EXUMZ0NYfBd+w=
+cloud.google.com/go/functions v1.18.0 h1:50K2iLtj7xj6xqrhdNOL+aVaHwKi4h7qgNWP9ieTDag=
+cloud.google.com/go/functions v1.18.0/go.mod h1:r8uxxI35hdP2slfTjGJvx04NRy8sP/EXUMZ0NYfBd+w=
 cloud.google.com/go/iam v1.1.13 h1:7zWBXG9ERbMLrzQBRhFliAV+kjcRToDTgQT3CTwYyv4=
 cloud.google.com/go/iam v1.1.13/go.mod h1:K8mY0uSXwEXS30KrnVb+j54LB/ntfZu1dr+4zFMNbus=
 cloud.google.com/go/kms v1.18.5 h1:75LSlVs60hyHK3ubs2OHd4sE63OAMcM2BdSJc2bkuM4=
