@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	liberror "github.com/ekristen/libnuke/pkg/errors"
 
 	"github.com/sirupsen/logrus"
 
@@ -13,6 +12,7 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 
+	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/types"

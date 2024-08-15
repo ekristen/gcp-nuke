@@ -3,9 +3,9 @@ package resources
 import (
 	"context"
 	"errors"
-	"github.com/gotidy/ptr"
 	"strings"
 
+	"github.com/gotidy/ptr"
 	"github.com/sirupsen/logrus"
 
 	"google.golang.org/api/iterator"
