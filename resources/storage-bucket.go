@@ -33,6 +33,7 @@ func init() {
 		},
 		Settings: []string{
 			"DeleteGoogleManagedBuckets",
+			"DisableDeletionProtection",
 		},
 	})
 }
@@ -158,17 +159,23 @@ func (r *StorageBucket) Filter() error {
 }
 
 func (r *StorageBucket) Remove(ctx context.Context) error {
-	if _, err := r.svc.Bucket(*r.Name).Update(ctx, storage.BucketAttrsToUpdate{
-		RetentionPolicy: nil,
-		SoftDeletePolicy: &storage.SoftDeletePolicy{
-			EffectiveTime:     time.Now(),
-			RetentionDuration: 0,
-		},
-		Lifecycle:         &storage.Lifecycle{Rules: nil},
-		VersioningEnabled: false,
-	}); err != nil {
-		logrus.WithError(err).Error("encountered error while updating bucket attrs")
-		return err
+	if r.settings.GetBool("DisableDeletionProtection") {
+		if _, err := r.svc.Bucket(*r.Name).Update(ctx, storage.BucketAttrsToUpdate{
+			RetentionPolicy: &storage.RetentionPolicy{
+				RetentionPeriod: 0,
+				EffectiveTime:   time.Now(),
+				IsLocked:        false,
+			},
+			SoftDeletePolicy: &storage.SoftDeletePolicy{
+				EffectiveTime:     time.Now(),
+				RetentionDuration: 0,
+			},
+			Lifecycle:         &storage.Lifecycle{Rules: nil},
+			VersioningEnabled: false,
+		}); err != nil {
+			logrus.WithError(err).Error("encountered error while updating bucket attrs")
+			return err
+		}
 	}
 
 	if err := r.removeObjects(ctx); err != nil {
