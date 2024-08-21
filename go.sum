@@ -21,6 +21,8 @@ cloud.google.com/go/compute/metadata v0.5.0 h1:Zr0eK8JbFv6+Wi4ilXAR8FJ3wyNdpxHKJ
 cloud.google.com/go/compute/metadata v0.5.0/go.mod h1:aHnloV2TPI38yx4s9+wAZhHykWvVCfu7hQbF+9CWoiY=
 cloud.google.com/go/container v1.38.1 h1:Pb0GbZIg/KS4A9gbF3J4JHmrgPpBA2y+4v9N04aJkOs=
 cloud.google.com/go/container v1.38.1/go.mod h1:2r4Qiz6IG2LhRFfWhPNmrYD7yzdE2B2kghigVWoSw/g=
+cloud.google.com/go/container v1.39.0 h1:Q1oW01ENxkkG3uf1oYoTmHPdvP+yhFCIuCJ4mk2RwkQ=
+cloud.google.com/go/container v1.39.0/go.mod h1:gNgnvs1cRHXjYxrotVm+0nxDfZkqzBbXCffh5WtqieI=
 cloud.google.com/go/firestore v1.16.0 h1:YwmDHcyrxVRErWcgxunzEaZxtNbc8QoFYA/JOEwDPgc=
 cloud.google.com/go/firestore v1.16.0/go.mod h1:+22v/7p+WNBSQwdSwP57vz47aZiY+HrDkrOsJNhk7rg=
 cloud.google.com/go/functions v1.17.0 h1:vrYGAUIvB+YW1D8nR79FHRalKOTGoQ5GUCjgOfH0VhQ=
