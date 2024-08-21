@@ -27,12 +27,16 @@ cloud.google.com/go/functions v1.17.0 h1:vrYGAUIvB+YW1D8nR79FHRalKOTGoQ5GUCjgOfH
 cloud.google.com/go/functions v1.17.0/go.mod h1:r8uxxI35hdP2slfTjGJvx04NRy8sP/EXUMZ0NYfBd+w=
 cloud.google.com/go/functions v1.18.0 h1:50K2iLtj7xj6xqrhdNOL+aVaHwKi4h7qgNWP9ieTDag=
 cloud.google.com/go/functions v1.18.0/go.mod h1:r8uxxI35hdP2slfTjGJvx04NRy8sP/EXUMZ0NYfBd+w=
+cloud.google.com/go/functions v1.19.0 h1:bO55p91lPY5JLg5MBdmt6G9n4kNeClX0lA9hdusDU6M=
+cloud.google.com/go/functions v1.19.0/go.mod h1:WDreEDZoUVoOkXKDejFWGnprrGYn2cY2KHx73UQERC0=
 cloud.google.com/go/iam v1.1.13 h1:7zWBXG9ERbMLrzQBRhFliAV+kjcRToDTgQT3CTwYyv4=
 cloud.google.com/go/iam v1.1.13/go.mod h1:K8mY0uSXwEXS30KrnVb+j54LB/ntfZu1dr+4zFMNbus=
 cloud.google.com/go/kms v1.18.5 h1:75LSlVs60hyHK3ubs2OHd4sE63OAMcM2BdSJc2bkuM4=
 cloud.google.com/go/kms v1.18.5/go.mod h1:yXunGUGzabH8rjUPImp2ndHiGolHeWJJ0LODLedicIY=
 cloud.google.com/go/longrunning v0.5.11 h1:Havn1kGjz3whCfoD8dxMLP73Ph5w+ODyZB9RUsDxtGk=
 cloud.google.com/go/longrunning v0.5.11/go.mod h1:rDn7//lmlfWV1Dx6IB4RatCPenTwwmqXuiP0/RgoEO4=
+cloud.google.com/go/longrunning v0.5.12 h1:5LqSIdERr71CqfUsFlJdBpOkBH8FBCFD7P1nTWy3TYE=
+cloud.google.com/go/longrunning v0.5.12/go.mod h1:S5hMV8CDJ6r50t2ubVJSKQVv5u0rmik5//KgLO3k4lU=
 cloud.google.com/go/run v1.4.1 h1:grsUhL/Dlp7z5z2A4Nxi1oxEyktBkyB8VuobO6fuILs=
 cloud.google.com/go/run v1.4.1/go.mod h1:gaXIpytRDfrJjb3pz9PRG2q2KUaDDDV+Uvmq6QRZH20=
 cloud.google.com/go/secretmanager v1.13.6 h1:0ZEl/LuoB4xQsjVfQt3Gi/dZfOv36n4JmdPrMargzYs=
