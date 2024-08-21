@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/compute v1.28.0
 	cloud.google.com/go/container v1.38.1
 	cloud.google.com/go/functions v1.18.0
-	cloud.google.com/go/iam v1.1.13
+	cloud.google.com/go/iam v1.2.0
 	cloud.google.com/go/kms v1.18.5
 	cloud.google.com/go/run v1.4.1
 	cloud.google.com/go/secretmanager v1.13.6
@@ -31,7 +31,7 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.4 // indirect
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	cloud.google.com/go/firestore v1.16.0 // indirect
-	cloud.google.com/go/longrunning v0.5.11 // indirect
+	cloud.google.com/go/longrunning v0.5.12 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
