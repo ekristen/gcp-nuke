@@ -71,6 +71,8 @@ func (l *BigQueryDatasetLister) List(ctx context.Context, o interface{}) ([]reso
 
 		resources = append(resources, &BigQueryDataset{
 			svc:      l.svc,
+			project:  opts.Project,
+			region:   opts.Region,
 			dataset:  resp,
 			Name:     ptr.String(meta.Name),
 			Location: ptr.String(meta.Location),
