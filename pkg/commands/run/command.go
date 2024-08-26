@@ -39,13 +39,12 @@ func execute(c *cli.Context) error {
 	logrus.Trace("preparing to run nuke")
 
 	params := &libnuke.Parameters{
-		Force:              c.Bool("no-prompt"),
-		ForceSleep:         c.Int("prompt-delay"),
-		Quiet:              c.Bool("quiet"),
-		NoDryRun:           c.Bool("no-dry-run"),
-		Includes:           c.StringSlice("include"),
-		Excludes:           c.StringSlice("exclude"),
-		WaitOnDependencies: true,
+		Force:      c.Bool("no-prompt"),
+		ForceSleep: c.Int("prompt-delay"),
+		Quiet:      c.Bool("quiet"),
+		NoDryRun:   c.Bool("no-dry-run"),
+		Includes:   c.StringSlice("include"),
+		Excludes:   c.StringSlice("exclude"),
 	}
 
 	parsedConfig, err := libconfig.New(libconfig.Options{
