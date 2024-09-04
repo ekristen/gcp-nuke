@@ -20,8 +20,8 @@ require (
 	github.com/gotidy/ptr v1.4.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli/v2 v2.27.4
-	golang.org/x/oauth2 v0.22.0
-	golang.org/x/text v0.17.0
+	golang.org/x/oauth2 v0.23.0
+	golang.org/x/text v0.18.0
 	google.golang.org/api v0.196.0
 	google.golang.org/genproto v0.0.0-20240903143218-8af14fe29dc1
 	google.golang.org/protobuf v1.34.2
