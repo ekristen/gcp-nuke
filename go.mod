@@ -9,7 +9,7 @@ require (
 	cloud.google.com/go/firestore v1.17.0
 	cloud.google.com/go/functions v1.19.1
 	cloud.google.com/go/iam v1.2.1
-	cloud.google.com/go/kms v1.19.1
+	cloud.google.com/go/kms v1.20.0
 	cloud.google.com/go/run v1.5.1
 	cloud.google.com/go/secretmanager v1.14.1
 	cloud.google.com/go/storage v1.43.0
@@ -32,7 +32,7 @@ require (
 	cloud.google.com/go/auth v0.9.4 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.4 // indirect
 	cloud.google.com/go/compute/metadata v0.5.1 // indirect
-	cloud.google.com/go/longrunning v0.6.0 // indirect
+	cloud.google.com/go/longrunning v0.6.1 // indirect
 	github.com/apache/arrow/go/v15 v15.0.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
