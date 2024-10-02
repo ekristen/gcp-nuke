@@ -15,6 +15,8 @@ cloud.google.com/go/bigquery v1.62.0 h1:SYEA2f7fKqbSRRBHb7g0iHTtZvtPSPYdXfmqsjps
 cloud.google.com/go/bigquery v1.62.0/go.mod h1:5ee+ZkF1x/ntgCsFQJAQTM3QkAZOecfCmvxhkJsWRSA=
 cloud.google.com/go/bigquery v1.63.0 h1:yQFuJXdDukmBkiUUpjX0i1CtHLFU62HqPs/VDvSzaZo=
 cloud.google.com/go/bigquery v1.63.0/go.mod h1:TQto6OR4kw27bqjNTGkVk1Vo5PJlTgxvDJn6YEIZL/E=
+cloud.google.com/go/bigquery v1.63.1 h1:/6syiWrSpardKNxdvldS5CUTRJX1iIkSPXCjLjiGL+g=
+cloud.google.com/go/bigquery v1.63.1/go.mod h1:ufaITfroCk17WTqBhMpi8CRjsfHjMX07pDrQaRKKX2o=
 cloud.google.com/go/compute v1.28.0 h1:OPtBxMcheSS+DWfci803qvPly3d4w7Eu5ztKBcFfzwk=
 cloud.google.com/go/compute v1.28.0/go.mod h1:DEqZBtYrDnD5PvjsKwb3onnhX+qjdCVM7eshj1XdjV4=
 cloud.google.com/go/compute v1.28.1 h1:XwPcZjgMCnU2tkwY10VleUjSAfpTj9RDn+kGrbYsi8o=
