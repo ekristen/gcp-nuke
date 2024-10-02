@@ -3,7 +3,7 @@ module github.com/ekristen/gcp-nuke
 go 1.22
 
 require (
-	cloud.google.com/go/bigquery v1.63.0
+	cloud.google.com/go/bigquery v1.63.1
 	cloud.google.com/go/compute v1.28.1
 	cloud.google.com/go/container v1.40.0
 	cloud.google.com/go/firestore v1.17.0
