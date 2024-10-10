@@ -10,7 +10,7 @@ require (
 	cloud.google.com/go/functions v1.19.1
 	cloud.google.com/go/iam v1.2.1
 	cloud.google.com/go/kms v1.20.0
-	cloud.google.com/go/run v1.5.1
+	cloud.google.com/go/run v1.6.0
 	cloud.google.com/go/secretmanager v1.14.1
 	cloud.google.com/go/storage v1.44.0
 	firebase.google.com/go v3.13.0+incompatible
