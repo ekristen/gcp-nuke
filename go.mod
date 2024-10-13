@@ -19,7 +19,7 @@ require (
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/gotidy/ptr v1.4.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/urfave/cli/v2 v2.27.4
+	github.com/urfave/cli/v2 v2.27.5
 	golang.org/x/oauth2 v0.23.0
 	golang.org/x/text v0.19.0
 	google.golang.org/api v0.200.0
@@ -42,7 +42,7 @@ require (
 	github.com/census-instrumentation/opencensus-proto v0.4.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cncf/xds/go v0.0.0-20240905190251-b4127c9b8d78 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.5 // indirect
 	github.com/envoyproxy/go-control-plane v0.13.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.1.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
