@@ -2,12 +2,16 @@ package resources
 
 import (
 	"context"
-	"github.com/ekristen/gcp-nuke/pkg/nuke"
+
+	"github.com/gotidy/ptr"
+
+	"google.golang.org/api/dns/v1"
+
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/types"
-	"github.com/gotidy/ptr"
-	"google.golang.org/api/dns/v1"
+
+	"github.com/ekristen/gcp-nuke/pkg/nuke"
 )
 
 const DNSManagedZoneResource = "DNSManagedZone"
@@ -63,7 +67,6 @@ func (l *DNSManagedZoneLister) List(ctx context.Context, o interface{}) ([]resou
 type DNSManagedZone struct {
 	svc          *dns.Service
 	project      *string
-	region       *string
 	Name         *string `description:"Name of the managed zone"`
 	DNSName      *string `description:"DNS name of the managed zone"`
 	CreationTime *string `description:"Creation time of the managed zone"`
