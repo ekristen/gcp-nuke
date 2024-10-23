@@ -22,7 +22,7 @@ require (
 	github.com/urfave/cli/v2 v2.27.5
 	golang.org/x/oauth2 v0.23.0
 	golang.org/x/text v0.19.0
-	google.golang.org/api v0.202.0
+	google.golang.org/api v0.203.0
 	google.golang.org/genproto v0.0.0-20241015192408-796eee8c2d53
 	google.golang.org/protobuf v1.35.1
 )
@@ -30,7 +30,7 @@ require (
 require (
 	cel.dev/expr v0.16.1 // indirect
 	cloud.google.com/go v0.116.0 // indirect
-	cloud.google.com/go/auth v0.9.8 // indirect
+	cloud.google.com/go/auth v0.9.9 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.4 // indirect
 	cloud.google.com/go/compute/metadata v0.5.2 // indirect
 	cloud.google.com/go/longrunning v0.6.1 // indirect
