@@ -4,14 +4,14 @@ go 1.22
 
 require (
 	cloud.google.com/go/bigquery v1.63.1
-	cloud.google.com/go/compute v1.28.1
-	cloud.google.com/go/container v1.40.0
+	cloud.google.com/go/compute v1.28.2
+	cloud.google.com/go/container v1.41.0
 	cloud.google.com/go/firestore v1.17.0
-	cloud.google.com/go/functions v1.19.1
-	cloud.google.com/go/iam v1.2.1
-	cloud.google.com/go/kms v1.20.0
-	cloud.google.com/go/run v1.6.0
-	cloud.google.com/go/secretmanager v1.14.1
+	cloud.google.com/go/functions v1.19.2
+	cloud.google.com/go/iam v1.2.2
+	cloud.google.com/go/kms v1.20.1
+	cloud.google.com/go/run v1.6.1
+	cloud.google.com/go/secretmanager v1.14.2
 	cloud.google.com/go/storage v1.45.0
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/ekristen/libnuke v0.21.1
@@ -22,7 +22,7 @@ require (
 	github.com/urfave/cli/v2 v2.27.5
 	golang.org/x/oauth2 v0.23.0
 	golang.org/x/text v0.19.0
-	google.golang.org/api v0.202.0
+	google.golang.org/api v0.203.0
 	google.golang.org/genproto v0.0.0-20241015192408-796eee8c2d53
 	google.golang.org/protobuf v1.35.1
 )
@@ -30,7 +30,7 @@ require (
 require (
 	cel.dev/expr v0.16.1 // indirect
 	cloud.google.com/go v0.116.0 // indirect
-	cloud.google.com/go/auth v0.9.8 // indirect
+	cloud.google.com/go/auth v0.9.9 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.4 // indirect
 	cloud.google.com/go/compute/metadata v0.5.2 // indirect
 	cloud.google.com/go/longrunning v0.6.1 // indirect
