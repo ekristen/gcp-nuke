@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	cloud.google.com/go/bigquery v1.64.0
-	cloud.google.com/go/compute v1.28.2
+	cloud.google.com/go/compute v1.28.3
 	cloud.google.com/go/container v1.41.0
 	cloud.google.com/go/firestore v1.17.0
 	cloud.google.com/go/functions v1.19.2
