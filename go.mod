@@ -22,7 +22,7 @@ require (
 	github.com/urfave/cli/v2 v2.27.5
 	golang.org/x/oauth2 v0.24.0
 	golang.org/x/text v0.20.0
-	google.golang.org/api v0.207.0
+	google.golang.org/api v0.208.0
 	google.golang.org/genproto v0.0.0-20241113202542-65e8d215514f
 	google.golang.org/protobuf v1.35.2
 )
