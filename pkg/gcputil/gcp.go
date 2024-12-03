@@ -83,8 +83,10 @@ func (g *GCP) ImpersonateServiceAccount(ctx context.Context, targetServiceAccoun
 	defer credsClient.Close()
 
 	req := &credentialspb.GenerateAccessTokenRequest{
-		Name:  fmt.Sprintf("projects/-/serviceAccounts/%s", targetServiceAccount),
-		Scope: []string{"https://www.googleapis.com/auth/cloud-platform"},
+		Name: fmt.Sprintf("projects/-/serviceAccounts/%s", targetServiceAccount),
+		Scope: []string{
+			"https://www.googleapis.com/auth/cloud-platform",
+		},
 		Lifetime: &durationpb.Duration{
 			Seconds: int64(time.Hour.Seconds()), // 1 hour
 		},
