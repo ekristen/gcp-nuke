@@ -14,7 +14,7 @@ require (
 	cloud.google.com/go/secretmanager v1.14.2
 	cloud.google.com/go/storage v1.47.0
 	firebase.google.com/go v3.13.0+incompatible
-	github.com/ekristen/libnuke v0.21.5
+	github.com/ekristen/libnuke v0.21.7
 	github.com/fatih/color v1.18.0
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/gotidy/ptr v1.4.0
