@@ -23,7 +23,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli/v2 v2.27.5
 	golang.org/x/oauth2 v0.24.0
-	golang.org/x/text v0.20.0
+	golang.org/x/text v0.21.0
 	google.golang.org/api v0.209.0
 	google.golang.org/genproto v0.0.0-20241113202542-65e8d215514f
 	google.golang.org/protobuf v1.35.2
