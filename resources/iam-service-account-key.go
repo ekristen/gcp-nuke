@@ -20,9 +20,10 @@ const IAMServiceAccountKeyResource = "IAMServiceAccountKey"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   IAMServiceAccountKeyResource,
-		Scope:  nuke.Project,
-		Lister: &IAMServiceAccountKeyLister{},
+		Name:     IAMServiceAccountKeyResource,
+		Scope:    nuke.Project,
+		Resource: &IAMServiceAccountKey{},
+		Lister:   &IAMServiceAccountKeyLister{},
 	})
 }
 

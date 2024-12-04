@@ -17,9 +17,10 @@ const FirebaseWebAppResource = "FirebaseWebApp"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   FirebaseWebAppResource,
-		Scope:  nuke.Project,
-		Lister: &FirebaseWebAppLister{},
+		Name:     FirebaseWebAppResource,
+		Scope:    nuke.Project,
+		Resource: &FirebaseWebApp{},
+		Lister:   &FirebaseWebAppLister{},
 	})
 }
 

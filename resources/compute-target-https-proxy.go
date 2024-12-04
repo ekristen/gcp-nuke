@@ -24,9 +24,10 @@ const ComputeTargetHTTPSProxyResource = "ComputeTargetHTTPSProxy"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   ComputeTargetHTTPSProxyResource,
-		Scope:  nuke.Project,
-		Lister: &ComputeTargetHTTPSProxyLister{},
+		Name:     ComputeTargetHTTPSProxyResource,
+		Scope:    nuke.Project,
+		Resource: &ComputeTargetHTTPSProxy{},
+		Lister:   &ComputeTargetHTTPSProxyLister{},
 	})
 }
 

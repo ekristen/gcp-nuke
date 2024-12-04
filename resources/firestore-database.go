@@ -21,9 +21,10 @@ const FirestoreDatabaseResource = "FirestoreDatabase"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   FirestoreDatabaseResource,
-		Scope:  nuke.Project,
-		Lister: &FirestoreDatabaseLister{},
+		Name:     FirestoreDatabaseResource,
+		Scope:    nuke.Project,
+		Resource: &FirestoreDatabase{},
+		Lister:   &FirestoreDatabaseLister{},
 	})
 }
 

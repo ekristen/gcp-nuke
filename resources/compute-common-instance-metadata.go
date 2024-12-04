@@ -1,13 +1,15 @@
 package resources
 
 import (
-	compute "cloud.google.com/go/compute/apiv1"
-	"cloud.google.com/go/compute/apiv1/computepb"
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/gotidy/ptr"
 	"github.com/sirupsen/logrus"
-	"strings"
+
+	compute "cloud.google.com/go/compute/apiv1"
+	"cloud.google.com/go/compute/apiv1/computepb"
 
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
@@ -20,9 +22,10 @@ const ComputeCommonInstanceMetadataResource = "ComputeCommonInstanceMetadata"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   ComputeCommonInstanceMetadataResource,
-		Scope:  nuke.Project,
-		Lister: &ComputeCommonInstanceMetadataLister{},
+		Name:     ComputeCommonInstanceMetadataResource,
+		Scope:    nuke.Project,
+		Resource: &ComputeCommonInstanceMetadata{},
+		Lister:   &ComputeCommonInstanceMetadataLister{},
 	})
 }
 

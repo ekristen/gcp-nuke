@@ -24,9 +24,10 @@ const ComputeSSLCertificateResource = "ComputeSSLCertificate"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   ComputeSSLCertificateResource,
-		Scope:  nuke.Project,
-		Lister: &ComputeSSLCertificateLister{},
+		Name:     ComputeSSLCertificateResource,
+		Scope:    nuke.Project,
+		Resource: &ComputeSSLCertificate{},
+		Lister:   &ComputeSSLCertificateLister{},
 	})
 }
 

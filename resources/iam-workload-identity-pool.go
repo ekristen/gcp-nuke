@@ -16,9 +16,10 @@ const IAMWorkloadIdentityPoolResource = "IAMWorkloadIdentityPool"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   IAMWorkloadIdentityPoolResource,
-		Scope:  nuke.Project,
-		Lister: &IAMWorkloadIdentityPoolLister{},
+		Name:     IAMWorkloadIdentityPoolResource,
+		Scope:    nuke.Project,
+		Resource: &IAMWorkloadIdentityPool{},
+		Lister:   &IAMWorkloadIdentityPoolLister{},
 	})
 }
 

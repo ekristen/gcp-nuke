@@ -24,9 +24,10 @@ const ComputeDiskResource = "ComputeDisk"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   ComputeDiskResource,
-		Scope:  nuke.Project,
-		Lister: &ComputeDiskLister{},
+		Name:     ComputeDiskResource,
+		Scope:    nuke.Project,
+		Resource: &ComputeDisk{},
+		Lister:   &ComputeDiskLister{},
 	})
 }
 

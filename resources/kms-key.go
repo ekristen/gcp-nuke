@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/gotidy/ptr"
 	"strings"
 
+	"github.com/gotidy/ptr"
 	"github.com/sirupsen/logrus"
 
 	"google.golang.org/api/iterator"
@@ -25,9 +25,10 @@ const KMSKeyResource = "KMSKey"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   KMSKeyResource,
-		Scope:  nuke.Project,
-		Lister: &KMSKeyLister{},
+		Name:     KMSKeyResource,
+		Scope:    nuke.Project,
+		Resource: &KMSKey{},
+		Lister:   &KMSKeyLister{},
 	})
 }
 

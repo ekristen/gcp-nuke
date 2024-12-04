@@ -24,9 +24,10 @@ const VPCRouteResource = "VPCRoute"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   VPCRouteResource,
-		Scope:  nuke.Project,
-		Lister: &VPCRouteLister{},
+		Name:     VPCRouteResource,
+		Scope:    nuke.Project,
+		Resource: &VPCRoute{},
+		Lister:   &VPCRouteLister{},
 	})
 }
 

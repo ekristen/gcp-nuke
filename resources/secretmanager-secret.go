@@ -26,9 +26,10 @@ const SecretManagerSecretResource = "SecretManagerSecret"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   SecretManagerSecretResource,
-		Scope:  nuke.Project,
-		Lister: &SecretManagerSecretLister{},
+		Name:     SecretManagerSecretResource,
+		Scope:    nuke.Project,
+		Resource: &SecretManagerSecret{},
+		Lister:   &SecretManagerSecretLister{},
 	})
 }
 

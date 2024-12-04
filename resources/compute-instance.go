@@ -22,9 +22,10 @@ const ComputeInstanceResource = "ComputeInstance"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   ComputeInstanceResource,
-		Scope:  nuke.Project,
-		Lister: &ComputeInstanceLister{},
+		Name:     ComputeInstanceResource,
+		Scope:    nuke.Project,
+		Resource: &ComputeInstance{},
+		Lister:   &ComputeInstanceLister{},
 	})
 }
 

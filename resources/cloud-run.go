@@ -25,9 +25,10 @@ const CloudRunResource = "CloudRun"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   CloudRunResource,
-		Scope:  nuke.Project,
-		Lister: &CloudRunLister{},
+		Name:     CloudRunResource,
+		Scope:    nuke.Project,
+		Resource: &CloudRun{},
+		Lister:   &CloudRunLister{},
 	})
 }
 
@@ -87,8 +88,8 @@ type CloudRun struct {
 	Project  *string
 	Region   *string
 	FullName *string
-	Name     *string
-	Labels   map[string]string `property:"tagPrefix=label"`
+	Name     *string           `description:"The name of the cloud run"`
+	Labels   map[string]string `property:"tagPrefix=label" description:"The labels associated with the cloud run"`
 }
 
 func (r *CloudRun) Filter() error {

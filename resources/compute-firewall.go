@@ -22,9 +22,10 @@ const ComputeFirewallResource = "ComputeFirewall"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   ComputeFirewallResource,
-		Scope:  nuke.Project,
-		Lister: &ComputeFirewallLister{},
+		Name:     ComputeFirewallResource,
+		Scope:    nuke.Project,
+		Resource: &ComputeFirewall{},
+		Lister:   &ComputeFirewallLister{},
 	})
 }
 

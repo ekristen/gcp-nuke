@@ -24,9 +24,10 @@ const ComputeForwardingRuleResource = "ComputeForwardingRule"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   ComputeForwardingRuleResource,
-		Scope:  nuke.Project,
-		Lister: &ComputeForwardingRuleLister{},
+		Name:     ComputeForwardingRuleResource,
+		Scope:    nuke.Project,
+		Resource: &ComputeForwardingRule{},
+		Lister:   &ComputeForwardingRuleLister{},
 	})
 }
 
