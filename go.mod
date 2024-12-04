@@ -8,8 +8,8 @@ require (
 	cloud.google.com/go/container v1.42.0
 	cloud.google.com/go/firestore v1.17.0
 	cloud.google.com/go/functions v1.19.2
-	cloud.google.com/go/iam v1.2.2
-	cloud.google.com/go/kms v1.20.1
+	cloud.google.com/go/iam v1.3.0
+	cloud.google.com/go/kms v1.20.2
 	cloud.google.com/go/run v1.8.0
 	cloud.google.com/go/secretmanager v1.14.2
 	cloud.google.com/go/storage v1.47.0
