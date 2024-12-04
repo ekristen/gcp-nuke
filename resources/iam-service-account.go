@@ -26,9 +26,10 @@ const IAMServiceAccountResource = "IAMServiceAccount"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   IAMServiceAccountResource,
-		Scope:  nuke.Project,
-		Lister: &IAMServiceAccountLister{},
+		Name:     IAMServiceAccountResource,
+		Scope:    nuke.Project,
+		Resource: &IAMServiceAccount{},
+		Lister:   &IAMServiceAccountLister{},
 		Settings: []string{
 			"DeleteDefaultServiceAccounts",
 		},

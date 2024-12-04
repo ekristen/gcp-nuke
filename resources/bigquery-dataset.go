@@ -21,9 +21,10 @@ const BigQueryDatasetResource = "BigQueryDataset"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   BigQueryDatasetResource,
-		Scope:  nuke.Project,
-		Lister: &BigQueryDatasetLister{},
+		Name:     BigQueryDatasetResource,
+		Scope:    nuke.Project,
+		Resource: &BigQueryDataset{},
+		Lister:   &BigQueryDatasetLister{},
 	})
 }
 
@@ -88,8 +89,8 @@ type BigQueryDataset struct {
 	project  *string
 	region   *string
 	dataset  *bigquery.Dataset
-	Name     *string
-	Location *string
+	Name     *string           `description:"The name of the dataset"`
+	Location *string           `description:"The location of the dataset"`
 	Labels   map[string]string `property:"tagPrefix=label"`
 }
 

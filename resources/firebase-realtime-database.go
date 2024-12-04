@@ -25,9 +25,10 @@ const FirebaseRealtimeDatabaseResource = "FirebaseRealtimeDatabase"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   FirebaseRealtimeDatabaseResource,
-		Scope:  nuke.Project,
-		Lister: &FirebaseRealtimeDatabaseLister{},
+		Name:     FirebaseRealtimeDatabaseResource,
+		Scope:    nuke.Project,
+		Resource: &FirebaseRealtimeDatabase{},
+		Lister:   &FirebaseRealtimeDatabaseLister{},
 		Settings: []string{
 			"EmptyDefaultDatabase",
 		},

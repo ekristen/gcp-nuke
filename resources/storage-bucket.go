@@ -26,8 +26,9 @@ const StorageBucketResource = "StorageBucket"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:  StorageBucketResource,
-		Scope: nuke.Project,
+		Name:     StorageBucketResource,
+		Scope:    nuke.Project,
+		Resource: &StorageBucket{},
 		Lister: &StorageBucketLister{
 			multiRegion: make(map[string]string),
 		},

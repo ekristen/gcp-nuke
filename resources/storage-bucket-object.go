@@ -22,9 +22,10 @@ const StorageBucketObjectResource = "StorageBucketObject"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   StorageBucketObjectResource,
-		Scope:  nuke.Project,
-		Lister: &StorageBucketObjectLister{},
+		Name:     StorageBucketObjectResource,
+		Scope:    nuke.Project,
+		Resource: &StorageBucketObject{},
+		Lister:   &StorageBucketObjectLister{},
 	})
 }
 

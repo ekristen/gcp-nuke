@@ -24,9 +24,10 @@ const ComputeBackendServiceResource = "ComputeBackendService"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   ComputeBackendServiceResource,
-		Scope:  nuke.Project,
-		Lister: &ComputeBackendServiceLister{},
+		Name:     ComputeBackendServiceResource,
+		Scope:    nuke.Project,
+		Resource: &ComputeBackendService{},
+		Lister:   &ComputeBackendServiceLister{},
 	})
 }
 

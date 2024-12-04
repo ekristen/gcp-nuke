@@ -90,3 +90,44 @@ nav:
       - Resources: resources.md
       - Releases: releases.md
       - Testing: testing.md
+  - Resources:
+      - Big Query Dataset: resources/big-query-dataset.md
+      - Cloud Function: resources/cloud-function.md
+      - Cloud Function 2: resources/cloud-function-2.md
+      - Cloud Run: resources/cloud-run.md
+      - Cloud SQL Instance: resources/cloud-sql-instance.md
+      - Compute Backend Service: resources/compute-backend-service.md
+      - Compute Common Instance Metadata: resources/compute-common-instance-metadata.md
+      - Compute Disk: resources/compute-disk.md
+      - Compute Firewall: resources/compute-firewall.md
+      - Compute Forwarding Rule: resources/compute-forwarding-rule.md
+      - Compute Instance: resources/compute-instance.md
+      - Compute Packet Mirroring: resources/compute-packet-mirroring.md
+      - Compute SSL Certificate: resources/compute-ssl-certificate.md
+      - Compute Security Policy: resources/compute-security-policy.md
+      - Compute Target HTTP Proxy: resources/compute-target-http-proxy.md
+      - Compute Target HTTPS Proxy: resources/compute-target-https-proxy.md
+      - Compute URL Map: resources/compute-url-map.md
+      - DNS Managed Zone: resources/dns-managed-zone.md
+      - Firebase Auth Provider: resources/firebase-auth-provider.md
+      - Firebase OAuth Provider: resources/firebase-oauth-provider.md
+      - Firebase Realtime Database: resources/firebase-realtime-database.md
+      - Firebase Web App: resources/firebase-web-app.md
+      - Firestore Database: resources/firestore-database.md
+      - GKE Cluster: resources/gke-cluster.md
+      - IAM Policy Binding: resources/iam-policy-binding.md
+      - IAM Role: resources/iam-role.md
+      - IAM Service Account: resources/iam-service-account.md
+      - IAM Service Account Key: resources/iam-service-account-key.md
+      - IAM Workload Identity Pool: resources/iam-workload-identity-pool.md
+      - IAM Workload Identity Pool Provider: resources/iam-workload-identity-pool-provider.md
+      - KMS Key: resources/kms-key.md
+      - Secret Manager Secret: resources/secret-manager-secret.md
+      - Storage Bucket: resources/storage-bucket.md
+      - Storage Bucket Object: resources/storage-bucket-object.md
+      - VPC Global IP Address: resources/vpc-global-ip-address.md
+      - VPC IP Address: resources/vpc-ip-address.md
+      - VPC Network: resources/vpc-network.md
+      - VPC Route: resources/vpc-route.md
+      - VPC Router: resources/vpc-router.md
+      - VPC Subnet: resources/vpc-subnet.md

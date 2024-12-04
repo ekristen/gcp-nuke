@@ -23,9 +23,10 @@ const ComputePacketMirroringResource = "ComputePacketMirroring"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   ComputePacketMirroringResource,
-		Scope:  nuke.Project,
-		Lister: &ComputePacketMirroringLister{},
+		Name:     ComputePacketMirroringResource,
+		Scope:    nuke.Project,
+		Resource: &ComputePacketMirroring{},
+		Lister:   &ComputePacketMirroringLister{},
 	})
 }
 

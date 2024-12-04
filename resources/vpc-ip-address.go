@@ -24,9 +24,10 @@ const VPCIPAddressResource = "VPCIPAddress"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   VPCIPAddressResource,
-		Scope:  nuke.Project,
-		Lister: &VPCIPAddressLister{},
+		Name:     VPCIPAddressResource,
+		Scope:    nuke.Project,
+		Resource: &VPCIPAddress{},
+		Lister:   &VPCIPAddressLister{},
 	})
 }
 

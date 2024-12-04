@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/gotidy/ptr"
 	"github.com/sirupsen/logrus"
-	"strings"
 
 	"google.golang.org/api/iterator"
 
@@ -24,9 +25,10 @@ const VPCSubnetResource = "VPCSubnet"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   VPCSubnetResource,
-		Scope:  nuke.Project,
-		Lister: &VPCSubnetLister{},
+		Name:     VPCSubnetResource,
+		Scope:    nuke.Project,
+		Resource: &VPCSubnet{},
+		Lister:   &VPCSubnetLister{},
 	})
 }
 

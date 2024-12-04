@@ -21,9 +21,10 @@ const GKEClusterResource = "GKECluster"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   GKEClusterResource,
-		Scope:  nuke.Project,
-		Lister: &GKEClusterLister{},
+		Name:     GKEClusterResource,
+		Scope:    nuke.Project,
+		Resource: &GKECluster{},
+		Lister:   &GKEClusterLister{},
 	})
 }
 

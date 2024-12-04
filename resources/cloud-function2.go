@@ -25,9 +25,10 @@ const CloudFunction2Resource = "CloudFunction2"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   CloudFunction2Resource,
-		Scope:  nuke.Project,
-		Lister: &CloudFunction2Lister{},
+		Name:     CloudFunction2Resource,
+		Scope:    nuke.Project,
+		Resource: &CloudFunction2{},
+		Lister:   &CloudFunction2Lister{},
 	})
 }
 

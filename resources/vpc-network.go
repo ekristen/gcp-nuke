@@ -19,9 +19,10 @@ const VPCNetworkResource = "VPCNetwork"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   VPCNetworkResource,
-		Scope:  nuke.Project,
-		Lister: &VPCNetworkLister{},
+		Name:     VPCNetworkResource,
+		Scope:    nuke.Project,
+		Resource: &VPCNetwork{},
+		Lister:   &VPCNetworkLister{},
 		DependsOn: []string{
 			VPCSubnetResource,
 			VPCRouteResource,

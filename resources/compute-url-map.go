@@ -24,9 +24,10 @@ const ComputeURLMapResource = "ComputeURLMap"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   ComputeURLMapResource,
-		Scope:  nuke.Project,
-		Lister: &ComputeURLMapLister{},
+		Name:     ComputeURLMapResource,
+		Scope:    nuke.Project,
+		Resource: &ComputeURLMap{},
+		Lister:   &ComputeURLMapLister{},
 	})
 }
 

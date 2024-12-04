@@ -19,9 +19,10 @@ const CloudSQLInstanceResource = "CloudSQLInstance"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   CloudSQLInstanceResource,
-		Scope:  nuke.Project,
-		Lister: &CloudSQLInstanceLister{},
+		Name:     CloudSQLInstanceResource,
+		Scope:    nuke.Project,
+		Resource: &CloudSQLInstance{},
+		Lister:   &CloudSQLInstanceLister{},
 		Settings: []string{
 			"DisableDeletionProtection",
 		},
@@ -81,11 +82,11 @@ type CloudSQLInstance struct {
 
 	project         *string
 	region          *string
-	Name            *string
-	State           *string
-	Labels          map[string]string `property:"tagPrefix=label"`
-	CreationDate    *string
-	DatabaseVersion *string
+	Name            *string           `description:"Name of the Cloud SQL instance"`
+	State           *string           `description:"The current serving state of the Cloud SQL instance"`
+	Labels          map[string]string `property:"tagPrefix=label" description:"The user-defined labels associated with this Cloud SQL instance"`
+	CreationDate    *string           `description:"The time when the instance was created"`
+	DatabaseVersion *string           `description:"The database engine type and version"`
 
 	instanceSettings *sqladmin.Settings
 }

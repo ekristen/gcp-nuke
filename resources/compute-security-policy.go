@@ -24,9 +24,10 @@ const ComputeSecurityPolicyResource = "ComputeSecurityPolicy"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   ComputeSecurityPolicyResource,
-		Scope:  nuke.Project,
-		Lister: &ComputeSecurityPolicyLister{},
+		Name:     ComputeSecurityPolicyResource,
+		Scope:    nuke.Project,
+		Resource: &ComputeSecurityPolicy{},
+		Lister:   &ComputeSecurityPolicyLister{},
 	})
 }
 

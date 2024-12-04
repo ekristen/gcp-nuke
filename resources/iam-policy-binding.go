@@ -19,9 +19,10 @@ const IAMPolicyBindingResource = "IAMPolicyBinding"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:   IAMPolicyBindingResource,
-		Scope:  nuke.Project,
-		Lister: &IAMPolicyBindingLister{},
+		Name:     IAMPolicyBindingResource,
+		Scope:    nuke.Project,
+		Resource: &IAMPolicyBinding{},
+		Lister:   &IAMPolicyBindingLister{},
 		Settings: []string{
 			"DeleteGoogleManaged",
 		},
