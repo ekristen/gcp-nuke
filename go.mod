@@ -3,7 +3,7 @@ module github.com/ekristen/gcp-nuke
 go 1.22
 
 require (
-	cloud.google.com/go/bigquery v1.64.0
+	cloud.google.com/go/bigquery v1.65.0
 	cloud.google.com/go/compute v1.29.0
 	cloud.google.com/go/container v1.42.0
 	cloud.google.com/go/firestore v1.17.0
@@ -12,7 +12,7 @@ require (
 	cloud.google.com/go/kms v1.20.2
 	cloud.google.com/go/run v1.8.0
 	cloud.google.com/go/secretmanager v1.14.2
-	cloud.google.com/go/storage v1.47.0
+	cloud.google.com/go/storage v1.48.0
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/ekristen/libnuke v0.21.8
 	github.com/fatih/camelcase v1.0.0
@@ -90,7 +90,7 @@ require (
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241113202542-65e8d215514f // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241118233622-e639e219e697 // indirect
-	google.golang.org/grpc v1.67.1 // indirect
+	google.golang.org/grpc v1.67.2 // indirect
 	google.golang.org/grpc/stats/opentelemetry v0.0.0-20240907200651-3ffb98b2c93a // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
