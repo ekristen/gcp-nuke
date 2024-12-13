@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	cloud.google.com/go/bigquery v1.65.0
-	cloud.google.com/go/compute v1.30.0
+	cloud.google.com/go/compute v1.31.0
 	cloud.google.com/go/container v1.42.0
 	cloud.google.com/go/firestore v1.17.0
 	cloud.google.com/go/functions v1.19.2
@@ -78,7 +78,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.29.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.29.0 // indirect
 	go.opentelemetry.io/otel/trace v1.29.0 // indirect
-	golang.org/x/crypto v0.30.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/mod v0.20.0 // indirect
 	golang.org/x/net v0.32.0 // indirect
