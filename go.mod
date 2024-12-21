@@ -9,10 +9,10 @@ require (
 	cloud.google.com/go/firestore v1.17.0
 	cloud.google.com/go/functions v1.19.2
 	cloud.google.com/go/iam v1.3.0
-	cloud.google.com/go/kms v1.20.2
+	cloud.google.com/go/kms v1.20.3
 	cloud.google.com/go/run v1.8.0
 	cloud.google.com/go/secretmanager v1.14.2
-	cloud.google.com/go/storage v1.48.0
+	cloud.google.com/go/storage v1.49.0
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/ekristen/libnuke v0.22.0
 	github.com/fatih/camelcase v1.0.0
