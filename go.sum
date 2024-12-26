@@ -94,6 +94,8 @@ github.com/ekristen/libnuke v0.21.8 h1:JyMyMUbh/ti8r1wjXe5B8h8xhPibFN2tu9zVlkn1v
 github.com/ekristen/libnuke v0.21.8/go.mod h1:+hh3UCSxmkfBweQJv9pa5twY82n7MhO4DK+AA+oUoTM=
 github.com/ekristen/libnuke v0.22.0 h1:x5ZxadNiH0DZJOtdxVDKZaaBymojdi65Pi+k3ITfv7M=
 github.com/ekristen/libnuke v0.22.0/go.mod h1:+hh3UCSxmkfBweQJv9pa5twY82n7MhO4DK+AA+oUoTM=
+github.com/ekristen/libnuke v0.24.0 h1:DCzkOwT+n/2G37KoNSlTOU1DoAVcBgtdaJSNpQl6NJw=
+github.com/ekristen/libnuke v0.24.0/go.mod h1:+hh3UCSxmkfBweQJv9pa5twY82n7MhO4DK+AA+oUoTM=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.4/go.mod h1:6rpuAdCZL397s3pYoYcLgu1mIlRU8Am5FuJP05cCM98=
