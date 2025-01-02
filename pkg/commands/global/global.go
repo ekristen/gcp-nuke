@@ -2,6 +2,7 @@ package global
 
 import (
 	"fmt"
+	"github.com/ekristen/libnuke/pkg/log"
 	"path"
 	"runtime"
 
@@ -30,6 +31,17 @@ func Flags() []cli.Flag {
 			Name:  "log-full-timestamp",
 			Usage: "force log output to always show full timestamp",
 		},
+		&cli.StringFlag{
+			Name:    "log-format",
+			Usage:   "log format",
+			Value:   "standard",
+			EnvVars: []string{"GCP_NUKE_LOG_FORMAT"},
+		},
+		&cli.BoolFlag{
+			Name:    "json",
+			Usage:   "output as json, shorthand for --log-format=json",
+			EnvVars: []string{"GCP_NUKE_LOG_FORMAT_JSON"},
+		},
 	}
 
 	return globalFlags
@@ -48,7 +60,29 @@ func Before(c *cli.Context) error {
 		}
 	}
 
-	logrus.SetFormatter(formatter)
+	logFormatter := &log.CustomFormatter{
+		FallbackFormatter: formatter,
+	}
+
+	if c.Bool("json") {
+		_ = c.Set("log-format", "json")
+	}
+
+	switch c.String("log-format") {
+	case "json":
+		logrus.SetFormatter(&logrus.JSONFormatter{
+			DisableHTMLEscape: true,
+		})
+		// note: this is a hack to remove the _handler key from the log output
+		logrus.AddHook(&StructuredHook{})
+	case "kv":
+		logrus.SetFormatter(&logrus.TextFormatter{
+			DisableColors: true,
+			FullTimestamp: true,
+		})
+	default:
+		logrus.SetFormatter(logFormatter)
+	}
 
 	switch c.String("log-level") {
 	case "trace":
@@ -62,6 +96,23 @@ func Before(c *cli.Context) error {
 	case "error":
 		logrus.SetLevel(logrus.ErrorLevel)
 	}
+
+	return nil
+}
+
+type StructuredHook struct {
+}
+
+func (h *StructuredHook) Levels() []logrus.Level {
+	return logrus.AllLevels
+}
+
+func (h *StructuredHook) Fire(e *logrus.Entry) error {
+	if e.Data == nil {
+		return nil
+	}
+
+	delete(e.Data, "_handler")
 
 	return nil
 }
