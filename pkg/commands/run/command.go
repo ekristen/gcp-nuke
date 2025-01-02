@@ -36,7 +36,9 @@ func execute(c *cli.Context) error {
 		return fmt.Errorf("no projects found")
 	}
 
-	logrus.Trace("preparing to run nuke")
+	logger := logrus.StandardLogger()
+
+	logger.Trace("preparing to run nuke")
 
 	params := &libnuke.Parameters{
 		Force:      c.Bool("no-prompt"),
@@ -50,8 +52,10 @@ func execute(c *cli.Context) error {
 	parsedConfig, err := libconfig.New(libconfig.Options{
 		Path:         c.Path("config"),
 		Deprecations: registry.GetDeprecatedResourceTypeMapping(),
+		Log:          logger.WithField("component", "config"),
 	})
 	if err != nil {
+		logger.Errorf("Failed to parse config file %s", c.Path("config"))
 		return err
 	}
 
@@ -67,6 +71,7 @@ func execute(c *cli.Context) error {
 	n := libnuke.New(params, filters, parsedConfig.Settings)
 
 	n.SetRunSleep(5 * time.Second)
+	n.SetLogger(logger.WithField("component", "libnuke"))
 	n.RegisterVersion(fmt.Sprintf("> %s", common.AppVersion.String()))
 
 	p := &nuke.Prompt{Parameters: params, GCP: gcp}
@@ -101,41 +106,44 @@ func execute(c *cli.Context) error {
 	if slices.Contains(parsedConfig.Regions, "all") {
 		parsedConfig.Regions = gcp.Regions
 
-		logrus.Info(
+		logger.Info(
 			`"all" detected in region list, only enabled regions and "global" will be used, all others ignored`)
 
 		if len(parsedConfig.Regions) > 1 {
-			logrus.Warnf(`additional regions defined along with "all", these will be ignored!`)
+			logger.Warnf(`additional regions defined along with "all", these will be ignored!`)
 		}
 
-		logrus.Infof("The following regions are enabled for the account (%d total):", len(parsedConfig.Regions))
+		logger.Infof("The following regions are enabled for the account (%d total):", len(parsedConfig.Regions))
 
 		printableRegions := make([]string, 0)
 		for i, region := range parsedConfig.Regions {
 			printableRegions = append(printableRegions, region)
 			if i%6 == 0 { // print 5 regions per line
-				logrus.Infof("> %s", strings.Join(printableRegions, ", "))
+				logger.Infof("> %s", strings.Join(printableRegions, ", "))
 				printableRegions = make([]string, 0)
 			} else if i == len(parsedConfig.Regions)-1 {
-				logrus.Infof("> %s", strings.Join(printableRegions, ", "))
+				logger.Infof("> %s", strings.Join(printableRegions, ", "))
 			}
 		}
 	}
 
 	// Register the scanners for each region that is defined in the configuration.
 	for _, regionName := range parsedConfig.Regions {
-		if err := n.RegisterScanner(nuke.Project, scanner.New(regionName, projectResourceTypes, &nuke.ListerOpts{
+		scannerActual := scanner.New(regionName, projectResourceTypes, &nuke.ListerOpts{
 			Project:       ptr.String(projectID),
 			Region:        ptr.String(regionName),
 			Zones:         gcp.GetZones(regionName),
 			EnabledAPIs:   gcp.GetEnabledAPIs(),
 			ClientOptions: gcp.GetClientOptions(),
-		})); err != nil {
+		})
+		scannerActual.SetLogger(logger)
+
+		if err := n.RegisterScanner(nuke.Project, scannerActual); err != nil {
 			return err
 		}
 	}
 
-	logrus.Debug("running ...")
+	logger.Debug("running ...")
 
 	return n.Run(c.Context)
 }
