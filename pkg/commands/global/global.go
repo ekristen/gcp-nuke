@@ -2,10 +2,10 @@ package global
 
 import (
 	"fmt"
-	"github.com/ekristen/libnuke/pkg/log"
 	"path"
 	"runtime"
 
+	"github.com/ekristen/libnuke/pkg/log"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
