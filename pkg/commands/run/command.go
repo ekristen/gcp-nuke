@@ -3,6 +3,7 @@ package run
 import (
 	"context"
 	"fmt"
+	"os"
 	"slices"
 	"strings"
 	"time"
@@ -37,6 +38,7 @@ func execute(c *cli.Context) error {
 	}
 
 	logger := logrus.StandardLogger()
+	logger.SetOutput(os.Stdout)
 
 	logger.Trace("preparing to run nuke")
 
