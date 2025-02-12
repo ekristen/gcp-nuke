@@ -69,6 +69,7 @@ func (l *ComputePacketMirroringLister) List(ctx context.Context, o interface{}) 
 			svc:     l.svc,
 			Name:    resp.Name,
 			project: opts.Project,
+			region:  opts.Region,
 		})
 	}
 
