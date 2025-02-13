@@ -6,7 +6,7 @@ ARG PROJECT_NAME
 RUN apk add --no-cache ca-certificates
 RUN addgroup -S ${PROJECT_NAME} && adduser -S ${PROJECT_NAME} -G ${PROJECT_NAME}
 
-FROM docker.io/library/golang:1.23 AS build
+FROM docker.io/library/golang:1.24 AS build
 ARG PROJECT_NAME
 COPY / /src
 WORKDIR /src
