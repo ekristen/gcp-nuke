@@ -1,6 +1,8 @@
 module github.com/ekristen/gcp-nuke
 
-go 1.22
+go 1.23.0
+
+toolchain go1.24.0
 
 require (
 	cloud.google.com/go/bigquery v1.65.0
@@ -22,7 +24,7 @@ require (
 	github.com/iancoleman/strcase v0.3.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli/v2 v2.27.5
-	golang.org/x/oauth2 v0.26.0
+	golang.org/x/oauth2 v0.27.0
 	golang.org/x/text v0.22.0
 	google.golang.org/api v0.215.0
 	google.golang.org/genproto v0.0.0-20241118233622-e639e219e697
