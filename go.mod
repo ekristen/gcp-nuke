@@ -5,16 +5,16 @@ go 1.23.0
 toolchain go1.24.1
 
 require (
-	cloud.google.com/go/bigquery v1.65.0
-	cloud.google.com/go/compute v1.31.0
-	cloud.google.com/go/container v1.42.0
-	cloud.google.com/go/firestore v1.17.0
-	cloud.google.com/go/functions v1.19.2
-	cloud.google.com/go/iam v1.3.0
-	cloud.google.com/go/kms v1.20.2
-	cloud.google.com/go/run v1.8.0
-	cloud.google.com/go/secretmanager v1.14.2
-	cloud.google.com/go/storage v1.48.0
+	cloud.google.com/go/bigquery v1.66.2
+	cloud.google.com/go/compute v1.34.0
+	cloud.google.com/go/container v1.42.2
+	cloud.google.com/go/firestore v1.18.0
+	cloud.google.com/go/functions v1.19.3
+	cloud.google.com/go/iam v1.4.1
+	cloud.google.com/go/kms v1.21.0
+	cloud.google.com/go/run v1.9.1
+	cloud.google.com/go/secretmanager v1.14.5
+	cloud.google.com/go/storage v1.50.0
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/ekristen/libnuke v0.24.3
 	github.com/fatih/camelcase v1.0.0
