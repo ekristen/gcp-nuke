@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/gotidy/ptr"
 	"github.com/sirupsen/logrus"
@@ -42,11 +43,13 @@ func (l *ComputeInstanceGroupLister) List(ctx context.Context, o interface{}) ([
 		return resources, err
 	}
 
+	// List zonal instance groups
 	if l.svc == nil {
 		var err error
 		l.svc, err = compute.NewInstanceGroupsRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
-			return nil, err
+			logrus.WithError(err).Error("failed to create zonal instance groups client")
+			return nil, fmt.Errorf("failed to create zonal instance groups client: %v", err)
 		}
 	}
 
@@ -64,7 +67,7 @@ func (l *ComputeInstanceGroupLister) List(ctx context.Context, o interface{}) ([
 				break
 			}
 			if err != nil {
-				logrus.WithError(err).Error("unable to iterate compute instance groups")
+				logrus.WithError(err).WithField("zone", zone).Error("unable to iterate zonal compute instance groups")
 				break
 			}
 
@@ -84,19 +87,27 @@ func (l *ComputeInstanceGroupLister) List(ctx context.Context, o interface{}) ([
 type ComputeInstanceGroup struct {
 	svc               *compute.InstanceGroupsClient
 	Project           *string
-	Region            *string
 	Name              *string
 	Zone              *string
 	CreationTimestamp *string
 }
 
 func (r *ComputeInstanceGroup) Remove(ctx context.Context) error {
+	// Zonal instance group
 	_, err := r.svc.Delete(ctx, &computepb.DeleteInstanceGroupRequest{
 		Project:       *r.Project,
 		Zone:          *r.Zone,
 		InstanceGroup: *r.Name,
 	})
-	return err
+	if err != nil {
+		logrus.WithError(err).WithFields(logrus.Fields{
+			"project": *r.Project,
+			"zone":    *r.Zone,
+			"name":    *r.Name,
+		}).Error("failed to delete zonal instance group")
+		return fmt.Errorf("failed to delete zonal instance group: %v", err)
+	}
+	return nil
 }
 
 func (r *ComputeInstanceGroup) Properties() types.Properties {
