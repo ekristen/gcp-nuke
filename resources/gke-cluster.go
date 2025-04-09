@@ -3,10 +3,11 @@ package resources
 import (
 	"context"
 	"fmt"
-	"github.com/gotidy/ptr"
 	"strings"
 
-	"cloud.google.com/go/container/apiv1"
+	"github.com/gotidy/ptr"
+
+	container "cloud.google.com/go/container/apiv1"
 	"cloud.google.com/go/container/apiv1/containerpb"
 
 	liberror "github.com/ekristen/libnuke/pkg/errors"
@@ -69,6 +70,12 @@ func (l *GKEClusterLister) List(ctx context.Context, o interface{}) ([]resource.
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
+
+	// Skip if the region is "global" since GKE doesn't support global location
+	if *opts.Region == "global" {
+		return resources, liberror.ErrSkipRequest("GKE clusters are not supported in global location")
+	}
+
 	if err := opts.BeforeList(nuke.Regional, "container.googleapis.com"); err != nil {
 		return resources, err
 	}
