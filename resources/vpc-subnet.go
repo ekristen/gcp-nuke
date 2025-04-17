@@ -14,6 +14,7 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 
+	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/types"
@@ -69,7 +70,7 @@ func (l *VPCSubnetLister) List(ctx context.Context, o interface{}) ([]resource.R
 			break
 		}
 		if err != nil {
-			logrus.WithError(err).Error("unable to iterate networks")
+			logrus.WithError(err).Error("unable to iterate subnetworks")
 			break
 		}
 
@@ -93,6 +94,7 @@ func (l *VPCSubnetLister) List(ctx context.Context, o interface{}) ([]resource.R
 
 type VPCSubnet struct {
 	svc       *compute.SubnetworksClient
+	removeOp  *compute.Operation
 	project   *string
 	region    *string
 	Name      *string
@@ -109,7 +111,8 @@ func (r *VPCSubnet) Filter() error {
 }
 
 func (r *VPCSubnet) Remove(ctx context.Context) error {
-	_, err := r.svc.Delete(ctx, &computepb.DeleteSubnetworkRequest{
+	var err error
+	r.removeOp, err = r.svc.Delete(ctx, &computepb.DeleteSubnetworkRequest{
 		Project:    *r.project,
 		Region:     *r.region,
 		Subnetwork: *r.Name,
@@ -123,4 +126,33 @@ func (r *VPCSubnet) Properties() types.Properties {
 
 func (r *VPCSubnet) String() string {
 	return *r.Name
+}
+
+// HandleWait is a hook into the libnuke resource lifecycle to allow for waiting on a resource to be removed
+// because certain GCP resources are async and require waiting for the operation to complete, this allows for
+// polling of the operation until it is complete. Otherwise, remove is only called once and the resource is
+// left in a permanent wait if the operation fails.
+func (r *VPCSubnet) HandleWait(ctx context.Context) error {
+	if r.removeOp == nil {
+		return nil
+	}
+
+	if err := r.removeOp.Poll(ctx); err != nil {
+		logrus.WithError(err).Trace("subnet remove op polling encountered error")
+		return err
+	}
+
+	if !r.removeOp.Done() {
+		return liberror.ErrWaitResource("waiting for operation to complete")
+	}
+
+	if r.removeOp.Done() {
+		if r.removeOp.Proto().GetError() != nil {
+			removeErr := fmt.Errorf("delete error on '%s': %s", r.removeOp.Proto().GetTargetLink(), r.removeOp.Proto().GetHttpErrorMessage())
+			logrus.WithError(removeErr).WithField("status_code", r.removeOp.Proto().GetError()).Errorf("unable to delete %s", VPCSubnetResource)
+			return removeErr
+		}
+	}
+
+	return nil
 }
