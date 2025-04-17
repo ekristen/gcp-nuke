@@ -1,11 +1,12 @@
 package resources
 
 import (
-	compute "cloud.google.com/go/compute/apiv1"
-	"cloud.google.com/go/compute/apiv1/computepb"
 	"context"
 	"errors"
 	"fmt"
+
+	compute "cloud.google.com/go/compute/apiv1"
+	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/ekristen/gcp-nuke/pkg/nuke"
 	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
@@ -26,6 +27,7 @@ func init() {
 		DependsOn: []string{
 			VPCSubnetResource,
 			VPCRouteResource,
+			VPCRouterResource,
 		},
 	})
 }
