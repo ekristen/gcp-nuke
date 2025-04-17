@@ -27,6 +27,9 @@ func init() {
 		Scope:    nuke.Project,
 		Resource: &ComputeRegionalInstanceGroup{},
 		Lister:   &ComputeRegionalInstanceGroupLister{},
+		DependsOn: []string{
+			ComputeInstanceResource,
+		},
 	})
 }
 

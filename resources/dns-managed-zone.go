@@ -22,6 +22,9 @@ func init() {
 		Scope:    nuke.Project,
 		Resource: &DNSManagedZone{},
 		Lister:   &DNSManagedZoneLister{},
+		DependsOn: []string{
+			DNSRecordResource,
+		},
 	})
 }
 
