@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gotidy/ptr"
+	"github.com/sirupsen/logrus"
 
 	container "cloud.google.com/go/container/apiv1"
 	"cloud.google.com/go/container/apiv1/containerpb"
@@ -71,10 +72,10 @@ func (l *GKEClusterLister) List(ctx context.Context, o interface{}) ([]resource.
 
 	opts := o.(*nuke.ListerOpts)
 
-	// Skip if the region is "global" since GKE doesn't support global location
-	if *opts.Region == "global" {
-		return resources, liberror.ErrSkipRequest("GKE clusters are not supported in global location")
-	}
+	logrus.WithFields(logrus.Fields{
+		"region":        *opts.Region,
+		"resource_type": "GKECluster",
+	}).Debug("GKE Lister - Region value")
 
 	if err := opts.BeforeList(nuke.Regional, "container.googleapis.com"); err != nil {
 		return resources, err
