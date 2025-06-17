@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.16-labs
+# syntax=docker/dockerfile:1.17-labs
 ARG PROJECT_NAME=gcp-nuke
 
 FROM cgr.dev/chainguard/wolfi-base:latest as base
