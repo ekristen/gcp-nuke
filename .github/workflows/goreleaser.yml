@@ -33,7 +33,7 @@ jobs:
       - name: setup-go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.24.x
+          go-version: 1.25.x
       - uses: anchore/sbom-action/download-syft@v0.20.4
       - name: setup qemu
         id: qemu
