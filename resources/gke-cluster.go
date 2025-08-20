@@ -53,12 +53,13 @@ func (l *GKEClusterLister) ListClusters(ctx context.Context, project, location s
 		}
 
 		resources = append(resources, &GKECluster{
-			svc:     l.svc,
-			Project: ptr.String(project),
-			Region:  ptr.String(region),
-			Name:    ptr.String(cluster.Name),
-			Zone:    ptr.String(zone),
-			Status:  ptr.String(cluster.Status.String()),
+			svc:               l.svc,
+			Project:           ptr.String(project),
+			Region:            ptr.String(region),
+			Name:              ptr.String(cluster.Name),
+			Zone:              ptr.String(zone),
+			Status:            ptr.String(cluster.Status.String()),
+			CreationTimestamp: ptr.String(cluster.CreateTime),
 		})
 	}
 
@@ -96,13 +97,14 @@ func (l *GKEClusterLister) List(ctx context.Context, o interface{}) ([]resource.
 }
 
 type GKECluster struct {
-	svc      *container.ClusterManagerClient
-	removeOp *containerpb.Operation
-	Project  *string
-	Region   *string
-	Name     *string
-	Zone     *string
-	Status   *string
+	svc               *container.ClusterManagerClient
+	removeOp          *containerpb.Operation
+	Project           *string
+	Region            *string
+	Name              *string
+	Zone              *string
+	Status            *string
+	CreationTimestamp *string
 }
 
 func (r *GKECluster) Remove(ctx context.Context) error {
