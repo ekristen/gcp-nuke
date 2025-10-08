@@ -24,6 +24,7 @@ require (
 	github.com/iancoleman/strcase v0.3.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli/v2 v2.27.7
+	github.com/urfave/cli/v3 v3.4.1
 	golang.org/x/oauth2 v0.32.0
 	golang.org/x/text v0.30.0
 	google.golang.org/api v0.215.0
