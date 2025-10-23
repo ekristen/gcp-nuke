@@ -34,7 +34,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: 1.25.x
-      - uses: anchore/sbom-action/download-syft@v0.20.8
+      - uses: anchore/sbom-action/download-syft@v0.20.9
       - name: setup qemu
         id: qemu
         uses: docker/setup-qemu-action@v3
