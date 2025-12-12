@@ -96,7 +96,7 @@ jobs:
           docker images --format "{{.Repository}}:{{.Tag}}" | grep "${{ github.repository }}" | xargs -L1 docker push
       - name: upload artifacts
         if: github.event.pull_request.base.ref == 'main'
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: binaries
           path: releases/*.tar.gz
