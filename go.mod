@@ -22,7 +22,7 @@ require (
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/gotidy/ptr v1.4.0
 	github.com/iancoleman/strcase v0.3.0
-	github.com/sirupsen/logrus v1.9.3
+	github.com/sirupsen/logrus v1.9.4
 	github.com/urfave/cli/v2 v2.27.7
 	golang.org/x/oauth2 v0.34.0
 	golang.org/x/text v0.33.0
