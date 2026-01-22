@@ -2,7 +2,7 @@ module github.com/ekristen/gcp-nuke
 
 go 1.24.0
 
-toolchain go1.24.6
+toolchain go1.25.6
 
 require (
 	cloud.google.com/go/bigquery v1.65.0
