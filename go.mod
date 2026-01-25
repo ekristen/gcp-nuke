@@ -3,7 +3,7 @@ module github.com/ekristen/gcp-nuke
 go 1.25.6
 
 require (
-	cloud.google.com/go/aiplatform v1.113.0
+	cloud.google.com/go/aiplatform v1.114.0
 	cloud.google.com/go/alloydb v1.20.0
 	cloud.google.com/go/artifactregistry v1.19.0
 	cloud.google.com/go/bigquery v1.72.0
@@ -20,7 +20,7 @@ require (
 	cloud.google.com/go/kms v1.25.0
 	cloud.google.com/go/memcache v1.11.7
 	cloud.google.com/go/memorystore v0.4.0
-	cloud.google.com/go/networkconnectivity v1.19.1
+	cloud.google.com/go/networkconnectivity v1.20.0
 	cloud.google.com/go/orchestration v1.11.10
 	cloud.google.com/go/pubsub/v2 v2.3.0
 	cloud.google.com/go/redis v1.18.3

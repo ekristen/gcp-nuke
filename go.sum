@@ -5,6 +5,8 @@ cloud.google.com/go v0.123.0 h1:2NAUJwPR47q+E35uaJeYoNhuNEM9kM8SjgRgdeOJUSE=
 cloud.google.com/go v0.123.0/go.mod h1:xBoMV08QcqUGuPW65Qfm1o9Y4zKZBpGS+7bImXLTAZU=
 cloud.google.com/go/aiplatform v1.113.0 h1:XCLZ5/LcQzF/hMn5wO19751IspRjG+c/S4FWJRLkhMg=
 cloud.google.com/go/aiplatform v1.113.0/go.mod h1:B8fcWtC2vSadapIQqweJrTATJe/odNDjk2uIA5kmXog=
+cloud.google.com/go/aiplatform v1.114.0 h1:TCrSLci+NFEAx0PZMv8btGe5j68RivArmDJbBLIc/3o=
+cloud.google.com/go/aiplatform v1.114.0/go.mod h1:W5yMrpIuHG/CSK8iF7XnwIfCJu6dcLRQ0cTqGR5vwwE=
 cloud.google.com/go/alloydb v1.20.0 h1:p9SbcJhdi6s39SAIpz4lpJJTkfboSQUCwDd7go0bJ6o=
 cloud.google.com/go/alloydb v1.20.0/go.mod h1:ZwDNJOn6Z2uzzwDIlS6ctpM/EgMD1LqPzI+/ynJNaIU=
 cloud.google.com/go/artifactregistry v1.19.0 h1:DaOHWeURq93K27/6Sa2fy3rJoftrVXKeT3tonM4fxtI=
@@ -53,6 +55,8 @@ cloud.google.com/go/monitoring v1.24.3 h1:dde+gMNc0UhPZD1Azu6at2e79bfdztVDS5lvhO
 cloud.google.com/go/monitoring v1.24.3/go.mod h1:nYP6W0tm3N9H/bOw8am7t62YTzZY+zUeQ+Bi6+2eonI=
 cloud.google.com/go/networkconnectivity v1.19.1 h1:n0IzhdgSNzIKQygWwDV8yKRXkZpX3FsjCYFbO9iNHPU=
 cloud.google.com/go/networkconnectivity v1.19.1/go.mod h1:Q5v6uNNNz8BP232uuXM66XgWML9m379xhwv58Y+8Kb0=
+cloud.google.com/go/networkconnectivity v1.20.0 h1:A0uRcZJdq7F6LYWcc2NIea3h0i7p6kY1/CyLavOTG0I=
+cloud.google.com/go/networkconnectivity v1.20.0/go.mod h1:9MzGwD4ljiq+Z2Pg3ue27OEewCuHz7IUfw1fITrIdSw=
 cloud.google.com/go/orchestration v1.11.10 h1:TVWDiZyvcflLFeTQH2GexHmtJ6iUSjzr0zsSiT338dA=
 cloud.google.com/go/orchestration v1.11.10/go.mod h1:tz7m1s4wNEvhNNIM3JOMH0lYxBssu9+7si5MCPw/4/0=
 cloud.google.com/go/pubsub/v2 v2.3.0 h1:DgAN907x+sP0nScYfBzneRiIhWoXcpCD8ZAut8WX9vs=
