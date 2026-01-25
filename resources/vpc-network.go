@@ -1,11 +1,14 @@
 package resources
 
 import (
-	compute "cloud.google.com/go/compute/apiv1"
-	"cloud.google.com/go/compute/apiv1/computepb"
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+
+	compute "cloud.google.com/go/compute/apiv1"
+	"cloud.google.com/go/compute/apiv1/computepb"
+
 	"github.com/ekristen/gcp-nuke/pkg/nuke"
 	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
@@ -14,6 +17,15 @@ import (
 	"github.com/sirupsen/logrus"
 	"google.golang.org/api/iterator"
 )
+
+func isRetryableError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errMsg := strings.ToLower(err.Error())
+	return strings.Contains(errMsg, "not ready") ||
+		strings.Contains(errMsg, "resourcenotready")
+}
 
 const VPCNetworkResource = "VPCNetwork"
 
@@ -24,8 +36,10 @@ func init() {
 		Resource: &VPCNetwork{},
 		Lister:   &VPCNetworkLister{},
 		DependsOn: []string{
-			VPCSubnetResource,
+			VPCGlobalIPAddressResource,
+			VPCIPAddressResource,
 			VPCRouteResource,
+			VPCSubnetResource,
 		},
 	})
 }
@@ -36,7 +50,7 @@ type VPCNetworkLister struct {
 
 func (l *VPCNetworkLister) Close() {
 	if l.svc != nil {
-		l.svc.Close()
+		_ = l.svc.Close()
 	}
 }
 
@@ -94,6 +108,9 @@ func (r *VPCNetwork) Remove(ctx context.Context) error {
 		Network: *r.Name,
 	})
 	if err != nil {
+		if isRetryableError(err) {
+			return liberror.ErrWaitResource("resource not ready, retrying")
+		}
 		return err
 	}
 

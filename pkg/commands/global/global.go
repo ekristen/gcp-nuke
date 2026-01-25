@@ -1,13 +1,14 @@
 package global
 
 import (
+	"context"
 	"fmt"
 	"path"
 	"runtime"
 
 	"github.com/ekristen/libnuke/pkg/log"
 	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 func Flags() []cli.Flag {
@@ -16,7 +17,7 @@ func Flags() []cli.Flag {
 			Name:    "log-level",
 			Usage:   "Log Level",
 			Aliases: []string{"l"},
-			EnvVars: []string{"LOGLEVEL"},
+			Sources: cli.EnvVars("LOGLEVEL"),
 			Value:   "info",
 		},
 		&cli.BoolFlag{
@@ -35,24 +36,24 @@ func Flags() []cli.Flag {
 			Name:    "log-format",
 			Usage:   "log format",
 			Value:   "standard",
-			EnvVars: []string{"GCP_NUKE_LOG_FORMAT"},
+			Sources: cli.EnvVars("GCP_NUKE_LOG_FORMAT"),
 		},
 		&cli.BoolFlag{
 			Name:    "json",
 			Usage:   "output as json, shorthand for --log-format=json",
-			EnvVars: []string{"GCP_NUKE_LOG_FORMAT_JSON"},
+			Sources: cli.EnvVars("GCP_NUKE_LOG_FORMAT_JSON"),
 		},
 	}
 
 	return globalFlags
 }
 
-func Before(c *cli.Context) error {
+func Before(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 	formatter := &logrus.TextFormatter{
-		DisableColors: c.Bool("log-disable-color"),
-		FullTimestamp: c.Bool("log-full-timestamp"),
+		DisableColors: cmd.Bool("log-disable-color"),
+		FullTimestamp: cmd.Bool("log-full-timestamp"),
 	}
-	if c.Bool("log-caller") {
+	if cmd.Bool("log-caller") {
 		logrus.SetReportCaller(true)
 
 		formatter.CallerPrettyfier = func(f *runtime.Frame) (string, string) {
@@ -64,11 +65,12 @@ func Before(c *cli.Context) error {
 		FallbackFormatter: formatter,
 	}
 
-	if c.Bool("json") {
-		_ = c.Set("log-format", "json")
+	logFormat := cmd.String("log-format")
+	if cmd.Bool("json") {
+		logFormat = "json"
 	}
 
-	switch c.String("log-format") {
+	switch logFormat {
 	case "json":
 		logrus.SetFormatter(&logrus.JSONFormatter{
 			DisableHTMLEscape: true,
@@ -84,7 +86,7 @@ func Before(c *cli.Context) error {
 		logrus.SetFormatter(logFormatter)
 	}
 
-	switch c.String("log-level") {
+	switch cmd.String("log-level") {
 	case "trace":
 		logrus.SetLevel(logrus.TraceLevel)
 	case "debug":
@@ -97,11 +99,10 @@ func Before(c *cli.Context) error {
 		logrus.SetLevel(logrus.ErrorLevel)
 	}
 
-	return nil
+	return ctx, nil
 }
 
-type StructuredHook struct {
-}
+type StructuredHook struct{}
 
 func (h *StructuredHook) Levels() []logrus.Level {
 	return logrus.AllLevels

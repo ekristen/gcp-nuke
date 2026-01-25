@@ -1,11 +1,11 @@
 package list
 
 import (
-	"fmt"
+	"context"
 	"sort"
 
 	"github.com/fatih/color"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/ekristen/libnuke/pkg/registry"
 
@@ -16,7 +16,7 @@ import (
 	_ "github.com/ekristen/gcp-nuke/resources"
 )
 
-func execute(c *cli.Context) error {
+func execute(_ context.Context, _ *cli.Command) error {
 	ls := registry.GetNames()
 
 	sort.Strings(ls)
@@ -30,13 +30,14 @@ func execute(c *cli.Context) error {
 			_, _ = color.New(color.FgCyan).Printf("alternative resource\n")
 		} else {
 			_, _ = color.New(color.Bold).Printf("%-55s", name)
-			c := color.FgGreen
-			if reg.Scope == nuke.Organization {
-				c = color.FgHiGreen
-			} else if reg.Scope == nuke.Project {
-				c = color.FgHiBlue
+			clr := color.FgGreen
+			switch reg.Scope {
+			case nuke.Organization:
+				clr = color.FgHiGreen
+			case nuke.Project:
+				clr = color.FgHiBlue
 			}
-			_, _ = color.New(c).Printf(fmt.Sprintf("%s\n", string(reg.Scope))) // nolint: govet
+			_, _ = color.New(clr).Printf("%s\n", string(reg.Scope))
 		}
 	}
 

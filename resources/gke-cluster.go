@@ -3,11 +3,15 @@ package resources
 import (
 	"context"
 	"fmt"
-	"github.com/gotidy/ptr"
 	"strings"
+
+	"github.com/gotidy/ptr"
+	"github.com/sirupsen/logrus"
 
 	"cloud.google.com/go/container/apiv1"
 	"cloud.google.com/go/container/apiv1/containerpb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
@@ -30,6 +34,12 @@ func init() {
 
 type GKEClusterLister struct {
 	svc *container.ClusterManagerClient
+}
+
+func (l *GKEClusterLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
 }
 
 func (l *GKEClusterLister) ListClusters(ctx context.Context, project, location string) ([]resource.Resource, error) {
@@ -60,6 +70,7 @@ func (l *GKEClusterLister) ListClusters(ctx context.Context, project, location s
 			Zone:              ptr.String(zone),
 			Status:            ptr.String(cluster.Status.String()),
 			CreationTimestamp: ptr.String(cluster.CreateTime),
+			Labels:            cluster.ResourceLabels,
 		})
 	}
 
@@ -105,6 +116,7 @@ type GKECluster struct {
 	Zone              *string
 	Status            *string
 	CreationTimestamp *string
+	Labels            map[string]string `property:"tagPrefix=label"`
 }
 
 func (r *GKECluster) Remove(ctx context.Context) error {
@@ -117,7 +129,11 @@ func (r *GKECluster) Remove(ctx context.Context) error {
 	r.removeOp, err = r.svc.DeleteCluster(ctx, &containerpb.DeleteClusterRequest{
 		Name: fmt.Sprintf("projects/%s/locations/%s/clusters/%s", *r.Project, *location, *r.Name),
 	})
-	return err
+	if err != nil {
+		logrus.WithError(err).WithField("cluster", *r.Name).Trace("gke cluster delete error")
+		return liberror.ErrWaitResource(fmt.Sprintf("delete failed: %v", err))
+	}
+	return nil
 }
 
 func (r *GKECluster) Properties() types.Properties {
@@ -133,13 +149,17 @@ func (r *GKECluster) HandleWait(ctx context.Context) error {
 		return nil
 	}
 
-	// TODO: this does not properly handle the wait it somehow ends in an error.
 	var err error
 	r.removeOp, err = r.svc.GetOperation(ctx, &containerpb.GetOperationRequest{
 		Name: r.removeOp.Name,
 	})
 	if err != nil {
-		return err
+		if status.Code(err) == codes.NotFound {
+			logrus.WithField("cluster", *r.Name).Trace("operation not found, assuming completed")
+			return nil
+		}
+		logrus.WithError(err).WithField("cluster", *r.Name).Trace("failed to get operation status")
+		return liberror.ErrWaitResource(fmt.Sprintf("poll failed: %v", err))
 	}
 
 	if r.removeOp.Status != containerpb.Operation_DONE {

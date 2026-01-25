@@ -1,4 +1,4 @@
-Remove all resources from an gcp account.
+Remove all resources from a GCP project.
 
 **gcp-nuke** is stable, but it is likely that not all gcp resources are covered by it. Be encouraged to add missing
 resources and create a Pull Request or to create an [Issue](https://github.com/ekristen/gcp-nuke/issues/new).
@@ -33,8 +33,8 @@ fork.
 ## Introducing libnuke
 
 Officially over the Christmas break of 2023, I decided to create [libnuke](https://github.com/ekristen/libnuke) which
-is a library that can be used to create similar tools for other cloud providers. This library is used by both this tool,
-gcp-nuke, and [azure-nuke](https://github.com/ekristen/azure-nuke) and soon [gcp-nuke](https://github.com/ekristen/gcp-nuke).
+is a library that can be used to create similar tools for other cloud providers. This library is used by this tool (gcp-nuke),
+[aws-nuke](https://github.com/ekristen/aws-nuke), and [azure-nuke](https://github.com/ekristen/azure-nuke).
 
 I also needed a version of this tool for Azure and GCP, and initially I just copied and altered the code I needed for
 Azure, but I didn't want to have to maintain multiple copies of the same code, so I decided to create

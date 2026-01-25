@@ -3,8 +3,9 @@ package resources
 import (
 	"context"
 	"fmt"
-	"github.com/gotidy/ptr"
 	"strings"
+
+	"github.com/gotidy/ptr"
 
 	iamadmin "cloud.google.com/go/iam/admin/apiv1"
 	"cloud.google.com/go/iam/admin/apiv1/adminpb"
@@ -29,6 +30,12 @@ func init() {
 
 type IAMRoleLister struct {
 	svc *iamadmin.IamClient
+}
+
+func (l *IAMRoleLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
 }
 
 func (l *IAMRoleLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {

@@ -32,6 +32,12 @@ type FirestoreDatabaseLister struct {
 	svc *admin.FirestoreAdminClient
 }
 
+func (l *FirestoreDatabaseLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
+}
+
 func (l *FirestoreDatabaseLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
 	opts := o.(*nuke.ListerOpts)
 	var resources []resource.Resource

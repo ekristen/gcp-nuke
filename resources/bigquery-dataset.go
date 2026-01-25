@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"errors"
+
 	"github.com/gotidy/ptr"
 	"github.com/sirupsen/logrus"
 
@@ -32,6 +33,12 @@ type BigQueryDatasetLister struct {
 	svc *bigquery.Client
 }
 
+func (l *BigQueryDatasetLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
+}
+
 func (l *BigQueryDatasetLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
 	opts := o.(*nuke.ListerOpts)
 	var resources []resource.Resource
@@ -47,8 +54,6 @@ func (l *BigQueryDatasetLister) List(ctx context.Context, o interface{}) ([]reso
 		}
 	}
 
-	// NOTE: you might have to modify the code below to actually work, this currently does not
-	// inspect the google go sdk instead is a jumping off point
 	it := l.svc.Datasets(ctx)
 	for {
 		resp, err := it.Next()
@@ -56,7 +61,7 @@ func (l *BigQueryDatasetLister) List(ctx context.Context, o interface{}) ([]reso
 			break
 		}
 		if err != nil {
-			logrus.WithError(err).Error("unable to iterate networks")
+			logrus.WithError(err).Error("unable to iterate bigquery datasets")
 			break
 		}
 
@@ -75,7 +80,7 @@ func (l *BigQueryDatasetLister) List(ctx context.Context, o interface{}) ([]reso
 			project:  opts.Project,
 			region:   opts.Region,
 			dataset:  resp,
-			Name:     ptr.String(meta.Name),
+			Name:     ptr.String(resp.DatasetID),
 			Location: ptr.String(meta.Location),
 			Labels:   meta.Labels,
 		})

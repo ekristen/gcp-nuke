@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/gotidy/ptr"
 	"strings"
+
+	"github.com/gotidy/ptr"
 
 	"github.com/sirupsen/logrus"
 
@@ -38,7 +39,7 @@ type CloudFunction2Lister struct {
 
 func (l *CloudFunction2Lister) Close() {
 	if l.svc != nil {
-		l.svc.Close()
+		_ = l.svc.Close()
 	}
 }
 
@@ -56,8 +57,6 @@ func (l *CloudFunction2Lister) List(ctx context.Context, o interface{}) ([]resou
 		if err != nil {
 			return nil, err
 		}
-
-		// TODO: determine locations, cache and skip locations not supported
 	}
 
 	req := &functionspb.ListFunctionsRequest{

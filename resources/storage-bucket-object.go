@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"errors"
+
 	"github.com/gotidy/ptr"
 
 	"github.com/sirupsen/logrus"
@@ -33,6 +34,12 @@ type StorageBucketObjectLister struct {
 	svc *storage.Client
 }
 
+func (l *StorageBucketObjectLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
+}
+
 func (l *StorageBucketObjectLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
 	var resources []resource.Resource
 
@@ -56,23 +63,26 @@ func (l *StorageBucketObjectLister) List(ctx context.Context, o interface{}) ([]
 	}
 
 	for _, bucket := range buckets {
-		it := l.svc.Bucket(bucket.Name).Objects(ctx, nil)
+		it := l.svc.Bucket(bucket.Name).Objects(ctx, &storage.Query{
+			Versions: true,
+		})
 		for {
 			resp, err := it.Next()
 			if errors.Is(err, iterator.Done) {
 				break
 			}
 			if err != nil {
-				logrus.WithError(err).Error("unable to iterate networks")
+				logrus.WithError(err).Error("unable to iterate objects")
 				break
 			}
 
 			resources = append(resources, &StorageBucketObject{
-				svc:      l.svc,
-				Name:     ptr.String(resp.Name),
-				Bucket:   ptr.String(bucket.Name),
-				Project:  opts.Project,
-				Metadata: resp.Metadata,
+				svc:        l.svc,
+				Name:       ptr.String(resp.Name),
+				Bucket:     ptr.String(bucket.Name),
+				Project:    opts.Project,
+				Generation: ptr.Int64(resp.Generation),
+				Metadata:   resp.Metadata,
 			})
 		}
 	}
@@ -81,16 +91,21 @@ func (l *StorageBucketObjectLister) List(ctx context.Context, o interface{}) ([]
 }
 
 type StorageBucketObject struct {
-	svc      *storage.Client
-	Project  *string
-	Region   *string
-	Name     *string
-	Bucket   *string
-	Metadata map[string]string
+	svc        *storage.Client
+	Project    *string
+	Region     *string
+	Name       *string
+	Bucket     *string
+	Generation *int64
+	Metadata   map[string]string
 }
 
 func (r *StorageBucketObject) Remove(ctx context.Context) error {
-	return r.svc.Bucket(*r.Bucket).Object(*r.Name).Delete(ctx)
+	obj := r.svc.Bucket(*r.Bucket).Object(*r.Name)
+	if r.Generation != nil {
+		obj = obj.Generation(*r.Generation)
+	}
+	return obj.Delete(ctx)
 }
 
 func (r *StorageBucketObject) Properties() types.Properties {

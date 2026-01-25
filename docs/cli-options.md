@@ -2,6 +2,10 @@
 
 This is not a comprehensive list of options, but rather a list of features that I think are worth highlighting.
 
+## Wait on Dependencies
+
+`--wait-on-dependencies` will wait for dependent resources to be deleted before deleting resources that depend on them. This is useful when resources have dependencies on each other (e.g., a VPC network cannot be deleted until all subnets are deleted first).
+
 ## Skip Prompts
 
 `--no-prompt` will skip the prompt to verify you want to run the command. This is useful if you are running in a CI/CD environment.

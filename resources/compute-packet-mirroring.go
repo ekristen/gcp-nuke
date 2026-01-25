@@ -34,6 +34,12 @@ type ComputePacketMirroringLister struct {
 	svc *compute.PacketMirroringsClient
 }
 
+func (l *ComputePacketMirroringLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
+}
+
 func (l *ComputePacketMirroringLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
 	opts := o.(*nuke.ListerOpts)
 	if *opts.Region == "global" {

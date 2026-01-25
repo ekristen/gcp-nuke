@@ -29,11 +29,31 @@ func init() {
 		Scope:    nuke.Project,
 		Resource: &KMSKey{},
 		Lister:   &KMSKeyLister{},
+		DependsOn: []string{
+			AlloyDBClusterResource,
+			ArtifactRegistryRepositoryResource,
+			BigQueryDatasetResource,
+			CloudSQLInstanceResource,
+			ComposerEnvironmentResource,
+			ComputeDiskResource,
+			DataprocClusterResource,
+			FilestoreInstanceResource,
+			GKEClusterResource,
+			SecretManagerSecretResource,
+			SpannerDatabaseResource,
+			StorageBucketResource,
+		},
 	})
 }
 
 type KMSKeyLister struct {
 	svc *kms.KeyManagementClient
+}
+
+func (l *KMSKeyLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
 }
 
 func (l *KMSKeyLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {

@@ -4,19 +4,21 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/ekristen/libnuke/pkg/settings"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gotidy/ptr"
 	"github.com/sirupsen/logrus"
 
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/api/iterator"
 
 	"cloud.google.com/go/storage"
 
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
+	"github.com/ekristen/libnuke/pkg/settings"
 	"github.com/ekristen/libnuke/pkg/types"
 
 	"github.com/ekristen/gcp-nuke/pkg/nuke"
@@ -46,7 +48,7 @@ type StorageBucketLister struct {
 
 func (l *StorageBucketLister) Close() {
 	if l.svc != nil {
-		l.svc.Close()
+		_ = l.svc.Close()
 	}
 }
 
@@ -203,7 +205,15 @@ func (r *StorageBucket) Settings(settings *settings.Setting) {
 	r.settings = settings
 }
 
+type objectToDelete struct {
+	name       string
+	generation int64
+}
+
 func (r *StorageBucket) removeObjects(ctx context.Context) error {
+	const maxConcurrency = 500
+
+	var objects []objectToDelete
 	it := r.svc.Bucket(*r.Name).Objects(ctx, &storage.Query{
 		Versions: true,
 	})
@@ -215,12 +225,46 @@ func (r *StorageBucket) removeObjects(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-
-		logrus.Debug("deleting object: ", resp.Name)
-		if err := r.svc.Bucket(*r.Name).Object(resp.Name).Generation(resp.Generation).Delete(ctx); err != nil {
-			return err
-		}
+		objects = append(objects, objectToDelete{
+			name:       resp.Name,
+			generation: resp.Generation,
+		})
 	}
 
+	if len(objects) == 0 {
+		return nil
+	}
+
+	logrus.Debugf("deleting %d objects from bucket %s", len(objects), *r.Name)
+
+	g, ctx := errgroup.WithContext(ctx)
+	g.SetLimit(maxConcurrency)
+
+	var deletedCount int64
+	var mu sync.Mutex
+
+	for _, obj := range objects {
+		obj := obj
+		g.Go(func() error {
+			if err := r.svc.Bucket(*r.Name).Object(obj.name).Generation(obj.generation).Delete(ctx); err != nil {
+				if !errors.Is(err, storage.ErrObjectNotExist) {
+					return err
+				}
+			}
+			mu.Lock()
+			deletedCount++
+			if deletedCount%100 == 0 {
+				logrus.Debugf("deleted %d/%d objects from bucket %s", deletedCount, len(objects), *r.Name)
+			}
+			mu.Unlock()
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		return err
+	}
+
+	logrus.Debugf("finished deleting %d objects from bucket %s", len(objects), *r.Name)
 	return nil
 }

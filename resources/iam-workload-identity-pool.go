@@ -3,13 +3,14 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/ekristen/gcp-nuke/pkg/nuke"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/types"
 	"github.com/gotidy/ptr"
 	"google.golang.org/api/iam/v1"
-	"strings"
 )
 
 const IAMWorkloadIdentityPoolResource = "IAMWorkloadIdentityPool"

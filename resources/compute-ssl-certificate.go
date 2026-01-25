@@ -36,6 +36,15 @@ type ComputeSSLCertificateLister struct {
 	globalSvc *compute.SslCertificatesClient
 }
 
+func (l *ComputeSSLCertificateLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
+	if l.globalSvc != nil {
+		_ = l.globalSvc.Close()
+	}
+}
+
 func (l *ComputeSSLCertificateLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)

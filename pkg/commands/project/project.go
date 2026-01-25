@@ -1,11 +1,12 @@
 package project
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/ekristen/gcp-nuke/pkg/commands/global"
 	"github.com/ekristen/gcp-nuke/pkg/common"
@@ -30,8 +31,8 @@ type CredentialsJSON struct {
 	} `json:"credential_source"`
 }
 
-func execute(c *cli.Context) error {
-	project, err := gcputil.New(c.Context, c.String("project-id"), c.String("impersonate-service-account"))
+func execute(ctx context.Context, cmd *cli.Command) error {
+	project, err := gcputil.New(ctx, cmd.String("project-id"), cmd.String("impersonate-service-account"))
 	if err != nil {
 		return err
 	}
@@ -42,7 +43,7 @@ func execute(c *cli.Context) error {
 	fmt.Printf(" Enabled APIs: %d\n", len(project.GetEnabledAPIs()))
 	fmt.Printf("      Regions: %d\n", len(project.Regions))
 
-	creds, err := project.GetCredentials(c.Context)
+	creds, err := project.GetCredentials(ctx)
 	if err != nil {
 		return err
 	}
@@ -57,24 +58,25 @@ func execute(c *cli.Context) error {
 	fmt.Println("--------------------------------------------------")
 	fmt.Println(">            Type:", parsed.Type)
 
-	if parsed.Type == "service_account" {
+	switch parsed.Type {
+	case "service_account":
 		fmt.Println("> Client Email:", parsed.ClientEmail)
 		fmt.Println("> Client ID:", parsed.ClientID)
 		fmt.Println("> Private Key ID:", parsed.PrivateKeyID)
-	} else if parsed.Type == "external_account" {
+	case "external_account":
 		fmt.Println(">        Audience:", parsed.Audience)
 		fmt.Println("> Service Account:",
-			strings.Replace(
+			strings.ReplaceAll(
 				parsed.ServiceAccountImpersonationURL,
-				"https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/", "", -1))
+				"https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/", ""))
 		fmt.Println(">     Source.File:", parsed.CredentialSource.File)
 		fmt.Println(">   Source.Format:", parsed.CredentialSource.Format.Type)
-		if c.String("impersonate-service-account") != "" {
-			fmt.Println(">   Impersonating:", c.String("impersonate-service-account"))
+		if cmd.String("impersonate-service-account") != "" {
+			fmt.Println(">   Impersonating:", cmd.String("impersonate-service-account"))
 		}
 	}
 
-	if c.Bool("with-regions") {
+	if cmd.Bool("with-regions") {
 		fmt.Println("")
 		fmt.Println("Regions:")
 		fmt.Println("--------------------------------------------------")
@@ -86,7 +88,7 @@ func execute(c *cli.Context) error {
 		fmt.Println("Regions: use --with-regions to include regions in the output")
 	}
 
-	if c.Bool("with-apis") {
+	if cmd.Bool("with-apis") {
 		fmt.Println("")
 		fmt.Println("Enabled APIs:")
 		fmt.Println("--------------------------------------------------")
@@ -105,7 +107,7 @@ func execute(c *cli.Context) error {
 
 func init() {
 	flags := []cli.Flag{
-		&cli.PathFlag{
+		&cli.StringFlag{
 			Name:    "config",
 			Aliases: []string{"c"},
 			Usage:   "path to config file",
@@ -114,13 +116,13 @@ func init() {
 		&cli.StringFlag{
 			Name:     "project-id",
 			Usage:    "which GCP project should be nuked",
-			EnvVars:  []string{"GCP_NUKE_PROJECT_ID"},
+			Sources:  cli.EnvVars("GCP_NUKE_PROJECT_ID"),
 			Required: true,
 		},
 		&cli.StringFlag{
 			Name:    "impersonate-service-account",
 			Usage:   "impersonate a service account for all API calls",
-			EnvVars: []string{"GCP_NUKE_IMPERSONATE_SERVICE_ACCOUNT"},
+			Sources: cli.EnvVars("GCP_NUKE_IMPERSONATE_SERVICE_ACCOUNT"),
 		},
 		&cli.BoolFlag{
 			Name:  "with-regions",

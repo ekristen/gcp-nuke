@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/gotidy/ptr"
-	"google.golang.org/genproto/googleapis/cloud/location"
 	"slices"
 	"strings"
+
+	"github.com/gotidy/ptr"
+	"google.golang.org/genproto/googleapis/cloud/location"
 
 	"github.com/sirupsen/logrus"
 
@@ -42,7 +43,7 @@ type CloudFunctionLister struct {
 
 func (l *CloudFunctionLister) Close() {
 	if l.svc != nil {
-		l.svc.Close()
+		_ = l.svc.Close()
 	}
 }
 

@@ -44,7 +44,7 @@ included them in the license copyright although no direct code was used.
 ```bash
 gcp-nuke run \
   --config test-config.yaml \
-  --project-id playground-12345 
+  --project-id playground-12345
 ```
 
 ### Example - No Dry Run (DESTRUCTIVE)
@@ -60,7 +60,13 @@ gcp-nuke run \
 
 ## Authentication
 
-Authentication is only supported via a Service Account either by Key or via Workload Identity. 
+Authentication uses [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/application-default-credentials). The following methods are supported:
+
+### gcloud CLI (Recommended for local development)
+
+```bash
+gcloud auth application-default login
+```
 
 ### Service Account Key
 
@@ -68,9 +74,9 @@ Authentication is only supported via a Service Account either by Key or via Work
 export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
 ```
 
-### Federated Token (Kubernetes)
+### Workload Identity (GKE, Cloud Run, etc.)
 
-**coming soon**
+When running on GCP infrastructure, credentials are automatically provided via the attached service account.
 
 ## Configuring
 
@@ -82,25 +88,44 @@ The entire configuration of the tool is done via a single YAML file.
 
 ```yaml
 regions:
-  - global
-  - eastus
+  - global # Nuke global resources
+  - us-east1 # Nuke resources in the us-east1 region
+
+resource-types:
+  excludes:
+    - StorageBucketObject # Exclude Storage Bucket Objects
 
 blocklist:
-  - 00001111-2222-3333-4444-555566667777
+  - production-12345 # Never nuke this project
 
-accounts: # i.e. projects but due to the commonality of libnuke, it's accounts here universally between tools
+accounts: # i.e. Google Cloud projects
   playground-12345:
     presets:
       - common
     filters:
-      IAMRole:
-        - property: Name
-          type: contains
-          value: CustomRole
+      # Protect specific service accounts by email
       IAMServiceAccount:
-        - property: Name
-          type: contains
-          value: custom-service-account
+        - 'custom-service-account@playground-12345.iam.gserviceaccount.com'
+
+      # Protect service account keys by service account email
+      IAMServiceAccountKey:
+        - property: ServiceAccountEmail
+          value: 'custom-service-account@playground-12345.iam.gserviceaccount.com'
+
+      # Protect a DNS zone from deletion
+      DNSManagedZone:
+        - 'my-dns-zone'
+
+      # Protect IAM policy bindings for specific users
+      IAMPolicyBinding:
+        - property: Member
+          value: 'user:admin@example.com'
+
+      # Delete DNS records only in a specific zone
+      DNSRecordSet:
+        - property: Zone
+          value: 'my-dns-zone'
+          invert: true
 
 presets:
   common:

@@ -3,10 +3,11 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/ekristen/libnuke/pkg/settings"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/api/cloudresourcemanager/v3"
-	"strings"
 
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
@@ -67,7 +68,7 @@ func (l *IAMPolicyBindingLister) List(ctx context.Context, o interface{}) ([]res
 			}
 
 			parts := strings.Split(member, "@")
-			if strings.HasSuffix(parts[1], ".gserviceaccount.com") && !strings.HasPrefix(parts[1], *opts.Project) {
+			if len(parts) > 1 && strings.HasSuffix(parts[1], ".gserviceaccount.com") && !strings.HasPrefix(parts[1], *opts.Project) {
 				iamPolicyBinding.GoogleManaged = true
 			}
 
@@ -85,7 +86,6 @@ func (l *IAMPolicyBindingLister) List(ctx context.Context, o interface{}) ([]res
 
 			resources = append(resources, iamPolicyBinding)
 		}
-
 	}
 
 	return resources, nil
@@ -121,8 +121,6 @@ func (r *IAMPolicyBinding) Remove(ctx context.Context) error {
 	for _, binding := range policy.Bindings {
 		if binding.Role == r.Role {
 			for i, member := range binding.Members {
-				// if the member matches specifically, or if the member is a deleted member
-				// was set to be removed initially, then we are going to remove it now.
 				if member == r.Member || member == fmt.Sprintf("deleted:%s", r.Member) {
 					binding.Members = append(binding.Members[:i], binding.Members[i+1:]...)
 				}

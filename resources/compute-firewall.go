@@ -33,6 +33,12 @@ type ComputeFirewallLister struct {
 	svc *compute.FirewallsClient
 }
 
+func (l *ComputeFirewallLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
+}
+
 func (l *ComputeFirewallLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
 	var resources []resource.Resource
 

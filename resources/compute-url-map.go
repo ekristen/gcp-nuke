@@ -36,6 +36,15 @@ type ComputeURLMapLister struct {
 	globalSvc *compute.UrlMapsClient
 }
 
+func (l *ComputeURLMapLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
+	if l.globalSvc != nil {
+		_ = l.globalSvc.Close()
+	}
+}
+
 func (l *ComputeURLMapLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)

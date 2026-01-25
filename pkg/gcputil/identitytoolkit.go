@@ -72,7 +72,7 @@ func (s *IdentityPlatformService) GetProjectConfig(ctx context.Context, projectI
 	if err != nil {
 		return nil, fmt.Errorf("error requesting project config: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("API request error: status %d", resp.StatusCode)
@@ -105,7 +105,7 @@ func (s *IdentityPlatformService) UpdateProjectConfig(ctx context.Context, proje
 	if err != nil {
 		return nil, fmt.Errorf("error updating project config: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("API request error: status %d", resp.StatusCode)
@@ -155,7 +155,7 @@ func (s *IdentityPlatformService) ListDefaultSupportedOAuthIdpConfigs(ctx contex
 	if err != nil {
 		return nil, fmt.Errorf("error requesting OAuth IDP configs: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("API request error: status %d", resp.StatusCode)
@@ -182,7 +182,7 @@ func (s *IdentityPlatformService) DeleteDefaultSupportedOAuthIdpConfig(ctx conte
 	if err != nil {
 		return fmt.Errorf("error deleting OAuth IDP config: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("API request error: status %d", resp.StatusCode)
@@ -205,7 +205,7 @@ func (s *IdentityPlatformService) ListOAuthIdpConfigs(ctx context.Context, proje
 	if err != nil {
 		return nil, fmt.Errorf("error requesting OAuth IDP configs: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("API request error: status %d", resp.StatusCode)
@@ -232,7 +232,7 @@ func (s *IdentityPlatformService) DeleteOAuthIdpConfig(ctx context.Context, proj
 	if err != nil {
 		return fmt.Errorf("error deleting OAuth IDP config: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("API request error: status %d", resp.StatusCode)

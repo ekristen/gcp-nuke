@@ -3,8 +3,9 @@ package resources
 import (
 	"context"
 	"errors"
-	"github.com/gotidy/ptr"
 	"strings"
+
+	"github.com/gotidy/ptr"
 
 	"github.com/sirupsen/logrus"
 
@@ -33,6 +34,12 @@ func init() {
 
 type ComputeDiskLister struct {
 	svc *compute.DisksClient
+}
+
+func (l *ComputeDiskLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
 }
 
 func (l *ComputeDiskLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {

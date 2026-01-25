@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/gotidy/ptr"
 	"github.com/sirupsen/logrus"
-	"strings"
 
 	"google.golang.org/api/iterator"
 
@@ -33,6 +34,12 @@ func init() {
 
 type VPCRouteLister struct {
 	svc *compute.RoutesClient
+}
+
+func (l *VPCRouteLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
 }
 
 func (l *VPCRouteLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
