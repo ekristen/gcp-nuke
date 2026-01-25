@@ -2,10 +2,11 @@ package nuke
 
 import (
 	"fmt"
+	"slices"
+
 	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/api/option"
-	"slices"
 
 	"github.com/ekristen/libnuke/pkg/registry"
 )

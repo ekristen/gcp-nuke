@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/gotidy/ptr"
 	"strings"
 	"time"
+
+	"github.com/gotidy/ptr"
 
 	"github.com/sirupsen/logrus"
 
@@ -35,6 +36,12 @@ func init() {
 
 type SecretManagerSecretLister struct {
 	svc *secretmanager.Client
+}
+
+func (l *SecretManagerSecretLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
 }
 
 func (l *SecretManagerSecretLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {

@@ -80,7 +80,7 @@ func (g *GCP) ImpersonateServiceAccount(ctx context.Context, targetServiceAccoun
 	if err != nil {
 		return err
 	}
-	defer credsClient.Close()
+	defer func() { _ = credsClient.Close() }()
 
 	req := &credentialspb.GenerateAccessTokenRequest{
 		Name: fmt.Sprintf("projects/-/serviceAccounts/%s", targetServiceAccount),
@@ -188,7 +188,7 @@ func New(ctx context.Context, projectID, impersonateServiceAccount string) (*GCP
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}
-	defer c.Close()
+	defer func() { _ = c.Close() }()
 
 	// Build the request to list regions
 	regionReq := &computepb.ListRegionsRequest{

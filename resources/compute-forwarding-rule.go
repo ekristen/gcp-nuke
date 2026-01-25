@@ -36,6 +36,15 @@ type ComputeForwardingRuleLister struct {
 	globalSvc *compute.GlobalForwardingRulesClient
 }
 
+func (l *ComputeForwardingRuleLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
+	if l.globalSvc != nil {
+		_ = l.globalSvc.Close()
+	}
+}
+
 func (l *ComputeForwardingRuleLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)

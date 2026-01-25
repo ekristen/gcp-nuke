@@ -36,6 +36,15 @@ type ComputeSecurityPolicyLister struct {
 	globalSvc *compute.SecurityPoliciesClient
 }
 
+func (l *ComputeSecurityPolicyLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
+	if l.globalSvc != nil {
+		_ = l.globalSvc.Close()
+	}
+}
+
 func (l *ComputeSecurityPolicyLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)

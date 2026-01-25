@@ -33,6 +33,12 @@ type ComputeCommonInstanceMetadataLister struct {
 	svc *compute.ProjectsClient
 }
 
+func (l *ComputeCommonInstanceMetadataLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
+}
+
 func (l *ComputeCommonInstanceMetadataLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
 	var resources []resource.Resource
 

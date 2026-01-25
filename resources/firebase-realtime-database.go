@@ -129,7 +129,6 @@ func (r *FirebaseRealtimeDatabase) String() string {
 }
 
 func (r *FirebaseRealtimeDatabase) DeleteDatabaseInstance(ctx context.Context) error {
-	// If it is the default database, it cannot be deleted only disabled.
 	if *r.Type == "DEFAULT_DATABASE" {
 		return nil
 	}
@@ -143,12 +142,10 @@ func (r *FirebaseRealtimeDatabase) EmptyDefaultDatabase(ctx context.Context) err
 		return nil
 	}
 
-	// If it is not the default database then we just skip
 	if *r.Type != "DEFAULT_DATABASE" {
 		return nil
 	}
 
-	// If the setting is not enabled, then we just skip
 	if !r.settings.GetBool("EmptyDefaultDatabase") {
 		return nil
 	}

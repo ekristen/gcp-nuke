@@ -76,7 +76,39 @@ type DNSManagedZone struct {
 }
 
 func (r *DNSManagedZone) Remove(ctx context.Context) error {
+	if err := r.removeRecords(ctx); err != nil {
+		return err
+	}
+
 	return r.svc.ManagedZones.Delete(*r.project, *r.Name).Do()
+}
+
+func (r *DNSManagedZone) removeRecords(ctx context.Context) error {
+	var deletions []*dns.ResourceRecordSet
+
+	req := r.svc.ResourceRecordSets.List(*r.project, *r.Name)
+	if err := req.Pages(ctx, func(page *dns.ResourceRecordSetsListResponse) error {
+		for _, rrset := range page.Rrsets {
+			if rrset.Name == *r.DNSName && (rrset.Type == "SOA" || rrset.Type == "NS") {
+				continue
+			}
+			deletions = append(deletions, rrset)
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	if len(deletions) == 0 {
+		return nil
+	}
+
+	change := &dns.Change{
+		Deletions: deletions,
+	}
+
+	_, err := r.svc.Changes.Create(*r.project, *r.Name, change).Context(ctx).Do()
+	return err
 }
 
 func (r *DNSManagedZone) Properties() types.Properties {

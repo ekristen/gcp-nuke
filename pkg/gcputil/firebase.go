@@ -4,17 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/sirupsen/logrus"
 	"google.golang.org/api/option"
 	"google.golang.org/api/option/internaloption"
 	htransport "google.golang.org/api/transport/http"
-	"io"
-	"net/http"
 )
 
-const basePath = "https://firebasedatabase.googleapis.com/"
-const basePathTemplate = "https://firebasedatabase.UNIVERSE_DOMAIN/"
-const mtlsBasePath = "https://firebasedatabase.mtls.googleapis.com/"
+const (
+	basePath         = "https://firebasedatabase.googleapis.com/"
+	basePathTemplate = "https://firebasedatabase.UNIVERSE_DOMAIN/"
+	mtlsBasePath     = "https://firebasedatabase.mtls.googleapis.com/"
+)
 
 // DatabaseInstance represents a Firebase Realtime Database instance
 type DatabaseInstance struct {
@@ -81,7 +84,7 @@ func (s *FirebaseDatabaseService) ListDatabaseInstances(ctx context.Context, par
 	if err != nil {
 		return nil, fmt.Errorf("error requesting database instances: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		d, _ := io.ReadAll(resp.Body)
@@ -112,7 +115,7 @@ func (s *FirebaseDatabaseService) DeleteDatabaseInstance(ctx context.Context, pa
 	if err != nil {
 		return fmt.Errorf("error deleting database instance: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("API request error: status %d", resp.StatusCode)
@@ -135,7 +138,7 @@ func (s *FirebaseDatabaseService) DisableDatabaseInstance(ctx context.Context, p
 	if err != nil {
 		return fmt.Errorf("error disabling database instance: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("API request error: status %d", resp.StatusCode)

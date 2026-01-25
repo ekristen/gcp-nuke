@@ -3,12 +3,13 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/gertd/go-pluralize"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"os"
 	"strings"
 	"text/template"
+
+	"github.com/gertd/go-pluralize"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 const resourceTemplate = `package resources

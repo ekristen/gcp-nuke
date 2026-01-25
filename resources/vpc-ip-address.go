@@ -35,6 +35,12 @@ type VPCIPAddressLister struct {
 	svc *compute.AddressesClient
 }
 
+func (l *VPCIPAddressLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
+}
+
 func (l *VPCIPAddressLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
 	var resources []resource.Resource
 
@@ -93,7 +99,7 @@ func (r *VPCIPAddress) Remove(ctx context.Context) (err error) {
 	r.removeOp, err = r.svc.Delete(ctx, &computepb.DeleteAddressRequest{
 		Project: *r.project,
 		Region:  *r.region,
-		Address: *r.Name, // misleading - address is actually the name not the IPv4/IPv6 value
+		Address: *r.Name,
 	})
 	return err
 }

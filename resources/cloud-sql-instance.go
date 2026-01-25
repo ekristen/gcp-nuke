@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"fmt"
+
 	"github.com/ekristen/libnuke/pkg/settings"
 	"github.com/gotidy/ptr"
 	"github.com/sirupsen/logrus"

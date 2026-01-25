@@ -2,12 +2,12 @@
 
 ## First Configuration
 
-First you need to create a config file for *gcp-nuke*. This is a minimal one:
+First you need to create a config file for _gcp-nuke_. This is a minimal one:
 
 ```yaml
 regions:
   - global
-  - us-central1
+  - us-east1
 
 blocklist:
   - production-12345
@@ -18,55 +18,85 @@ accounts:
 
 ## First Run (Dry Run)
 
-With this config we can run *gcp-nuke*:
+With this config we can run _gcp-nuke_:
 
 ```bash
 $ gcp-nuke nuke -c config/nuke-config.yaml
-gcp-nuke version v1.0.39.gc2f318f - Fri Jul 28 16:26:41 CEST 2017 - c2f318f37b7d2dec0e646da3d4d05ab5296d5bce
+gcp-nuke - 1.0.0
+Do you really want to nuke the project with the ID 'playground-12345'?
+Do you want to continue? Enter project ID to continue.
+> playground-12345
 
-Do you really want to nuke the account with the ID 000000000000 and the alias 'gcp-nuke-example'?
-Do you want to continue? Enter account alias to continue.
-> gcp-nuke-example
+starting scan for resources
 
-us-east-1 - EC2DHCPOption - 'dopt-bf2ec3d8' - would remove
-us-east-1 - EC2Instance - 'i-01b489457a60298dd' - would remove
-us-east-1 - EC2KeyPair - 'test' - would remove
-us-east-1 - EC2NetworkACL - 'acl-6482a303' - cannot delete default VPC
-us-east-1 - EC2RouteTable - 'rtb-ffe91e99' - would remove
-us-east-1 - EC2SecurityGroup - 'sg-220e945a' - cannot delete group 'default'
-us-east-1 - EC2SecurityGroup - 'sg-f20f958a' - would remove
-us-east-1 - EC2Subnet - 'subnet-154d844e' - would remove
-us-east-1 - EC2Volume - 'vol-0ddfb15461a00c3e2' - would remove
-us-east-1 - EC2VPC - 'vpc-c6159fa1' - would remove
-us-east-1 - IAMUserAccessKey - 'my-user -> ABCDEFGHIJKLMNOPQRST' - would remove
-us-east-1 - IAMUserPolicyAttachment - 'my-user -> AdministratorAccess' - [UserName: "my-user", PolicyArn: "arn:gcp:iam::gcp:policy/AdministratorAccess", PolicyName: "AdministratorAccess"] - would remove
-us-east-1 - IAMUser - 'my-user' - would remove
-Scan complete: 13 total, 11 nukeable, 2 filtered.
+global - IAMServiceAccount - grafana@playground-12345.iam.gserviceaccount.com - [Description: "", ID: "1234567890123456789", Name: "grafana@playground-12345.iam.gserviceaccount.com"] - would remove
+global - IAMServiceAccount - playground-filestore-backup@playground-12345.iam.gserviceaccount.com - [Description: "", ID: "1234567890123456789", Name: "playground-filestore-backup@playground-12345.iam.gserviceaccount.com"] - would remove
+global - DNSManagedZone - sql-psa-goog - [CreationTime: "2026-01-25T12:26:03.208Z", DNSName: "sql-psa.goog.", Name: "sql-psa-goog", Visibility: "private"] - would remove
+global - DNSManagedZone - example-com - [CreationTime: "2026-01-25T12:18:51.287Z", DNSName: "example.com.", Name: "example-com", Visibility: "public"] - would remove
+global - IAMServiceAccountKey - 123456789012-compute@developer.gserviceaccount.com -> 1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p - [Algorithm: "KEY_ALG_RSA_2048", Disabled: "false", ID: "1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p", ManagedType: "SYSTEM_MANAGED", ServiceAccount: "Compute Engine default service account", ServiceAccountEmail: "123456789012-compute@developer.gserviceaccount.com", ServiceAccountID: "1234567890123456789"] - filtered: will not remove system managed key
+us-east1 - ArtifactRegistryRepository - playground-repo - [Format: "DOCKER", FullName: "projects/playground-12345/locations/us-east-1/repositories/playground-repo", Name: "playground-repo", label:goog-terraform-provisioned: "true"] - would remove
+us-east1 - ComputeBackendService - gkegw1-tw1m-argocd-argocd-server-443-32wtkmg3e8op - [Name: "gkegw1-tw1m-argocd-argocd-server-443-32wtkmg3e8op"] - would remove
+us-east1 - ComputeBackendService - gkegw1-tw1m-grafana-grafana-80-ura50snsg7it - [Name: "gkegw1-tw1m-grafana-grafana-80-ura50snsg7it"] - would remove
+us-east1 - ComputeBackendService - gkegw1-tw1m-prometheus-prometheus-server-80-qxf2xtfecs7d - [Name: "gkegw1-tw1m-prometheus-prometheus-server-80-qxf2xtfecs7d"] - would remove
+us-east1 - StorageBucket - playground-loki-logs - [MultiRegion: "false", Name: "playground-loki-logs", label:goog-terraform-provisioned: "true"] - would remove
+us-east1 - KMSKey - playground-67890 - [Keyring: "playground-12345", Name: "playground-67890", State: "ENABLED"] - would remove
+us-east1 - KMSKey - playground-12345 - [Keyring: "playground-12345", Name: "playground-12345", State: "DESTROYED"] - filtered: key is already destroyed
+...
+...
+...
+Scan complete: 333 total, 205 nukeable, 128 filtered.
 
-Would delete these resources. Provide --no-dry-run to actually destroy resources.
+The above resources would be deleted with the supplied configuration. Provide --no-dry-run to actually destroy resources.
 ```
 
-As we see, *gcp-nuke* only lists all found resources and exits. This is because the `--no-dry-run` flag is missing.
-Also, it wants to delete the administrator. We don't want to do this, because we use this user to access our account.
-Therefore, we have to extend the config, so it ignores this user:
+As we see, _gcp-nuke_ only lists all found resources and exits. This is because the `--no-dry-run` flag is missing.
 
 ```yaml
 regions:
-  - global
-  - us-central1
+  - global # Nuke global resources
+  - us-east1 # Nuke resources in the us-east1 region
+
+resource-types:
+  excludes:
+    - StorageBucketObject # Exclude Storage Bucket Objects
 
 blocklist:
-  - production-12345
+  - production-12345 # Never nuke this project
 
-accounts:
-  playground-12345: # gcp-nuke-example
+accounts: # i.e. Google Cloud projects
+  playground-12345:
+    presets:
+      - common
     filters:
-      IAMUser:
-        - "my-user"
-      IAMUserPolicyAttachment:
-        - "my-user -> AdministratorAccess"
-      IAMUserAccessKey:
-        - "my-user -> ABCDEFGHIJKLMNOPQRST"
+      # Protect specific service accounts by email
+      IAMServiceAccount:
+        - 'custom-service-account@playground-12345.iam.gserviceaccount.com'
+
+      # Protect service account keys by service account email
+      IAMServiceAccountKey:
+        - property: ServiceAccountEmail
+          value: 'custom-service-account@playground-12345.iam.gserviceaccount.com'
+
+      # Protect a DNS zone from deletion
+      DNSManagedZone:
+        - 'my-dns-zone'
+
+      # Protect IAM policy bindings for specific users
+      IAMPolicyBinding:
+        - property: Member
+          value: 'user:admin@example.com'
+
+      # Delete DNS records only in a specific zone
+      DNSRecordSet:
+        - property: Zone
+          value: 'my-dns-zone'
+          invert: true
+
+presets:
+  common:
+    filters:
+      VPC:
+        - default
 ```
 
 ## Second Run (No Dry Run)
@@ -75,62 +105,66 @@ accounts:
 This will officially remove resources from your gcp project. Make sure you really want to do this!
 
 ```bash
-$ gcp-nuke nuke --config config/nuke-config.yml --no-dry-run
-gcp-nuke version v1.0.39.gc2f318f - Fri Jul 28 16:26:41 CEST 2017 - c2f318f37b7d2dec0e646da3d4d05ab5296d5bce
+$ gcp-nuke nuke -c config/nuke-config.yaml --no-dry-run
+gcp-nuke - 1.0.0
+Do you really want to nuke the project with the ID 'playground-12345'?
+Do you want to continue? Enter project ID to continue.
+> playground-12345
 
-Do you really want to nuke the account with the ID 000000000000 and the alias 'gcp-nuke-example'?
-Do you want to continue? Enter account alias to continue.
-> gcp-nuke-example
+starting scan for resources
 
-us-east-1 - EC2DHCPOption - 'dopt-bf2ec3d8' - would remove
-us-east-1 - EC2Instance - 'i-01b489457a60298dd' - would remove
-us-east-1 - EC2KeyPair - 'test' - would remove
-us-east-1 - EC2NetworkACL - 'acl-6482a303' - cannot delete default VPC
-us-east-1 - EC2RouteTable - 'rtb-ffe91e99' - would remove
-us-east-1 - EC2SecurityGroup - 'sg-220e945a' - cannot delete group 'default'
-us-east-1 - EC2SecurityGroup - 'sg-f20f958a' - would remove
-us-east-1 - EC2Subnet - 'subnet-154d844e' - would remove
-us-east-1 - EC2Volume - 'vol-0ddfb15461a00c3e2' - would remove
-us-east-1 - EC2VPC - 'vpc-c6159fa1' - would remove
-us-east-1 - IAMUserAccessKey - 'my-user -> ABCDEFGHIJKLMNOPQRST' - filtered by config
-us-east-1 - IAMUserPolicyAttachment - 'my-user -> AdministratorAccess' - [UserName: "my-user", PolicyArn: "arn:gcp:iam::gcp:policy/AdministratorAccess", PolicyName: "AdministratorAccess"] - would remove
-us-east-1 - IAMUser - 'my-user' - filtered by config
-Scan complete: 13 total, 8 nukeable, 5 filtered.
+global - IAMServiceAccount - grafana@playground-12345.iam.gserviceaccount.com - [Description: "", ID: "1234567890123456789", Name: "grafana@playground-12345.iam.gserviceaccount.com"] - would remove
+global - IAMServiceAccount - playground-filestore-backup@playground-12345.iam.gserviceaccount.com - [Description: "", ID: "1234567890123456789", Name: "playground-filestore-backup@playground-12345.iam.gserviceaccount.com"] - would remove
+global - DNSManagedZone - sql-psa-goog - [CreationTime: "2026-01-25T12:26:03.208Z", DNSName: "sql-psa.goog.", Name: "sql-psa-goog", Visibility: "private"] - would remove
+global - DNSManagedZone - example-com - [CreationTime: "2026-01-25T12:18:51.287Z", DNSName: "example.com.", Name: "example-com", Visibility: "public"] - would remove
+global - IAMServiceAccountKey - 123456789012-compute@developer.gserviceaccount.com -> 1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p - [Algorithm: "KEY_ALG_RSA_2048", Disabled: "false", ID: "1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p", ManagedType: "SYSTEM_MANAGED", ServiceAccount: "Compute Engine default service account", ServiceAccountEmail: "123456789012-compute@developer.gserviceaccount.com", ServiceAccountID: "1234567890123456789"] - filtered: will not remove system managed key
+us-east1 - ArtifactRegistryRepository - playground-repo - [Format: "DOCKER", FullName: "projects/playground-12345/locations/us-east-1/repositories/playground-repo", Name: "playground-repo", label:goog-terraform-provisioned: "true"] - would remove
+us-east1 - ComputeBackendService - gkegw1-tw1m-argocd-argocd-server-443-32wtkmg3e8op - [Name: "gkegw1-tw1m-argocd-argocd-server-443-32wtkmg3e8op"] - would remove
+us-east1 - ComputeBackendService - gkegw1-tw1m-grafana-grafana-80-ura50snsg7it - [Name: "gkegw1-tw1m-grafana-grafana-80-ura50snsg7it"] - would remove
+us-east1 - ComputeBackendService - gkegw1-tw1m-prometheus-prometheus-server-80-qxf2xtfecs7d - [Name: "gkegw1-tw1m-prometheus-prometheus-server-80-qxf2xtfecs7d"] - would remove
+us-east1 - StorageBucket - playground-loki-logs - [MultiRegion: "false", Name: "playground-loki-logs", label:goog-terraform-provisioned: "true"] - would remove
+us-east1 - KMSKey - playground-67890 - [Keyring: "playground-12345", Name: "playground-67890", State: "ENABLED"] - would remove
+us-east1 - KMSKey - playground-12345 - [Keyring: "playground-12345", Name: "playground-12345", State: "DESTROYED"] - filtered: key is already destroyed
+...
+...
+...
+Scan complete: 333 total, 205 nukeable, 128 filtered.
 
-Do you really want to nuke these resources on the account with the ID 000000000000 and the alias 'gcp-nuke-example'?
-Do you want to continue? Enter account alias to continue.
-> gcp-nuke-example
+Do you really want to nuke these resources on the project with the ID 'playground-12345'?
+Do you want to continue? Enter project ID to continue.
+> playground-12345
 
-us-east-1 - EC2DHCPOption - 'dopt-bf2ec3d8' - failed
-us-east-1 - EC2Instance - 'i-01b489457a60298dd' - triggered remove
-us-east-1 - EC2KeyPair - 'test' - triggered remove
-us-east-1 - EC2RouteTable - 'rtb-ffe91e99' - failed
-us-east-1 - EC2SecurityGroup - 'sg-f20f958a' - failed
-us-east-1 - EC2Subnet - 'subnet-154d844e' - failed
-us-east-1 - EC2Volume - 'vol-0ddfb15461a00c3e2' - failed
-us-east-1 - EC2VPC - 'vpc-c6159fa1' - failed
-us-east-1 - S3Object - 's3://rebuy-terraform-state-138758637120/run-terraform.lock' - triggered remove
+global - DNSManagedZone - sql-psa-goog - triggered remove
+global - DNSManagedZone - example-com - triggered remove
+us-east1 - ArtifactRegistryRepository - playground-repo - triggered remove
+us-east1 - ComputeBackendService - gkegw1-tw1m-argocd-argocd-server-443-32wtkmg3e8op - triggered remove
+us-east1 - ComputeBackendService - gkegw1-tw1m-grafana-grafana-80-ura50snsg7it - triggered remove
+us-east1 - ComputeBackendService - gkegw1-tw1m-prometheus-prometheus-server-80-qxf2xtfecs7d - triggered remove
+us-east1 - StorageBucket - playground-loki-logs - triggered remove
+...
+...
+...
 
-Removal requested: 2 waiting, 6 failed, 5 skipped, 0 finished
+Removal requested: 205 waiting, 0 failed, 128 skipped, 0 finished
 
-us-east-1 - EC2DHCPOption - 'dopt-bf2ec3d8' - failed
-us-east-1 - EC2Instance - 'i-01b489457a60298dd' - waiting
-us-east-1 - EC2KeyPair - 'test' - removed
-us-east-1 - EC2RouteTable - 'rtb-ffe91e99' - failed
-us-east-1 - EC2SecurityGroup - 'sg-f20f958a' - failed
-us-east-1 - EC2Subnet - 'subnet-154d844e' - failed
-us-east-1 - EC2Volume - 'vol-0ddfb15461a00c3e2' - failed
-us-east-1 - EC2VPC - 'vpc-c6159fa1' - failed
+global - DNSManagedZone - sql-psa-goog - removed
+global - DNSManagedZone - example-com - waiting
+us-east1 - ArtifactRegistryRepository - playground-repo - removed
+us-east1 - ComputeBackendService - gkegw1-tw1m-argocd-argocd-server-443-32wtkmg3e8op - removed
+us-east1 - ComputeBackendService - gkegw1-tw1m-grafana-grafana-80-ura50snsg7it - removed
+us-east1 - ComputeBackendService - gkegw1-tw1m-prometheus-prometheus-server-80-qxf2xtfecs7d - removed
+us-east1 - StorageBucket - playground-loki-logs - removed
+...
+...
+...
 
-Removal requested: 1 waiting, 6 failed, 5 skipped, 1 finished
+Removal requested: 12 waiting, 0 failed, 128 skipped, 193 finished
 
 --- truncating long output ---
 ```
 
-As you see *gcp-nuke* now tries to delete all resources which aren't filtered, without caring about the dependencies
-between them. This results in API errors which can be ignored. These errors are shown at the end of the *gcp-nuke* run,
-if they keep to appear.
+As you see _gcp-nuke_ now tries to delete all resources which aren't filtered. This results in API errors which can be ignored.
+These errors are shown at the end of the _gcp-nuke_ run, if they keep to appear.
 
-*gcp-nuke* retries deleting all resources until all specified ones are deleted or until there are only resources
+_gcp-nuke_ retries deleting all resources until all specified ones are deleted or until there are only resources
 with errors left.
-

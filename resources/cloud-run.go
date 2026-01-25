@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/gotidy/ptr"
 	"strings"
+
+	"github.com/gotidy/ptr"
 
 	"github.com/sirupsen/logrus"
 
@@ -34,6 +35,12 @@ func init() {
 
 type CloudRunLister struct {
 	svc *run.ServicesClient
+}
+
+func (l *CloudRunLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
 }
 
 func (l *CloudRunLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {

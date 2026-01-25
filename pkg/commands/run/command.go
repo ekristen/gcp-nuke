@@ -10,7 +10,7 @@ import (
 
 	"github.com/gotidy/ptr"
 	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	libconfig "github.com/ekristen/libnuke/pkg/config"
 	libnuke "github.com/ekristen/libnuke/pkg/nuke"
@@ -24,11 +24,11 @@ import (
 	"github.com/ekristen/gcp-nuke/pkg/nuke"
 )
 
-func execute(c *cli.Context) error {
-	ctx, cancel := context.WithCancel(c.Context)
+func execute(ctx context.Context, cmd *cli.Command) error {
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	gcp, err := gcputil.New(ctx, c.String("project-id"), c.String("impersonate-service-account"))
+	gcp, err := gcputil.New(ctx, cmd.String("project-id"), cmd.String("impersonate-service-account"))
 	if err != nil {
 		return err
 	}
@@ -43,25 +43,26 @@ func execute(c *cli.Context) error {
 	logger.Trace("preparing to run nuke")
 
 	params := &libnuke.Parameters{
-		Force:      c.Bool("no-prompt"),
-		ForceSleep: c.Int("prompt-delay"),
-		Quiet:      c.Bool("quiet"),
-		NoDryRun:   c.Bool("no-dry-run"),
-		Includes:   c.StringSlice("include"),
-		Excludes:   c.StringSlice("exclude"),
+		Force:              cmd.Bool("no-prompt"),
+		ForceSleep:         int(cmd.Int("prompt-delay")),
+		Quiet:              cmd.Bool("quiet"),
+		NoDryRun:           cmd.Bool("no-dry-run"),
+		Includes:           cmd.StringSlice("include"),
+		Excludes:           cmd.StringSlice("exclude"),
+		WaitOnDependencies: cmd.Bool("wait-on-dependencies"),
 	}
 
 	parsedConfig, err := libconfig.New(libconfig.Options{
-		Path:         c.Path("config"),
+		Path:         cmd.String("config"),
 		Deprecations: registry.GetDeprecatedResourceTypeMapping(),
 		Log:          logger.WithField("component", "config"),
 	})
 	if err != nil {
-		logger.Errorf("Failed to parse config file %s", c.Path("config"))
+		logger.Errorf("Failed to parse config file %s", cmd.String("config"))
 		return err
 	}
 
-	projectID := c.String("project-id")
+	projectID := cmd.String("project-id")
 
 	projectConfig := parsedConfig.Accounts[projectID]
 
@@ -131,14 +132,21 @@ func execute(c *cli.Context) error {
 
 	// Register the scanners for each region that is defined in the configuration.
 	for _, regionName := range parsedConfig.Regions {
-		scannerActual := scanner.New(regionName, projectResourceTypes, &nuke.ListerOpts{
-			Project:       ptr.String(projectID),
-			Region:        ptr.String(regionName),
-			Zones:         gcp.GetZones(regionName),
-			EnabledAPIs:   gcp.GetEnabledAPIs(),
-			ClientOptions: gcp.GetClientOptions(),
+		scannerActual, err := scanner.New(&scanner.Config{
+			Owner:         regionName,
+			ResourceTypes: projectResourceTypes,
+			Opts: &nuke.ListerOpts{
+				Project:       ptr.String(projectID),
+				Region:        ptr.String(regionName),
+				Zones:         gcp.GetZones(regionName),
+				EnabledAPIs:   gcp.GetEnabledAPIs(),
+				ClientOptions: gcp.GetClientOptions(),
+			},
+			Logger: logger,
 		})
-		scannerActual.SetLogger(logger)
+		if err != nil {
+			return err
+		}
 
 		if err := n.RegisterScanner(nuke.Project, scannerActual); err != nil {
 			return err
@@ -147,12 +155,12 @@ func execute(c *cli.Context) error {
 
 	logger.Debug("running ...")
 
-	return n.Run(c.Context)
+	return n.Run(ctx)
 }
 
 func init() {
 	flags := []cli.Flag{
-		&cli.PathFlag{
+		&cli.StringFlag{
 			Name:  "config",
 			Usage: "path to config file",
 			Value: "config.yaml",
@@ -183,21 +191,25 @@ func init() {
 			Usage: "seconds to delay after prompt before running (minimum: 3 seconds)",
 			Value: 10,
 		},
+		&cli.BoolFlag{
+			Name:  "wait-on-dependencies",
+			Usage: "wait for dependent resources to be deleted before deleting resources that depend on them",
+		},
 		&cli.StringSliceFlag{
 			Name:    "feature-flag",
 			Usage:   "enable experimental behaviors that may not be fully tested or supported",
-			EnvVars: []string{"GCP_NUKE_FEATURE_FLAGS"},
+			Sources: cli.EnvVars("GCP_NUKE_FEATURE_FLAGS"),
 		},
 		&cli.StringFlag{
 			Name:     "project-id",
 			Usage:    "which GCP project should be nuked",
-			EnvVars:  []string{"GCP_NUKE_PROJECT_ID"},
+			Sources:  cli.EnvVars("GCP_NUKE_PROJECT_ID"),
 			Required: true,
 		},
 		&cli.StringFlag{
 			Name:    "impersonate-service-account",
 			Usage:   "impersonate a service account for all API calls",
-			EnvVars: []string{"GCP_NUKE_IMPERSONATE_SERVICE_ACCOUNT"},
+			Sources: cli.EnvVars("GCP_NUKE_IMPERSONATE_SERVICE_ACCOUNT"),
 		},
 	}
 

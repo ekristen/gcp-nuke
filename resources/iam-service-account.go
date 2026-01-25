@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/ekristen/libnuke/pkg/settings"
 	"github.com/gotidy/ptr"
-	"strings"
 
 	"github.com/sirupsen/logrus"
 
@@ -44,8 +45,15 @@ type IAMServiceAccountLister struct {
 	svc *iamadmin.IamClient
 }
 
+func (l *IAMServiceAccountLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
+}
+
 func (l *IAMServiceAccountLister) ListServiceAccounts(
-	ctx context.Context, opts *nuke.ListerOpts) ([]*adminpb.ServiceAccount, error) {
+	ctx context.Context, opts *nuke.ListerOpts,
+) ([]*adminpb.ServiceAccount, error) {
 	if l.svc == nil {
 		var err error
 		l.svc, err = iamadmin.NewIamClient(ctx, opts.ClientOptions...)
@@ -118,10 +126,7 @@ type IAMServiceAccount struct {
 
 func (r *IAMServiceAccount) Filter() error {
 	isDefaultServiceAccount := false
-	deleteDefaultServiceAccounts := false
-	if r.settings.GetBool("DeleteDefaultServiceAccounts") {
-		deleteDefaultServiceAccounts = true
-	}
+	deleteDefaultServiceAccounts := r.settings.GetBool("DeleteDefaultServiceAccounts")
 
 	if !strings.Contains(*r.Name, ".iam.gserviceaccount.com") {
 		isDefaultServiceAccount = true

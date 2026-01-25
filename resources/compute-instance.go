@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"errors"
+
 	"github.com/gotidy/ptr"
 	"github.com/sirupsen/logrus"
 
@@ -31,6 +32,12 @@ func init() {
 
 type ComputeInstanceLister struct {
 	svc *compute.InstancesClient
+}
+
+func (l *ComputeInstanceLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
 }
 
 func (l *ComputeInstanceLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {

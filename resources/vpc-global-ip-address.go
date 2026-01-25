@@ -35,6 +35,12 @@ type VPCGlobalIPAddressLister struct {
 	svc *compute.GlobalAddressesClient
 }
 
+func (l *VPCGlobalIPAddressLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
+}
+
 func (l *VPCGlobalIPAddressLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
 	var resources []resource.Resource
 
@@ -91,7 +97,7 @@ type VPCGlobalIPAddress struct {
 func (r *VPCGlobalIPAddress) Remove(ctx context.Context) (err error) {
 	r.removeOp, err = r.svc.Delete(ctx, &computepb.DeleteGlobalAddressRequest{
 		Project: *r.project,
-		Address: *r.Name, // misleading - address is actually the name not the IPv4/IPv6 value
+		Address: *r.Name,
 	})
 	return err
 }

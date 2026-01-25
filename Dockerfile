@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.21-labs
 ARG PROJECT_NAME=gcp-nuke
 
-FROM cgr.dev/chainguard/wolfi-base:latest as base
+FROM cgr.dev/chainguard/wolfi-base:latest AS base
 ARG PROJECT_NAME
 RUN apk add --no-cache ca-certificates
 RUN addgroup -S ${PROJECT_NAME} && adduser -S ${PROJECT_NAME} -G ${PROJECT_NAME}

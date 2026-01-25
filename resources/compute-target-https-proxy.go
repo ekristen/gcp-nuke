@@ -36,6 +36,15 @@ type ComputeTargetHTTPSProxyLister struct {
 	globalSvc *compute.TargetHttpsProxiesClient
 }
 
+func (l *ComputeTargetHTTPSProxyLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
+	if l.globalSvc != nil {
+		_ = l.globalSvc.Close()
+	}
+}
+
 func (l *ComputeTargetHTTPSProxyLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)

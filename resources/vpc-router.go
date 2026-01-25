@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"errors"
+
 	"github.com/sirupsen/logrus"
 
 	"google.golang.org/api/iterator"
@@ -30,6 +31,12 @@ func init() {
 
 type VPCRouterLister struct {
 	svc *compute.RoutersClient
+}
+
+func (l *VPCRouterLister) Close() {
+	if l.svc != nil {
+		_ = l.svc.Close()
+	}
 }
 
 func (l *VPCRouterLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
