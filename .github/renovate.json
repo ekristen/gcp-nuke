@@ -3,9 +3,13 @@
         "config:recommended"
     ],
     "vulnerabilityAlerts": {
-        "labels": ["security"],
+        "labels": [
+            "security"
+        ],
         "automerge": true,
-        "assignees": ["@ekristen"]
+        "assignees": [
+            "@ekristen"
+        ]
     },
     "osvVulnerabilityAlerts": true,
     "packageRules": [
@@ -24,11 +28,9 @@
             ],
             "groupName": "kubernetes",
             "groupSlug": "kubernetes",
-            "matchPackagePatterns": [
-                "^k8s.io/"
-            ],
             "matchPackageNames": [
-                "bitnami/kubectl"
+                "bitnami/kubectl",
+                "/^k8s.io//"
             ]
         },
         {
@@ -40,14 +42,16 @@
                 "digest"
             ],
             "automerge": true,
-            "labels": ["patch"]
+            "labels": [
+                "patch"
+            ]
         },
         {
-            "matchPackagePatterns": [
-                "^golang.*"
-            ],
             "groupName": "golang",
-            "groupSlug": "golang"
+            "groupSlug": "golang",
+            "matchPackageNames": [
+                "/^golang.*/"
+            ]
         },
         {
             "matchFileNames": [
@@ -58,26 +62,32 @@
             ],
             "matchCurrentVersion": "!/^0/",
             "automerge": true,
-            "labels": ["bot/skip-changelog"]
+            "labels": [
+                "bot/skip-changelog"
+            ]
         },
         {
-            "matchPackagePatterns": "cloud.google.com/go*",
-            "groupName": "google-cloud-sdk"
+            "groupName": "google-cloud-sdk",
+            "matchPackageNames": [
+                "/cloud.google.com/go*/"
+            ]
         }
     ],
-    "regexManagers": [
+    "customManagers": [
         {
-            "fileMatch": [
-                ".*.go$"
+            "customType": "regex",
+            "managerFilePatterns": [
+                "/.*.go$/"
             ],
             "matchStrings": [
-                "\"(?<currentValue>.*)\" \/\/ renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\s"
+                "\"(?<currentValue>.*)\" // renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\s"
             ],
             "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
         },
         {
-            "fileMatch": [
-                "^.github/workflows/.*"
+            "customType": "regex",
+            "managerFilePatterns": [
+                "/^.github/workflows/.*/"
             ],
             "matchStrings": [
                 "go-version: (?<currentValue>.*?).x\n"
