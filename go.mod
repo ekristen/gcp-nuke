@@ -42,7 +42,7 @@ require (
 	golang.org/x/sync v0.19.0
 	golang.org/x/text v0.33.0
 	google.golang.org/api v0.262.0
-	google.golang.org/genproto v0.0.0-20260122232226-8e98ce8d340d
+	google.golang.org/genproto v0.0.0-20260126211449-d11affda4bed
 	google.golang.org/grpc v1.78.0
 	google.golang.org/protobuf v1.36.11
 )
