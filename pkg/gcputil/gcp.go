@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -130,6 +131,16 @@ func New(ctx context.Context, projectID, impersonateServiceAccount string) (*GCP
 		ProjectID:     projectID,
 		zones:         make(map[string][]string),
 		clientOptions: make([]option.ClientOption, 0),
+	}
+
+	if jsonCreds := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON"); jsonCreds != "" {
+		logrus.Debug("using credentials from GOOGLE_APPLICATION_CREDENTIALS_JSON")
+		creds, err := google.CredentialsFromJSON(ctx, []byte(jsonCreds),
+			"https://www.googleapis.com/auth/cloud-platform")
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse GOOGLE_APPLICATION_CREDENTIALS_JSON: %w", err)
+		}
+		gcp.clientOptions = append(gcp.clientOptions, option.WithCredentials(creds))
 	}
 
 	if impersonateServiceAccount != "" {

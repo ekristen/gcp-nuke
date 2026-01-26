@@ -2,6 +2,23 @@
 
 This is not a comprehensive list of options, but rather a list of features that I think are worth highlighting.
 
+## Authentication Environment Variables
+
+gcp-nuke supports the following environment variables for authentication:
+
+| Variable | Description |
+|----------|-------------|
+| `GOOGLE_APPLICATION_CREDENTIALS` | Path to a service account JSON key file |
+| `GOOGLE_APPLICATION_CREDENTIALS_JSON` | Service account JSON key as a string (takes precedence) |
+
+The `GOOGLE_APPLICATION_CREDENTIALS_JSON` variable is useful for CI/CD pipelines and containerized environments where you want to pass credentials directly without creating a file on disk.
+
+Example:
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS_JSON='{"type":"service_account","project_id":"...","private_key":"..."}'
+gcp-nuke run --config config.yaml --project-id playground-12345
+```
+
 ## Wait on Dependencies
 
 `--wait-on-dependencies` will wait for dependent resources to be deleted before deleting resources that depend on them. This is useful when resources have dependencies on each other (e.g., a VPC network cannot be deleted until all subnets are deleted first).
