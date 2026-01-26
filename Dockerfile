@@ -24,3 +24,4 @@ FROM base
 ARG PROJECT_NAME
 COPY --from=build /src/bin/${PROJECT_NAME} /usr/local/bin/${PROJECT_NAME}
 USER ${PROJECT_NAME}
+ENTRYPOINT ["/usr/local/bin/gcp-nuke"]

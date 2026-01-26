@@ -35,7 +35,7 @@ included them in the license copyright although no direct code was used.
 
 ## Usage
 
-**Note:** all cli flags can also be expressed as environment variables.
+**Note:** All CLI flags can also be expressed as environment variables.
 
 **By default, no destructive actions will be taken.**
 
@@ -68,11 +68,21 @@ Authentication uses [Application Default Credentials (ADC)](https://cloud.google
 gcloud auth application-default login
 ```
 
-### Service Account Key
+### Service Account Key (File Path)
 
 ```bash
 export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
 ```
+
+### Service Account Key (JSON String)
+
+For CI/CD pipelines and containerized environments where you want to pass credentials directly without creating a file:
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS_JSON='{"type":"service_account","project_id":"...","private_key":"..."}'
+```
+
+If both `GOOGLE_APPLICATION_CREDENTIALS` and `GOOGLE_APPLICATION_CREDENTIALS_JSON` are set, `GOOGLE_APPLICATION_CREDENTIALS_JSON` takes precedence.
 
 ### Workload Identity (GKE, Cloud Run, etc.)
 
