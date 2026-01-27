@@ -44,7 +44,7 @@ func (l *CloudTasksQueueLister) List(ctx context.Context, o interface{}) ([]reso
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Regional, "cloudtasks.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "cloudtasks.googleapis.com", CloudTasksQueueResource); err != nil {
 		return resources, err
 	}
 

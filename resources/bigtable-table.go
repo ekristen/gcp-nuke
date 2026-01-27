@@ -39,7 +39,7 @@ func (l *BigtableTableLister) List(ctx context.Context, o interface{}) ([]resour
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)
 
-	if err := opts.BeforeList(nuke.Global, "bigtable.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Global, "bigtable.googleapis.com", BigtableTableResource); err != nil {
 		return resources, nil
 	}
 

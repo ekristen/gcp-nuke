@@ -45,7 +45,7 @@ func (l *AlloyDBInstanceLister) List(ctx context.Context, o interface{}) ([]reso
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Regional, "alloydb.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "alloydb.googleapis.com", AlloyDBInstanceResource); err != nil {
 		return resources, err
 	}
 

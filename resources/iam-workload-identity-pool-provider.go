@@ -31,7 +31,7 @@ func (l *IAMWorkloadIdentityPoolProviderLister) List(ctx context.Context, o inte
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Global, "iam.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Global, "iam.googleapis.com", IAMWorkloadIdentityPoolProviderProviderResource); err != nil {
 		return resources, err
 	}
 

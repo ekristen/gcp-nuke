@@ -46,7 +46,7 @@ func (l *VPCRouteLister) List(ctx context.Context, o interface{}) ([]resource.Re
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com", VPCRouteResource); err != nil {
 		return resources, err
 	}
 

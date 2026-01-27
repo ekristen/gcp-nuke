@@ -53,7 +53,7 @@ func (l *ComputeNetworkEndpointGroupLister) List(ctx context.Context, o interfac
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)
 
-	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com"); err == nil {
+	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com", ComputeNetworkEndpointGroupResource); err == nil {
 		globalResources, err := l.listGlobal(ctx, opts)
 		if err != nil {
 			logrus.WithError(err).Error("unable to list global network endpoint groups")
@@ -62,7 +62,7 @@ func (l *ComputeNetworkEndpointGroupLister) List(ctx context.Context, o interfac
 		}
 	}
 
-	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com"); err == nil {
+	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com", ComputeNetworkEndpointGroupResource); err == nil {
 		regionalResources, err := l.listRegional(ctx, opts)
 		if err != nil {
 			logrus.WithError(err).Error("unable to list regional network endpoint groups")

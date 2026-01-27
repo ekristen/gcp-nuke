@@ -45,7 +45,7 @@ func (l *ComposerEnvironmentLister) List(ctx context.Context, o interface{}) ([]
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Regional, "composer.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "composer.googleapis.com", ComposerEnvironmentResource); err != nil {
 		return resources, err
 	}
 

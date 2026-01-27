@@ -42,7 +42,7 @@ func (l *BigQueryDatasetLister) Close() {
 func (l *BigQueryDatasetLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
 	opts := o.(*nuke.ListerOpts)
 	var resources []resource.Resource
-	if err := opts.BeforeList(nuke.Regional, "bigquery.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "bigquery.googleapis.com", BigQueryDatasetResource); err != nil {
 		return resources, err
 	}
 

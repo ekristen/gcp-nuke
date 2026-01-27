@@ -48,7 +48,7 @@ func (l *SecretManagerSecretLister) List(ctx context.Context, o interface{}) ([]
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Global, "secretmanager.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Global, "secretmanager.googleapis.com", SecretManagerSecretResource); err != nil {
 		return resources, err
 	}
 

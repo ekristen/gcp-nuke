@@ -34,7 +34,7 @@ func (l *DNSRecordSetLister) List(ctx context.Context, o interface{}) ([]resourc
 	opts := o.(*nuke.ListerOpts)
 	var resources []resource.Resource
 
-	if err := opts.BeforeList(nuke.Global, "dns.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Global, "dns.googleapis.com", DNSRecordSetResource); err != nil {
 		return resources, err
 	}
 

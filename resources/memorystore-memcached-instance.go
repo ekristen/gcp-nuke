@@ -40,7 +40,7 @@ func (l *MemorystoreMemcachedInstanceLister) List(ctx context.Context, o interfa
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)
 
-	if err := opts.BeforeList(nuke.Regional, "memcache.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "memcache.googleapis.com", MemorystoreMemcachedInstanceResource); err != nil {
 		return resources, nil
 	}
 

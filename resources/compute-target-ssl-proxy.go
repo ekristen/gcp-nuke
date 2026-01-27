@@ -45,7 +45,7 @@ func (l *ComputeTargetSSLProxyLister) List(ctx context.Context, o interface{}) (
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)
 
-	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com", ComputeTargetSSLProxyResource); err != nil {
 		return resources, nil
 	}
 

@@ -41,7 +41,7 @@ func (l *FirestoreDatabaseLister) Close() {
 func (l *FirestoreDatabaseLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
 	opts := o.(*nuke.ListerOpts)
 	var resources []resource.Resource
-	if err := opts.BeforeList(nuke.Global, "firestore.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Global, "firestore.googleapis.com", FirestoreDatabaseResource); err != nil {
 		return resources, err
 	}
 

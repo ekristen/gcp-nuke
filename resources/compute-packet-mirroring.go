@@ -11,7 +11,6 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 
-	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/types"
@@ -42,8 +41,8 @@ func (l *ComputePacketMirroringLister) Close() {
 
 func (l *ComputePacketMirroringLister) List(ctx context.Context, o interface{}) ([]resource.Resource, error) {
 	opts := o.(*nuke.ListerOpts)
-	if *opts.Region == "global" {
-		return nil, liberror.ErrSkipRequest("resource is regional")
+	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com", ComputePacketMirroringResource); err != nil {
+		return nil, err
 	}
 
 	var resources []resource.Resource

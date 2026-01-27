@@ -42,7 +42,7 @@ func (l *IAMServiceAccountKeyLister) List(ctx context.Context, o interface{}) ([
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Global, "iam.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Global, "iam.googleapis.com", IAMServiceAccountKeyResource); err != nil {
 		return resources, err
 	}
 

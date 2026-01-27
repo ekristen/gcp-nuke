@@ -40,7 +40,7 @@ func (l *FilestoreBackupLister) List(ctx context.Context, o interface{}) ([]reso
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)
 
-	if err := opts.BeforeList(nuke.Regional, "file.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "file.googleapis.com", FilestoreBackupResource); err != nil {
 		return resources, nil
 	}
 

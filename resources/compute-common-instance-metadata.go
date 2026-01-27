@@ -43,7 +43,7 @@ func (l *ComputeCommonInstanceMetadataLister) List(ctx context.Context, o interf
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com", ComputeCommonInstanceMetadataResource); err != nil {
 		return resources, err
 	}
 

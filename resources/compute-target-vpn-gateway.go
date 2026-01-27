@@ -48,7 +48,7 @@ func (l *ComputeTargetVpnGatewayLister) List(ctx context.Context, o interface{})
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)
 
-	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com", ComputeTargetVpnGatewayResource); err != nil {
 		return resources, nil
 	}
 

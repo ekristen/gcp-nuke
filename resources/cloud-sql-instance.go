@@ -38,7 +38,7 @@ func (l *CloudSQLInstanceLister) List(ctx context.Context, o interface{}) ([]res
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Regional, "sqladmin.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "sqladmin.googleapis.com", CloudSQLInstanceResource); err != nil {
 		return resources, err
 	}
 

@@ -40,7 +40,7 @@ func (l *CertificateManagerCertificateMapEntryLister) List(ctx context.Context, 
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)
 
-	if err := opts.BeforeList(nuke.Global, "certificatemanager.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Global, "certificatemanager.googleapis.com", CertificateManagerCertificateMapEntryResource); err != nil {
 		return resources, nil
 	}
 

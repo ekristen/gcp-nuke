@@ -44,7 +44,7 @@ func (l *DataprocClusterLister) List(ctx context.Context, o interface{}) ([]reso
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Regional, "dataproc.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "dataproc.googleapis.com", DataprocClusterResource); err != nil {
 		return resources, err
 	}
 

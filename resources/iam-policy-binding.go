@@ -38,7 +38,7 @@ func (l *IAMPolicyBindingLister) List(ctx context.Context, o interface{}) ([]res
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Global, "cloudresourcemanager.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Global, "cloudresourcemanager.googleapis.com", IAMPolicyBindingResource); err != nil {
 		return resources, err
 	}
 

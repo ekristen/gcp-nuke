@@ -34,7 +34,7 @@ func (l *DataflowJobLister) List(ctx context.Context, o interface{}) ([]resource
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Regional, "dataflow.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "dataflow.googleapis.com", DataflowJobResource); err != nil {
 		return resources, err
 	}
 

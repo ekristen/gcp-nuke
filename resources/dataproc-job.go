@@ -43,7 +43,7 @@ func (l *DataprocJobLister) List(ctx context.Context, o interface{}) ([]resource
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Regional, "dataproc.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "dataproc.googleapis.com", DataprocJobResource); err != nil {
 		return resources, err
 	}
 

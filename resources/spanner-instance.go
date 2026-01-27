@@ -45,7 +45,7 @@ func (l *SpannerInstanceLister) List(ctx context.Context, o interface{}) ([]reso
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Global, "spanner.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Global, "spanner.googleapis.com", SpannerInstanceResource); err != nil {
 		return resources, err
 	}
 

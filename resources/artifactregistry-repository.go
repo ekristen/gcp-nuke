@@ -40,7 +40,7 @@ func (l *ArtifactRegistryRepositoryLister) List(ctx context.Context, o interface
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)
 
-	if err := opts.BeforeList(nuke.Regional, "artifactregistry.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "artifactregistry.googleapis.com", ArtifactRegistryRepositoryResource); err != nil {
 		return resources, nil
 	}
 
