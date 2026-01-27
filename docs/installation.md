@@ -26,7 +26,7 @@ Mount your local gcloud configuration into the container:
 docker run --rm \
   -v ~/.config/gcloud:/home/gcp-nuke/.config/gcloud:ro \
   -v "$(pwd)/config.yaml:/config.yaml:ro" \
-  ghcr.io/ekristen/gcp-nuke:v1.10.0 \
+  ghcr.io/ekristen/gcp-nuke:v1.11.0 \
   run --config /config.yaml --project-id playground-12345
 ```
 
@@ -39,7 +39,7 @@ docker run --rm \
   -v "$(pwd)/credentials.json:/credentials.json:ro" \
   -v "$(pwd)/config.yaml:/config.yaml:ro" \
   -e GOOGLE_APPLICATION_CREDENTIALS=/credentials.json \
-  ghcr.io/ekristen/gcp-nuke:v1.10.0 \
+  ghcr.io/ekristen/gcp-nuke:v1.11.0 \
   run --config /config.yaml --project-id playground-12345
 ```
 
@@ -50,8 +50,8 @@ Pass credentials directly via environment variable without mounting files:
 ```bash
 docker run --rm \
   -v "$(pwd)/config.yaml:/config.yaml:ro" \
-  -e GOOGLE_APPLICATION_CREDENTIALS_JSON="$GOOGLE_APPLICATION_CREDENTIALS_JSON" \
-  ghcr.io/ekristen/gcp-nuke:v1.10.0 \
+  -e GOOGLE_APPLICATION_CREDENTIALS_JSON \
+  ghcr.io/ekristen/gcp-nuke:v1.11.0 \
   run --config /config.yaml --project-id playground-12345
 ```
 
