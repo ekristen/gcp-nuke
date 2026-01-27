@@ -42,7 +42,7 @@ func (l *CertificateManagerDNSAuthorizationLister) List(ctx context.Context, o i
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = certificatemanager.NewClient(ctx)
+		l.svc, err = certificatemanager.NewClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

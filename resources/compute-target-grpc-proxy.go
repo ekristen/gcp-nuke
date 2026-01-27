@@ -51,7 +51,7 @@ func (l *ComputeTargetGRPCProxyLister) List(ctx context.Context, o interface{}) 
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewTargetGrpcProxiesRESTClient(ctx)
+		l.svc, err = compute.NewTargetGrpcProxiesRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

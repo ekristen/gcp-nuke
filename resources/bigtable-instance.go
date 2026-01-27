@@ -49,7 +49,7 @@ func (l *BigtableInstanceLister) List(ctx context.Context, o interface{}) ([]res
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = bigtable.NewInstanceAdminClient(ctx, *opts.Project)
+		l.svc, err = bigtable.NewInstanceAdminClient(ctx, *opts.Project, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

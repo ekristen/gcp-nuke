@@ -75,7 +75,7 @@ func (l *ComputeURLMapLister) listGlobal(ctx context.Context, opts *nuke.ListerO
 
 	if l.globalSvc == nil {
 		var err error
-		l.globalSvc, err = compute.NewUrlMapsRESTClient(ctx)
+		l.globalSvc, err = compute.NewUrlMapsRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -111,7 +111,7 @@ func (l *ComputeURLMapLister) listRegional(ctx context.Context, opts *nuke.Liste
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewRegionUrlMapsRESTClient(ctx)
+		l.svc, err = compute.NewRegionUrlMapsRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

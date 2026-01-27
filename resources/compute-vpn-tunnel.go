@@ -51,7 +51,7 @@ func (l *ComputeVpnTunnelLister) List(ctx context.Context, o interface{}) ([]res
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewVpnTunnelsRESTClient(ctx)
+		l.svc, err = compute.NewVpnTunnelsRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

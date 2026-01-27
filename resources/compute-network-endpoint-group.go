@@ -86,7 +86,7 @@ func (l *ComputeNetworkEndpointGroupLister) listGlobal(ctx context.Context, opts
 
 	if l.globalSvc == nil {
 		var err error
-		l.globalSvc, err = compute.NewGlobalNetworkEndpointGroupsRESTClient(ctx)
+		l.globalSvc, err = compute.NewGlobalNetworkEndpointGroupsRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -123,7 +123,7 @@ func (l *ComputeNetworkEndpointGroupLister) listRegional(ctx context.Context, op
 
 	if l.regionalSvc == nil {
 		var err error
-		l.regionalSvc, err = compute.NewRegionNetworkEndpointGroupsRESTClient(ctx)
+		l.regionalSvc, err = compute.NewRegionNetworkEndpointGroupsRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -162,7 +162,7 @@ func (l *ComputeNetworkEndpointGroupLister) listZonal(ctx context.Context, opts 
 
 	if l.zonalSvc == nil {
 		var err error
-		l.zonalSvc, err = compute.NewNetworkEndpointGroupsRESTClient(ctx)
+		l.zonalSvc, err = compute.NewNetworkEndpointGroupsRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

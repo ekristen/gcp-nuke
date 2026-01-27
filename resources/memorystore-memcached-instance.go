@@ -46,7 +46,7 @@ func (l *MemorystoreMemcachedInstanceLister) List(ctx context.Context, o interfa
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = memcache.NewCloudMemcacheClient(ctx)
+		l.svc, err = memcache.NewCloudMemcacheClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

@@ -45,7 +45,7 @@ func (l *BigtableTableLister) List(ctx context.Context, o interface{}) ([]resour
 
 	if l.instanceSvc == nil {
 		var err error
-		l.instanceSvc, err = bigtable.NewInstanceAdminClient(ctx, *opts.Project)
+		l.instanceSvc, err = bigtable.NewInstanceAdminClient(ctx, *opts.Project, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -58,7 +58,7 @@ func (l *BigtableTableLister) List(ctx context.Context, o interface{}) ([]resour
 	}
 
 	for _, inst := range instances {
-		adminClient, err := bigtable.NewAdminClient(ctx, *opts.Project, inst.Name)
+		adminClient, err := bigtable.NewAdminClient(ctx, *opts.Project, inst.Name, opts.ClientOptions...)
 		if err != nil {
 			logrus.WithError(err).Errorf("unable to create admin client for instance %s", inst.Name)
 			continue

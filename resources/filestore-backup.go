@@ -46,7 +46,7 @@ func (l *FilestoreBackupLister) List(ctx context.Context, o interface{}) ([]reso
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = filestore.NewCloudFilestoreManagerClient(ctx)
+		l.svc, err = filestore.NewCloudFilestoreManagerClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

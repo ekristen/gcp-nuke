@@ -48,7 +48,7 @@ func (l *IAMServiceAccountKeyLister) List(ctx context.Context, o interface{}) ([
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = iamadmin.NewIamClient(ctx)
+		l.svc, err = iamadmin.NewIamClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

@@ -75,7 +75,7 @@ func (l *ComputeTargetHTTPSProxyLister) listGlobal(ctx context.Context, opts *nu
 
 	if l.globalSvc == nil {
 		var err error
-		l.globalSvc, err = compute.NewTargetHttpsProxiesRESTClient(ctx)
+		l.globalSvc, err = compute.NewTargetHttpsProxiesRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -110,7 +110,7 @@ func (l *ComputeTargetHTTPSProxyLister) listRegional(ctx context.Context, opts *
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewRegionTargetHttpsProxiesRESTClient(ctx)
+		l.svc, err = compute.NewRegionTargetHttpsProxiesRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

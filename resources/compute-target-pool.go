@@ -51,7 +51,7 @@ func (l *ComputeTargetPoolLister) List(ctx context.Context, o interface{}) ([]re
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewTargetPoolsRESTClient(ctx)
+		l.svc, err = compute.NewTargetPoolsRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

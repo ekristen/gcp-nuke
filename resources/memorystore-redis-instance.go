@@ -46,7 +46,7 @@ func (l *MemorystoreRedisInstanceLister) List(ctx context.Context, o interface{}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = redis.NewCloudRedisClient(ctx)
+		l.svc, err = redis.NewCloudRedisClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

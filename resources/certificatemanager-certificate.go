@@ -42,7 +42,7 @@ func (l *CertificateManagerCertificateLister) List(ctx context.Context, o interf
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = certificatemanager.NewClient(ctx)
+		l.svc, err = certificatemanager.NewClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

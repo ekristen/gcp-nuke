@@ -46,7 +46,7 @@ func (l *ArtifactRegistryRepositoryLister) List(ctx context.Context, o interface
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = artifactregistry.NewClient(ctx)
+		l.svc, err = artifactregistry.NewClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

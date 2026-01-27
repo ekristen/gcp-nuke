@@ -75,7 +75,7 @@ func (l *ComputeSSLCertificateLister) listGlobal(ctx context.Context, opts *nuke
 
 	if l.globalSvc == nil {
 		var err error
-		l.globalSvc, err = compute.NewSslCertificatesRESTClient(ctx)
+		l.globalSvc, err = compute.NewSslCertificatesRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -110,7 +110,7 @@ func (l *ComputeSSLCertificateLister) listRegional(ctx context.Context, opts *nu
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewRegionSslCertificatesRESTClient(ctx)
+		l.svc, err = compute.NewRegionSslCertificatesRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

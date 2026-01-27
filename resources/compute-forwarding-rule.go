@@ -75,7 +75,7 @@ func (l *ComputeForwardingRuleLister) listGlobal(ctx context.Context, opts *nuke
 
 	if l.globalSvc == nil {
 		var err error
-		l.globalSvc, err = compute.NewGlobalForwardingRulesRESTClient(ctx)
+		l.globalSvc, err = compute.NewGlobalForwardingRulesRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -112,7 +112,7 @@ func (l *ComputeForwardingRuleLister) listRegional(ctx context.Context, opts *nu
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewForwardingRulesRESTClient(ctx)
+		l.svc, err = compute.NewForwardingRulesRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

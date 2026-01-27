@@ -54,7 +54,7 @@ func (l *ComputeExternalVpnGatewayLister) List(ctx context.Context, o interface{
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewExternalVpnGatewaysRESTClient(ctx)
+		l.svc, err = compute.NewExternalVpnGatewaysRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

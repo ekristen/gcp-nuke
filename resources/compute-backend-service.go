@@ -75,7 +75,7 @@ func (l *ComputeBackendServiceLister) listGlobal(ctx context.Context, opts *nuke
 
 	if l.globalSvc == nil {
 		var err error
-		l.globalSvc, err = compute.NewBackendServicesRESTClient(ctx)
+		l.globalSvc, err = compute.NewBackendServicesRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -110,7 +110,7 @@ func (l *ComputeBackendServiceLister) listRegional(ctx context.Context, opts *nu
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewRegionBackendServicesRESTClient(ctx)
+		l.svc, err = compute.NewRegionBackendServicesRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

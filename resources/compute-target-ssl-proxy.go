@@ -51,7 +51,7 @@ func (l *ComputeTargetSSLProxyLister) List(ctx context.Context, o interface{}) (
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewTargetSslProxiesRESTClient(ctx)
+		l.svc, err = compute.NewTargetSslProxiesRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

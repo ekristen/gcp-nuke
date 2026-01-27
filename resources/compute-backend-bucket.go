@@ -51,7 +51,7 @@ func (l *ComputeBackendBucketLister) List(ctx context.Context, o interface{}) ([
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewBackendBucketsRESTClient(ctx)
+		l.svc, err = compute.NewBackendBucketsRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

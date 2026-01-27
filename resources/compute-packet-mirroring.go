@@ -49,7 +49,7 @@ func (l *ComputePacketMirroringLister) List(ctx context.Context, o interface{}) 
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewPacketMirroringsRESTClient(ctx)
+		l.svc, err = compute.NewPacketMirroringsRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
