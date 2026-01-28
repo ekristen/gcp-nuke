@@ -28,7 +28,7 @@ require (
 	cloud.google.com/go/scheduler v1.11.8
 	cloud.google.com/go/secretmanager v1.16.0
 	cloud.google.com/go/spanner v1.87.0
-	cloud.google.com/go/storage v1.59.1
+	cloud.google.com/go/storage v1.59.2
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/ekristen/libnuke v1.3.0
 	github.com/fatih/camelcase v1.0.0
