@@ -36,7 +36,13 @@ func main() {
 		markdown += "\n"
 
 		markdown += "## Properties\n\n"
-		for k, v := range propMap {
+		var propKeys []string
+		for k := range propMap {
+			propKeys = append(propKeys, k)
+		}
+		sort.Strings(propKeys)
+		for _, k := range propKeys {
+			v := propMap[k]
 			if v == "" {
 				v = "No description provided"
 			}

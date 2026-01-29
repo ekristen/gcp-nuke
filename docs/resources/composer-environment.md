@@ -7,9 +7,9 @@
 
 ## Properties
 
-- **`State`**: The current state of the environment
+- **`FullName`**: No description provided
 - **`Labels`**: Labels associated with the environment
+- **`Name`**: The name of the Composer environment
 - **`Project`**: No description provided
 - **`Region`**: No description provided
-- **`FullName`**: No description provided
-- **`Name`**: The name of the Composer environment
+- **`State`**: The current state of the environment

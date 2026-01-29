@@ -7,9 +7,9 @@
 
 ## Properties
 
-- **`Project`**: No description provided
 - **`FullName`**: No description provided
 - **`Name`**: The name of the Pub/Sub schema
+- **`Project`**: No description provided
 - **`Type`**: The type of the schema (AVRO, PROTOCOL_BUFFER)
 ## Depends On
 

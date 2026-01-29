@@ -7,11 +7,11 @@
 
 ## Properties
 
+- **`FullName`**: No description provided
 - **`Labels`**: Labels associated with the cluster
+- **`Name`**: The name of the AlloyDB cluster
 - **`Project`**: No description provided
 - **`Region`**: No description provided
-- **`FullName`**: No description provided
-- **`Name`**: The name of the AlloyDB cluster
 - **`State`**: The current state of the cluster
 ## Depends On
 

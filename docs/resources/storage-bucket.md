@@ -7,9 +7,9 @@
 
 ## Properties
 
-- **`Name`**: No description provided
 - **`Labels`**: No description provided
 - **`MultiRegion`**: No description provided
+- **`Name`**: No description provided
 ## Settings
 
 - `DeleteGoogleManagedBuckets`

@@ -7,10 +7,10 @@
 
 ## Properties
 
-- **`Region`**: No description provided
-- **`FullName`**: No description provided
-- **`Name`**: The resource name of the pipeline job
 - **`DisplayName`**: The display name of the pipeline job
-- **`State`**: The current state of the pipeline job
+- **`FullName`**: No description provided
 - **`Labels`**: Labels associated with the pipeline job
+- **`Name`**: The resource name of the pipeline job
 - **`Project`**: No description provided
+- **`Region`**: No description provided
+- **`State`**: The current state of the pipeline job

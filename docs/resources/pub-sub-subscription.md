@@ -7,8 +7,8 @@
 
 ## Properties
 
-- **`Project`**: No description provided
 - **`FullName`**: No description provided
-- **`Name`**: The name of the Pub/Sub subscription
-- **`Topic`**: The topic this subscription is attached to
 - **`Labels`**: Labels associated with the subscription
+- **`Name`**: The name of the Pub/Sub subscription
+- **`Project`**: No description provided
+- **`Topic`**: The topic this subscription is attached to

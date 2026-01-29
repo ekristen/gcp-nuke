@@ -8,6 +8,6 @@
 ## Properties
 
 - **`Deleted`**: No description provided
+- **`Etag`**: No description provided
 - **`Name`**: No description provided
 - **`Stage`**: No description provided
-- **`Etag`**: No description provided
