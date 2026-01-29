@@ -11,7 +11,7 @@ require (
 	cloud.google.com/go/certificatemanager v1.9.6
 	cloud.google.com/go/cloudtasks v1.13.7
 	cloud.google.com/go/compute v1.54.0
-	cloud.google.com/go/container v1.45.0
+	cloud.google.com/go/container v1.46.0
 	cloud.google.com/go/dataproc/v2 v2.15.0
 	cloud.google.com/go/filestore v1.10.3
 	cloud.google.com/go/firestore v1.21.0
