@@ -81,7 +81,7 @@ func (l *GKEClusterLister) List(ctx context.Context, o interface{}) ([]resource.
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Regional, "container.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "container.googleapis.com", GKEClusterResource); err != nil {
 		return resources, err
 	}
 

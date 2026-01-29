@@ -40,13 +40,13 @@ func (l *ArtifactRegistryRepositoryLister) List(ctx context.Context, o interface
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)
 
-	if err := opts.BeforeList(nuke.Regional, "artifactregistry.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "artifactregistry.googleapis.com", ArtifactRegistryRepositoryResource); err != nil {
 		return resources, nil
 	}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = artifactregistry.NewClient(ctx)
+		l.svc, err = artifactregistry.NewClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

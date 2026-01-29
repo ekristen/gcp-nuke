@@ -7,5 +7,5 @@
 
 ## Properties
 
-- **`Name`**: No description provided
 - **`Location`**: No description provided
+- **`Name`**: No description provided

@@ -7,9 +7,9 @@
 
 ## Properties
 
+- **`Labels`**: No description provided
 - **`Name`**: No description provided
 - **`Network`**: No description provided
-- **`Labels`**: No description provided
 ## Depends On
 
 !!! Experimental Feature

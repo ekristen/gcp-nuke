@@ -46,7 +46,7 @@ func (l *CloudRunJobLister) List(ctx context.Context, o interface{}) ([]resource
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Regional, "run.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "run.googleapis.com", CloudRunJobResource); err != nil {
 		return resources, err
 	}
 

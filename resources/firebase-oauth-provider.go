@@ -33,7 +33,7 @@ func (l *FirebaseOAuthProviderLister) List(ctx context.Context, o interface{}) (
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Global, "identitytoolkit.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Global, "identitytoolkit.googleapis.com", FirebaseOAuthProviderResource); err != nil {
 		return resources, err
 	}
 

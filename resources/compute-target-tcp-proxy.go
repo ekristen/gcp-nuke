@@ -49,7 +49,7 @@ func (l *ComputeTargetTCPProxyLister) List(ctx context.Context, o interface{}) (
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)
 
-	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com"); err == nil {
+	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com", ComputeTargetTCPProxyResource); err == nil {
 		globalResources, err := l.listGlobal(ctx, opts)
 		if err != nil {
 			logrus.WithError(err).Error("unable to list global target tcp proxies")
@@ -58,7 +58,7 @@ func (l *ComputeTargetTCPProxyLister) List(ctx context.Context, o interface{}) (
 		}
 	}
 
-	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com"); err == nil {
+	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com", ComputeTargetTCPProxyResource); err == nil {
 		regionalResources, err := l.listRegional(ctx, opts)
 		if err != nil {
 			logrus.WithError(err).Error("unable to list regional target tcp proxies")
@@ -75,7 +75,7 @@ func (l *ComputeTargetTCPProxyLister) listGlobal(ctx context.Context, opts *nuke
 
 	if l.globalSvc == nil {
 		var err error
-		l.globalSvc, err = compute.NewTargetTcpProxiesRESTClient(ctx)
+		l.globalSvc, err = compute.NewTargetTcpProxiesRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -111,7 +111,7 @@ func (l *ComputeTargetTCPProxyLister) listRegional(ctx context.Context, opts *nu
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewRegionTargetTcpProxiesRESTClient(ctx)
+		l.svc, err = compute.NewRegionTargetTcpProxiesRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

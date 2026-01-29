@@ -7,11 +7,11 @@
 
 ## Properties
 
-- **`Role`**: No description provided
+- **`GoogleManaged`**: No description provided
+- **`IsDeleted`**: No description provided
 - **`Member`**: No description provided
 - **`MemberType`**: No description provided
-- **`IsDeleted`**: No description provided
-- **`GoogleManaged`**: No description provided
+- **`Role`**: No description provided
 ## Settings
 
 - `DeleteGoogleManaged`

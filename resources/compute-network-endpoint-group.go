@@ -53,7 +53,7 @@ func (l *ComputeNetworkEndpointGroupLister) List(ctx context.Context, o interfac
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)
 
-	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com"); err == nil {
+	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com", ComputeNetworkEndpointGroupResource); err == nil {
 		globalResources, err := l.listGlobal(ctx, opts)
 		if err != nil {
 			logrus.WithError(err).Error("unable to list global network endpoint groups")
@@ -62,7 +62,7 @@ func (l *ComputeNetworkEndpointGroupLister) List(ctx context.Context, o interfac
 		}
 	}
 
-	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com"); err == nil {
+	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com", ComputeNetworkEndpointGroupResource); err == nil {
 		regionalResources, err := l.listRegional(ctx, opts)
 		if err != nil {
 			logrus.WithError(err).Error("unable to list regional network endpoint groups")
@@ -86,7 +86,7 @@ func (l *ComputeNetworkEndpointGroupLister) listGlobal(ctx context.Context, opts
 
 	if l.globalSvc == nil {
 		var err error
-		l.globalSvc, err = compute.NewGlobalNetworkEndpointGroupsRESTClient(ctx)
+		l.globalSvc, err = compute.NewGlobalNetworkEndpointGroupsRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -123,7 +123,7 @@ func (l *ComputeNetworkEndpointGroupLister) listRegional(ctx context.Context, op
 
 	if l.regionalSvc == nil {
 		var err error
-		l.regionalSvc, err = compute.NewRegionNetworkEndpointGroupsRESTClient(ctx)
+		l.regionalSvc, err = compute.NewRegionNetworkEndpointGroupsRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -162,7 +162,7 @@ func (l *ComputeNetworkEndpointGroupLister) listZonal(ctx context.Context, opts 
 
 	if l.zonalSvc == nil {
 		var err error
-		l.zonalSvc, err = compute.NewNetworkEndpointGroupsRESTClient(ctx)
+		l.zonalSvc, err = compute.NewNetworkEndpointGroupsRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

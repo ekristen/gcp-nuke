@@ -7,12 +7,12 @@
 
 ## Properties
 
-- **`State`**: The current state of the instance
-- **`NodeCount`**: The number of nodes in the instance
-- **`Labels`**: Labels associated with the instance
-- **`Project`**: No description provided
 - **`FullName`**: No description provided
+- **`Labels`**: Labels associated with the instance
 - **`Name`**: The name of the Spanner instance
+- **`NodeCount`**: The number of nodes in the instance
+- **`Project`**: No description provided
+- **`State`**: The current state of the instance
 ## Depends On
 
 !!! Experimental Feature

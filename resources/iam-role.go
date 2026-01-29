@@ -42,7 +42,7 @@ func (l *IAMRoleLister) List(ctx context.Context, o interface{}) ([]resource.Res
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Global, "iam.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Global, "iam.googleapis.com", IAMRoleResource); err != nil {
 		return resources, err
 	}
 

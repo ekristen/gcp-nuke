@@ -45,7 +45,7 @@ func (l *VertexAIPipelineJobLister) List(ctx context.Context, o interface{}) ([]
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Regional, "aiplatform.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "aiplatform.googleapis.com", VertexAIPipelineJobResource); err != nil {
 		return resources, err
 	}
 

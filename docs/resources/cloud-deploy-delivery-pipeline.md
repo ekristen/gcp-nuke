@@ -7,8 +7,8 @@
 
 ## Properties
 
+- **`FullName`**: No description provided
+- **`Labels`**: The labels associated with the delivery pipeline
+- **`Name`**: The name of the delivery pipeline
 - **`Project`**: No description provided
 - **`Region`**: No description provided
-- **`FullName`**: No description provided
-- **`Name`**: The name of the delivery pipeline
-- **`Labels`**: The labels associated with the delivery pipeline

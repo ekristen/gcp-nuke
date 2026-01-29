@@ -31,10 +31,16 @@ type ListerOpts struct {
 	ClientOptions []option.ClientOption
 }
 
-func (o *ListerOpts) BeforeList(geo Geography, service string) error {
+func (o *ListerOpts) BeforeList(geo Geography, service string, resourceNames ...string) error {
 	log := logrus.WithField("geo", geo).
 		WithField("service", service).
 		WithField("hook", "true")
+
+	resourceName := ""
+	if len(resourceNames) > 0 {
+		resourceName = resourceNames[0]
+		log = log.WithField("resource", resourceName)
+	}
 
 	if geo == Global && *o.Region != "global" {
 		log.Trace("before-list: skipping resource, global")
@@ -45,7 +51,7 @@ func (o *ListerOpts) BeforeList(geo Geography, service string) error {
 	}
 
 	if !slices.Contains(o.EnabledAPIs, service) {
-		log.Trace("before-list: skipping resource, api not enabled")
+		log.Warn("before-list: skipping resource, api not enabled")
 		return liberror.ErrSkipRequest(fmt.Sprintf("api '%s' not enabled", service))
 	}
 

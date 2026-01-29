@@ -49,7 +49,7 @@ func (l *ComputeBackendServiceLister) List(ctx context.Context, o interface{}) (
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)
 
-	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com"); err == nil {
+	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com", ComputeBackendServiceResource); err == nil {
 		globalResources, err := l.listGlobal(ctx, opts)
 		if err != nil {
 			logrus.WithError(err).Error("unable to list global ssl certificates")
@@ -58,7 +58,7 @@ func (l *ComputeBackendServiceLister) List(ctx context.Context, o interface{}) (
 		}
 	}
 
-	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com"); err == nil {
+	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com", ComputeBackendServiceResource); err == nil {
 		regionalResources, err := l.listRegional(ctx, opts)
 		if err != nil {
 			logrus.WithError(err).Error("unable to list regional ssl certificates")
@@ -75,7 +75,7 @@ func (l *ComputeBackendServiceLister) listGlobal(ctx context.Context, opts *nuke
 
 	if l.globalSvc == nil {
 		var err error
-		l.globalSvc, err = compute.NewBackendServicesRESTClient(ctx)
+		l.globalSvc, err = compute.NewBackendServicesRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -110,7 +110,7 @@ func (l *ComputeBackendServiceLister) listRegional(ctx context.Context, opts *nu
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewRegionBackendServicesRESTClient(ctx)
+		l.svc, err = compute.NewRegionBackendServicesRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

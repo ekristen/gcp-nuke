@@ -46,7 +46,7 @@ func (l *ComputeDiskLister) List(ctx context.Context, o interface{}) ([]resource
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com", ComputeDiskResource); err != nil {
 		return resources, err
 	}
 

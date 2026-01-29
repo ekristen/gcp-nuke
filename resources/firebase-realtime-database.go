@@ -43,7 +43,7 @@ func (l *FirebaseRealtimeDatabaseLister) List(ctx context.Context, o interface{}
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Regional, "firebasedatabase.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "firebasedatabase.googleapis.com", FirebaseRealtimeDatabaseResource); err != nil {
 		return resources, err
 	}
 

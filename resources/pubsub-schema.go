@@ -45,7 +45,7 @@ func (l *PubSubSchemaLister) List(ctx context.Context, o interface{}) ([]resourc
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Global, "pubsub.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Global, "pubsub.googleapis.com", PubSubSchemaResource); err != nil {
 		return resources, err
 	}
 

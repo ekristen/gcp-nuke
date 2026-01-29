@@ -44,7 +44,7 @@ func (l *ComputeInstanceLister) List(ctx context.Context, o interface{}) ([]reso
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com", ComputeInstanceResource); err != nil {
 		return resources, err
 	}
 

@@ -7,12 +7,12 @@
 
 ## Properties
 
+- **`DisplayName`**: The display name of the model
+- **`FullName`**: No description provided
+- **`Labels`**: Labels associated with the model
+- **`Name`**: The resource name of the model
 - **`Project`**: No description provided
 - **`Region`**: No description provided
-- **`FullName`**: No description provided
-- **`Name`**: The resource name of the model
-- **`DisplayName`**: The display name of the model
-- **`Labels`**: Labels associated with the model
 ## Depends On
 
 !!! Experimental Feature

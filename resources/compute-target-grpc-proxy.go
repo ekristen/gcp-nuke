@@ -45,13 +45,13 @@ func (l *ComputeTargetGRPCProxyLister) List(ctx context.Context, o interface{}) 
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)
 
-	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com", ComputeTargetGRPCProxyResource); err != nil {
 		return resources, nil
 	}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewTargetGrpcProxiesRESTClient(ctx)
+		l.svc, err = compute.NewTargetGrpcProxiesRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

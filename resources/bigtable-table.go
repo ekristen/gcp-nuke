@@ -39,13 +39,13 @@ func (l *BigtableTableLister) List(ctx context.Context, o interface{}) ([]resour
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)
 
-	if err := opts.BeforeList(nuke.Global, "bigtable.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Global, "bigtable.googleapis.com", BigtableTableResource); err != nil {
 		return resources, nil
 	}
 
 	if l.instanceSvc == nil {
 		var err error
-		l.instanceSvc, err = bigtable.NewInstanceAdminClient(ctx, *opts.Project)
+		l.instanceSvc, err = bigtable.NewInstanceAdminClient(ctx, *opts.Project, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -58,7 +58,7 @@ func (l *BigtableTableLister) List(ctx context.Context, o interface{}) ([]resour
 	}
 
 	for _, inst := range instances {
-		adminClient, err := bigtable.NewAdminClient(ctx, *opts.Project, inst.Name)
+		adminClient, err := bigtable.NewAdminClient(ctx, *opts.Project, inst.Name, opts.ClientOptions...)
 		if err != nil {
 			logrus.WithError(err).Errorf("unable to create admin client for instance %s", inst.Name)
 			continue

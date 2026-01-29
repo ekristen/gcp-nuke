@@ -51,7 +51,7 @@ func (l *VPCSubnetLister) List(ctx context.Context, o interface{}) ([]resource.R
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com", VPCSubnetResource); err != nil {
 		return resources, err
 	}
 

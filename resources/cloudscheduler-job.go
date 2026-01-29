@@ -46,7 +46,7 @@ func (l *CloudSchedulerJobLister) List(ctx context.Context, o interface{}) ([]re
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Regional, "cloudscheduler.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "cloudscheduler.googleapis.com", CloudSchedulerJobResource); err != nil {
 		return resources, err
 	}
 

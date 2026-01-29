@@ -44,7 +44,7 @@ func (l *StorageBucketObjectLister) List(ctx context.Context, o interface{}) ([]
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Global, "storage.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Global, "storage.googleapis.com", StorageBucketObjectResource); err != nil {
 		return resources, err
 	}
 

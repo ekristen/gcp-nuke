@@ -7,10 +7,10 @@
 
 ## Properties
 
-- **`Project`**: No description provided
 - **`FullName`**: No description provided
-- **`Name`**: The name of the Pub/Sub topic
 - **`Labels`**: Labels associated with the topic
+- **`Name`**: The name of the Pub/Sub topic
+- **`Project`**: No description provided
 ## Depends On
 
 !!! Experimental Feature

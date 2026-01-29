@@ -40,13 +40,13 @@ func (l *MemorystoreRedisInstanceLister) List(ctx context.Context, o interface{}
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)
 
-	if err := opts.BeforeList(nuke.Regional, "redis.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "redis.googleapis.com", MemorystoreRedisInstanceResource); err != nil {
 		return resources, nil
 	}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = redis.NewCloudRedisClient(ctx)
+		l.svc, err = redis.NewCloudRedisClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

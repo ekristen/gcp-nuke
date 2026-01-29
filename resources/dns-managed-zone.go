@@ -33,7 +33,7 @@ func (l *DNSManagedZoneLister) List(ctx context.Context, o interface{}) ([]resou
 	opts := o.(*nuke.ListerOpts)
 	var resources []resource.Resource
 
-	if err := opts.BeforeList(nuke.Global, "dns.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Global, "dns.googleapis.com", DNSManagedZoneResource); err != nil {
 		return resources, err
 	}
 

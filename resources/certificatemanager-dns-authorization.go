@@ -42,13 +42,13 @@ func (l *CertificateManagerDNSAuthorizationLister) List(ctx context.Context, o i
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = certificatemanager.NewClient(ctx)
+		l.svc, err = certificatemanager.NewClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	if err := opts.BeforeList(nuke.Global, "certificatemanager.googleapis.com"); err == nil {
+	if err := opts.BeforeList(nuke.Global, "certificatemanager.googleapis.com", CertificateManagerDNSAuthorizationResource); err == nil {
 		globalResources, err := l.listLocation(ctx, opts, "global")
 		if err != nil {
 			logrus.WithError(err).Error("unable to list global certificate manager DNS authorizations")
@@ -57,7 +57,7 @@ func (l *CertificateManagerDNSAuthorizationLister) List(ctx context.Context, o i
 		}
 	}
 
-	if err := opts.BeforeList(nuke.Regional, "certificatemanager.googleapis.com"); err == nil {
+	if err := opts.BeforeList(nuke.Regional, "certificatemanager.googleapis.com", CertificateManagerDNSAuthorizationResource); err == nil {
 		regionalResources, err := l.listLocation(ctx, opts, *opts.Region)
 		if err != nil {
 			logrus.WithError(err).Error("unable to list regional certificate manager DNS authorizations")

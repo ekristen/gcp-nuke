@@ -49,7 +49,7 @@ func (l *ComputeURLMapLister) List(ctx context.Context, o interface{}) ([]resour
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)
 
-	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com"); err == nil {
+	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com", ComputeURLMapResource); err == nil {
 		globalResources, err := l.listGlobal(ctx, opts)
 		if err != nil {
 			logrus.WithError(err).Error("unable to list global")
@@ -58,7 +58,7 @@ func (l *ComputeURLMapLister) List(ctx context.Context, o interface{}) ([]resour
 		}
 	}
 
-	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com"); err == nil {
+	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com", ComputeURLMapResource); err == nil {
 		regionalResources, err := l.listRegional(ctx, opts)
 		if err != nil {
 			logrus.WithError(err).Error("unable to list regional")
@@ -75,7 +75,7 @@ func (l *ComputeURLMapLister) listGlobal(ctx context.Context, opts *nuke.ListerO
 
 	if l.globalSvc == nil {
 		var err error
-		l.globalSvc, err = compute.NewUrlMapsRESTClient(ctx)
+		l.globalSvc, err = compute.NewUrlMapsRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -111,7 +111,7 @@ func (l *ComputeURLMapLister) listRegional(ctx context.Context, opts *nuke.Liste
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewRegionUrlMapsRESTClient(ctx)
+		l.svc, err = compute.NewRegionUrlMapsRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

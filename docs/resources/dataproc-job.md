@@ -7,8 +7,8 @@
 
 ## Properties
 
-- **`Region`**: No description provided
 - **`ID`**: The ID of the Dataproc job
-- **`State`**: The current state of the job
 - **`Labels`**: Labels associated with the job
 - **`Project`**: No description provided
+- **`Region`**: No description provided
+- **`State`**: The current state of the job

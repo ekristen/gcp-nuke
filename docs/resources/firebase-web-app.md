@@ -8,5 +8,5 @@
 ## Properties
 
 - **`AppID`**: No description provided
-- **`State`**: No description provided
 - **`DisplayName`**: No description provided
+- **`State`**: No description provided

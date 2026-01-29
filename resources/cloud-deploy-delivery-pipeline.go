@@ -35,7 +35,7 @@ func (l *CloudDeployDeliveryPipelineLister) List(ctx context.Context, o interfac
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Regional, "clouddeploy.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "clouddeploy.googleapis.com", CloudDeployDeliveryPipelineResource); err != nil {
 		return resources, err
 	}
 

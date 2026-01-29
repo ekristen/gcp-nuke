@@ -7,9 +7,9 @@
 
 ## Properties
 
+- **`DisplayName`**: No description provided
 - **`Labels`**: No description provided
 - **`Name`**: No description provided
-- **`DisplayName`**: No description provided
 - **`State`**: No description provided
 ## Depends On
 

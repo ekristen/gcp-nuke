@@ -40,13 +40,13 @@ func (l *CertificateManagerCertificateMapEntryLister) List(ctx context.Context, 
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)
 
-	if err := opts.BeforeList(nuke.Global, "certificatemanager.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Global, "certificatemanager.googleapis.com", CertificateManagerCertificateMapEntryResource); err != nil {
 		return resources, nil
 	}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = certificatemanager.NewClient(ctx)
+		l.svc, err = certificatemanager.NewClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

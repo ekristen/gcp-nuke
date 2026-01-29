@@ -49,7 +49,7 @@ func (l *ComputeForwardingRuleLister) List(ctx context.Context, o interface{}) (
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)
 
-	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com"); err == nil {
+	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com", ComputeForwardingRuleResource); err == nil {
 		globalResources, err := l.listGlobal(ctx, opts)
 		if err != nil {
 			logrus.WithError(err).Error("unable to list global security policies")
@@ -58,7 +58,7 @@ func (l *ComputeForwardingRuleLister) List(ctx context.Context, o interface{}) (
 		}
 	}
 
-	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com"); err == nil {
+	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com", ComputeForwardingRuleResource); err == nil {
 		regionalResources, err := l.listRegional(ctx, opts)
 		if err != nil {
 			logrus.WithError(err).Error("unable to list regional security policies")
@@ -75,7 +75,7 @@ func (l *ComputeForwardingRuleLister) listGlobal(ctx context.Context, opts *nuke
 
 	if l.globalSvc == nil {
 		var err error
-		l.globalSvc, err = compute.NewGlobalForwardingRulesRESTClient(ctx)
+		l.globalSvc, err = compute.NewGlobalForwardingRulesRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
@@ -112,7 +112,7 @@ func (l *ComputeForwardingRuleLister) listRegional(ctx context.Context, opts *nu
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewForwardingRulesRESTClient(ctx)
+		l.svc, err = compute.NewForwardingRulesRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

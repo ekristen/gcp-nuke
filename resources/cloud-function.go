@@ -51,7 +51,7 @@ func (l *CloudFunctionLister) List(ctx context.Context, o interface{}) ([]resour
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Regional, "cloudfunctions.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "cloudfunctions.googleapis.com", CloudFunctionResource); err != nil {
 		return resources, err
 	}
 

@@ -7,5 +7,5 @@
 
 ## Properties
 
-- **`Items`**: No description provided
 - **`Fingerprint`**: No description provided
+- **`Items`**: No description provided

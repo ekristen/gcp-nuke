@@ -40,13 +40,13 @@ func (l *MemorystoreMemcachedInstanceLister) List(ctx context.Context, o interfa
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)
 
-	if err := opts.BeforeList(nuke.Regional, "memcache.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "memcache.googleapis.com", MemorystoreMemcachedInstanceResource); err != nil {
 		return resources, nil
 	}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = memcache.NewCloudMemcacheClient(ctx)
+		l.svc, err = memcache.NewCloudMemcacheClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

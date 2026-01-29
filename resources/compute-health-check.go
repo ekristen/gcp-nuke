@@ -43,7 +43,7 @@ func (l *ComputeHealthCheckLister) List(ctx context.Context, o interface{}) ([]r
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Global, "compute.googleapis.com", ComputeHealthCheckResource); err != nil {
 		return resources, err
 	}
 

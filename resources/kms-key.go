@@ -60,7 +60,7 @@ func (l *KMSKeyLister) List(ctx context.Context, o interface{}) ([]resource.Reso
 	var resources []resource.Resource
 
 	opts := o.(*nuke.ListerOpts)
-	if err := opts.BeforeList(nuke.Regional, "cloudkms.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "cloudkms.googleapis.com", KMSKeyResource); err != nil {
 		return resources, err
 	}
 

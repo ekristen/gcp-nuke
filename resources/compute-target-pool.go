@@ -45,13 +45,13 @@ func (l *ComputeTargetPoolLister) List(ctx context.Context, o interface{}) ([]re
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)
 
-	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "compute.googleapis.com", ComputeTargetPoolResource); err != nil {
 		return resources, nil
 	}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = compute.NewTargetPoolsRESTClient(ctx)
+		l.svc, err = compute.NewTargetPoolsRESTClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}

@@ -40,13 +40,13 @@ func (l *MemorystoreClusterLister) List(ctx context.Context, o interface{}) ([]r
 	var resources []resource.Resource
 	opts := o.(*nuke.ListerOpts)
 
-	if err := opts.BeforeList(nuke.Regional, "redis.googleapis.com"); err != nil {
+	if err := opts.BeforeList(nuke.Regional, "redis.googleapis.com", MemorystoreClusterResource); err != nil {
 		return resources, nil
 	}
 
 	if l.svc == nil {
 		var err error
-		l.svc, err = cluster.NewCloudRedisClusterClient(ctx)
+		l.svc, err = cluster.NewCloudRedisClusterClient(ctx, opts.ClientOptions...)
 		if err != nil {
 			return nil, err
 		}
