@@ -231,6 +231,23 @@ func (r *StorageBucket) removeObjects(ctx context.Context) error {
 		})
 	}
 
+	softDeletedIt := r.svc.Bucket(*r.Name).Objects(ctx, &storage.Query{
+		SoftDeleted: true,
+	})
+	for {
+		resp, err := softDeletedIt.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		objects = append(objects, objectToDelete{
+			name:       resp.Name,
+			generation: resp.Generation,
+		})
+	}
+
 	if len(objects) == 0 {
 		return nil
 	}
