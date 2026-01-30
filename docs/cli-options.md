@@ -19,6 +19,22 @@ export GOOGLE_APPLICATION_CREDENTIALS_JSON='{"type":"service_account","project_i
 gcp-nuke run --config config.yaml --project-id playground-12345
 ```
 
+## Disable Deletion Protection
+
+`--disable-deletion-protection` will automatically disable deletion protection on resources before deleting them. This applies to resources that support deletion protection such as Cloud SQL instances, Compute instances, Storage buckets, Filestore instances, and Memorystore clusters/instances.
+
+This flag can also be set via the `GCP_NUKE_DISABLE_DELETION_PROTECTION` environment variable.
+
+Alternatively, you can enable this behavior per-resource type using the `DisableDeletionProtection` setting in the config file:
+
+```yaml
+settings:
+  CloudSQLInstance:
+    DisableDeletionProtection: true
+  ComputeInstance:
+    DisableDeletionProtection: true
+```
+
 ## Wait on Dependencies
 
 `--wait-on-dependencies` will wait for dependent resources to be deleted before deleting resources that depend on them. This is useful when resources have dependencies on each other (e.g., a VPC network cannot be deleted until all subnets are deleted first).
