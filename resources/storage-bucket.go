@@ -121,12 +121,13 @@ func (l *StorageBucketLister) List(ctx context.Context, o interface{}) ([]resour
 		}
 
 		resources = append(resources, &StorageBucket{
-			svc:         l.svc,
-			project:     opts.Project,
-			region:      ptr.String(loc),
-			Name:        ptr.String(bucket.Name),
-			Labels:      bucket.Labels,
-			MultiRegion: ptr.Bool(isMultiRegion),
+			svc:                       l.svc,
+			disableDeletionProtection: opts.DisableDeletionProtection,
+			project:                   opts.Project,
+			region:                    ptr.String(loc),
+			Name:                      ptr.String(bucket.Name),
+			Labels:                    bucket.Labels,
+			MultiRegion:               ptr.Bool(isMultiRegion),
 		})
 	}
 
@@ -134,13 +135,14 @@ func (l *StorageBucketLister) List(ctx context.Context, o interface{}) ([]resour
 }
 
 type StorageBucket struct {
-	svc         *storage.Client
-	settings    *settings.Setting
-	project     *string
-	region      *string
-	Name        *string
-	Labels      map[string]string `property:"tagPrefix=label"`
-	MultiRegion *bool
+	svc                       *storage.Client
+	settings                  *settings.Setting
+	disableDeletionProtection bool
+	project                   *string
+	region                    *string
+	Name                      *string
+	Labels                    map[string]string `property:"tagPrefix=label"`
+	MultiRegion               *bool
 }
 
 func (r *StorageBucket) Filter() error {
@@ -162,7 +164,7 @@ func (r *StorageBucket) Filter() error {
 }
 
 func (r *StorageBucket) Remove(ctx context.Context) error {
-	if r.settings.GetBool("DisableDeletionProtection") {
+	if r.settings.GetBool("DisableDeletionProtection") || r.disableDeletionProtection {
 		if _, err := r.svc.Bucket(*r.Name).Update(ctx, storage.BucketAttrsToUpdate{
 			RetentionPolicy: &storage.RetentionPolicy{
 				RetentionPeriod: 0,

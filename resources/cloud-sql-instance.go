@@ -61,15 +61,16 @@ func (l *CloudSQLInstanceLister) List(ctx context.Context, o interface{}) ([]res
 		}
 
 		resources = append(resources, &CloudSQLInstance{
-			svc:              l.svc,
-			project:          opts.Project,
-			region:           opts.Region,
-			Name:             ptr.String(instance.Name),
-			State:            ptr.String(instance.State),
-			Labels:           instance.Settings.UserLabels,
-			CreationDate:     ptr.String(instance.CreateTime),
-			DatabaseVersion:  ptr.String(instance.DatabaseVersion),
-			instanceSettings: instance.Settings,
+			svc:                      l.svc,
+			disableProtectionEnabled: opts.DisableDeletionProtection,
+			project:                  opts.Project,
+			region:                   opts.Region,
+			Name:                     ptr.String(instance.Name),
+			State:                    ptr.String(instance.State),
+			Labels:                   instance.Settings.UserLabels,
+			CreationDate:             ptr.String(instance.CreateTime),
+			DatabaseVersion:          ptr.String(instance.DatabaseVersion),
+			instanceSettings:         instance.Settings,
 		})
 	}
 
@@ -77,9 +78,10 @@ func (l *CloudSQLInstanceLister) List(ctx context.Context, o interface{}) ([]res
 }
 
 type CloudSQLInstance struct {
-	svc      *sqladmin.Service
-	deleteOp *sqladmin.Operation
-	settings *settings.Setting
+	svc                      *sqladmin.Service
+	deleteOp                 *sqladmin.Operation
+	settings                 *settings.Setting
+	disableProtectionEnabled bool
 
 	project         *string
 	region          *string
@@ -132,7 +134,7 @@ func (r *CloudSQLInstance) HandleWait(ctx context.Context) error {
 }
 
 func (r *CloudSQLInstance) disableDeletionProtection(ctx context.Context) error {
-	if r.settings.GetBool("DisableDeletionProtection") {
+	if r.settings.GetBool("DisableDeletionProtection") || r.disableProtectionEnabled {
 		logrus.Trace("disabling deletion protection")
 
 		r.instanceSettings.DeletionProtectionEnabled = false

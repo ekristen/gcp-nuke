@@ -77,14 +77,15 @@ func (l *FilestoreInstanceLister) List(ctx context.Context, o interface{}) ([]re
 
 			zoneCopy := zone
 			resources = append(resources, &FilestoreInstance{
-				svc:      l.svc,
-				project:  opts.Project,
-				zone:     &zoneCopy,
-				Name:     &name,
-				FullName: &resp.Name,
-				Tier:     resp.Tier.String(),
-				State:    resp.State.String(),
-				Labels:   resp.Labels,
+				svc:                       l.svc,
+				disableDeletionProtection: opts.DisableDeletionProtection,
+				project:                   opts.Project,
+				zone:                      &zoneCopy,
+				Name:                      &name,
+				FullName:                  &resp.Name,
+				Tier:                      resp.Tier.String(),
+				State:                     resp.State.String(),
+				Labels:                    resp.Labels,
 			})
 		}
 	}
@@ -99,16 +100,17 @@ func (l *FilestoreInstanceLister) Close() {
 }
 
 type FilestoreInstance struct {
-	svc      *filestore.CloudFilestoreManagerClient
-	removeOp *filestore.DeleteInstanceOperation
-	settings *settings.Setting
-	project  *string
-	zone     *string
-	Name     *string
-	FullName *string
-	Tier     string
-	State    string
-	Labels   map[string]string `property:"tagPrefix=label"`
+	svc                       *filestore.CloudFilestoreManagerClient
+	removeOp                  *filestore.DeleteInstanceOperation
+	settings                  *settings.Setting
+	disableDeletionProtection bool
+	project                   *string
+	zone                      *string
+	Name                      *string
+	FullName                  *string
+	Tier                      string
+	State                     string
+	Labels                    map[string]string `property:"tagPrefix=label"`
 }
 
 func (r *FilestoreInstance) Settings(setting *settings.Setting) {
@@ -116,7 +118,7 @@ func (r *FilestoreInstance) Settings(setting *settings.Setting) {
 }
 
 func (r *FilestoreInstance) Remove(ctx context.Context) (err error) {
-	if r.settings.GetBool("DisableDeletionProtection") {
+	if r.settings.GetBool("DisableDeletionProtection") || r.disableDeletionProtection {
 		updateOp, updateErr := r.svc.UpdateInstance(ctx, &filestorepb.UpdateInstanceRequest{
 			Instance: &filestorepb.Instance{
 				Name:                      *r.FullName,

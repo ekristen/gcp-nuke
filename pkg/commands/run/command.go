@@ -137,11 +137,12 @@ func execute(ctx context.Context, cmd *cli.Command) error {
 			Owner:         regionName,
 			ResourceTypes: projectResourceTypes,
 			Opts: &nuke.ListerOpts{
-				Project:       ptr.String(projectID),
-				Region:        ptr.String(regionName),
-				Zones:         gcp.GetZones(regionName),
-				EnabledAPIs:   gcp.GetEnabledAPIs(),
-				ClientOptions: gcp.GetClientOptions(),
+				Project:                   ptr.String(projectID),
+				Region:                    ptr.String(regionName),
+				Zones:                     gcp.GetZones(regionName),
+				EnabledAPIs:               gcp.GetEnabledAPIs(),
+				ClientOptions:             gcp.GetClientOptions(),
+				DisableDeletionProtection: cmd.Bool("disable-deletion-protection"),
 			},
 			Logger: logger,
 		})
@@ -211,6 +212,11 @@ func init() {
 			Name:    "impersonate-service-account",
 			Usage:   "impersonate a service account for all API calls",
 			Sources: cli.EnvVars("GCP_NUKE_IMPERSONATE_SERVICE_ACCOUNT"),
+		},
+		&cli.BoolFlag{
+			Name:    "disable-deletion-protection",
+			Usage:   "disable deletion protection on resources before deleting them",
+			Sources: cli.EnvVars("GCP_NUKE_DISABLE_DELETION_PROTECTION"),
 		},
 	}
 

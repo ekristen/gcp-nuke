@@ -76,14 +76,15 @@ func (l *MemorystoreValkeyInstanceLister) List(ctx context.Context, o interface{
 		name := nameParts[len(nameParts)-1]
 
 		resources = append(resources, &MemorystoreValkeyInstance{
-			svc:        l.svc,
-			project:    opts.Project,
-			region:     opts.Region,
-			Name:       &name,
-			FullName:   &resp.Name,
-			State:      resp.State.String(),
-			ShardCount: resp.ShardCount,
-			Labels:     resp.Labels,
+			svc:                       l.svc,
+			disableDeletionProtection: opts.DisableDeletionProtection,
+			project:                   opts.Project,
+			region:                    opts.Region,
+			Name:                      &name,
+			FullName:                  &resp.Name,
+			State:                     resp.State.String(),
+			ShardCount:                resp.ShardCount,
+			Labels:                    resp.Labels,
 		})
 	}
 
@@ -97,16 +98,17 @@ func (l *MemorystoreValkeyInstanceLister) Close() {
 }
 
 type MemorystoreValkeyInstance struct {
-	svc        *memorystore.Client
-	removeOp   *memorystore.DeleteInstanceOperation
-	settings   *settings.Setting
-	project    *string
-	region     *string
-	Name       *string
-	FullName   *string
-	State      string
-	ShardCount int32
-	Labels     map[string]string `property:"tagPrefix=label"`
+	svc                       *memorystore.Client
+	removeOp                  *memorystore.DeleteInstanceOperation
+	settings                  *settings.Setting
+	disableDeletionProtection bool
+	project                   *string
+	region                    *string
+	Name                      *string
+	FullName                  *string
+	State                     string
+	ShardCount                int32
+	Labels                    map[string]string `property:"tagPrefix=label"`
 }
 
 func (r *MemorystoreValkeyInstance) Settings(setting *settings.Setting) {
@@ -114,7 +116,7 @@ func (r *MemorystoreValkeyInstance) Settings(setting *settings.Setting) {
 }
 
 func (r *MemorystoreValkeyInstance) Remove(ctx context.Context) (err error) {
-	if r.settings.GetBool("DisableDeletionProtection") {
+	if r.settings.GetBool("DisableDeletionProtection") || r.disableDeletionProtection {
 		updateOp, updateErr := r.svc.UpdateInstance(ctx, &memorystorepb.UpdateInstanceRequest{
 			Instance: &memorystorepb.Instance{
 				Name:                      *r.FullName,

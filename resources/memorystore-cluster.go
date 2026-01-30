@@ -76,13 +76,14 @@ func (l *MemorystoreClusterLister) List(ctx context.Context, o interface{}) ([]r
 		name := nameParts[len(nameParts)-1]
 
 		resources = append(resources, &MemorystoreCluster{
-			svc:        l.svc,
-			project:    opts.Project,
-			region:     opts.Region,
-			Name:       &name,
-			FullName:   &resp.Name,
-			State:      resp.State.String(),
-			ShardCount: resp.ShardCount,
+			svc:                       l.svc,
+			disableDeletionProtection: opts.DisableDeletionProtection,
+			project:                   opts.Project,
+			region:                    opts.Region,
+			Name:                      &name,
+			FullName:                  &resp.Name,
+			State:                     resp.State.String(),
+			ShardCount:                resp.ShardCount,
 		})
 	}
 
@@ -96,15 +97,16 @@ func (l *MemorystoreClusterLister) Close() {
 }
 
 type MemorystoreCluster struct {
-	svc        *cluster.CloudRedisClusterClient
-	removeOp   *cluster.DeleteClusterOperation
-	settings   *settings.Setting
-	project    *string
-	region     *string
-	Name       *string
-	FullName   *string
-	State      string
-	ShardCount *int32
+	svc                       *cluster.CloudRedisClusterClient
+	removeOp                  *cluster.DeleteClusterOperation
+	settings                  *settings.Setting
+	disableDeletionProtection bool
+	project                   *string
+	region                    *string
+	Name                      *string
+	FullName                  *string
+	State                     string
+	ShardCount                *int32
 }
 
 func (r *MemorystoreCluster) Settings(setting *settings.Setting) {
@@ -112,7 +114,7 @@ func (r *MemorystoreCluster) Settings(setting *settings.Setting) {
 }
 
 func (r *MemorystoreCluster) Remove(ctx context.Context) (err error) {
-	if r.settings.GetBool("DisableDeletionProtection") {
+	if r.settings.GetBool("DisableDeletionProtection") || r.disableDeletionProtection {
 		updateOp, updateErr := r.svc.UpdateCluster(ctx, &clusterpb.UpdateClusterRequest{
 			Cluster: &clusterpb.Cluster{
 				Name:                      *r.FullName,
