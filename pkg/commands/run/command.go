@@ -96,7 +96,8 @@ func execute(ctx context.Context, cmd *cli.Command) error {
 		nil,
 	)
 
-	// GCP rest clients have to be closed, this ensures that they are closed properly
+	projectResourceTypes = prioritizeResourceTypes(projectResourceTypes)
+
 	defer func() {
 		for _, l := range registry.GetListers() {
 			lc, ok := l.(registry.ListerWithClose)
@@ -223,4 +224,32 @@ func init() {
 	}
 
 	common.RegisterCommand(cmd)
+}
+
+// prioritizeResourceTypes reorders resource types so slow-to-delete resources are processed first.
+func prioritizeResourceTypes(resourceTypes []string) []string {
+	slowResources := []string{
+		"GKECluster",
+		"ComposerEnvironment",
+		"AlloyDBCluster",
+		"AlloyDBInstance",
+		"CloudSQLInstance",
+		"SpannerInstance",
+		"BigtableInstance",
+		"FilestoreInstance",
+		"MemorystoreValkeyInstance",
+		"MemorystoreCluster",
+		"MemorystoreRedisInstance",
+		"DataprocCluster",
+	}
+
+	var first, rest []string
+	for _, resourceType := range resourceTypes {
+		if slices.Contains(slowResources, resourceType) {
+			first = append(first, resourceType)
+		} else {
+			rest = append(rest, resourceType)
+		}
+	}
+	return append(first, rest...)
 }
