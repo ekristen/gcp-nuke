@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gotidy/ptr"
 	"github.com/sirupsen/logrus"
 
 	"google.golang.org/api/iterator"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 
 	cluster "cloud.google.com/go/redis/cluster/apiv1"
 	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
@@ -16,6 +18,7 @@ import (
 	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
+	"github.com/ekristen/libnuke/pkg/settings"
 	"github.com/ekristen/libnuke/pkg/types"
 
 	"github.com/ekristen/gcp-nuke/pkg/nuke"
@@ -29,6 +32,9 @@ func init() {
 		Scope:    nuke.Project,
 		Resource: &MemorystoreCluster{},
 		Lister:   &MemorystoreClusterLister{},
+		Settings: []string{
+			"DisableDeletionProtection",
+		},
 	})
 }
 
@@ -92,6 +98,7 @@ func (l *MemorystoreClusterLister) Close() {
 type MemorystoreCluster struct {
 	svc        *cluster.CloudRedisClusterClient
 	removeOp   *cluster.DeleteClusterOperation
+	settings   *settings.Setting
 	project    *string
 	region     *string
 	Name       *string
@@ -100,7 +107,28 @@ type MemorystoreCluster struct {
 	ShardCount *int32
 }
 
+func (r *MemorystoreCluster) Settings(setting *settings.Setting) {
+	r.settings = setting
+}
+
 func (r *MemorystoreCluster) Remove(ctx context.Context) (err error) {
+	if r.settings.GetBool("DisableDeletionProtection") {
+		updateOp, updateErr := r.svc.UpdateCluster(ctx, &clusterpb.UpdateClusterRequest{
+			Cluster: &clusterpb.Cluster{
+				Name:                      *r.FullName,
+				DeletionProtectionEnabled: ptr.Bool(false),
+			},
+			UpdateMask: &fieldmaskpb.FieldMask{
+				Paths: []string{"deletion_protection_enabled"},
+			},
+		})
+		if updateErr != nil {
+			logrus.WithError(updateErr).WithField("cluster", *r.Name).Trace("failed to disable deletion protection")
+		} else if updateOp != nil {
+			_, _ = updateOp.Wait(ctx)
+		}
+	}
+
 	r.removeOp, err = r.svc.DeleteCluster(ctx, &clusterpb.DeleteClusterRequest{
 		Name: *r.FullName,
 	})

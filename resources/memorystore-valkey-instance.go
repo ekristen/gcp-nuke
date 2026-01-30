@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gotidy/ptr"
 	"github.com/sirupsen/logrus"
 
 	"google.golang.org/api/iterator"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 
 	memorystore "cloud.google.com/go/memorystore/apiv1"
 	"cloud.google.com/go/memorystore/apiv1/memorystorepb"
@@ -16,6 +18,7 @@ import (
 	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
+	"github.com/ekristen/libnuke/pkg/settings"
 	"github.com/ekristen/libnuke/pkg/types"
 
 	"github.com/ekristen/gcp-nuke/pkg/nuke"
@@ -29,6 +32,9 @@ func init() {
 		Scope:    nuke.Project,
 		Resource: &MemorystoreValkeyInstance{},
 		Lister:   &MemorystoreValkeyInstanceLister{},
+		Settings: []string{
+			"DisableDeletionProtection",
+		},
 	})
 }
 
@@ -93,6 +99,7 @@ func (l *MemorystoreValkeyInstanceLister) Close() {
 type MemorystoreValkeyInstance struct {
 	svc        *memorystore.Client
 	removeOp   *memorystore.DeleteInstanceOperation
+	settings   *settings.Setting
 	project    *string
 	region     *string
 	Name       *string
@@ -102,7 +109,28 @@ type MemorystoreValkeyInstance struct {
 	Labels     map[string]string `property:"tagPrefix=label"`
 }
 
+func (r *MemorystoreValkeyInstance) Settings(setting *settings.Setting) {
+	r.settings = setting
+}
+
 func (r *MemorystoreValkeyInstance) Remove(ctx context.Context) (err error) {
+	if r.settings.GetBool("DisableDeletionProtection") {
+		updateOp, updateErr := r.svc.UpdateInstance(ctx, &memorystorepb.UpdateInstanceRequest{
+			Instance: &memorystorepb.Instance{
+				Name:                      *r.FullName,
+				DeletionProtectionEnabled: ptr.Bool(false),
+			},
+			UpdateMask: &fieldmaskpb.FieldMask{
+				Paths: []string{"deletion_protection_enabled"},
+			},
+		})
+		if updateErr != nil {
+			logrus.WithError(updateErr).WithField("instance", *r.Name).Trace("failed to disable deletion protection")
+		} else if updateOp != nil {
+			_, _ = updateOp.Wait(ctx)
+		}
+	}
+
 	r.removeOp, err = r.svc.DeleteInstance(ctx, &memorystorepb.DeleteInstanceRequest{
 		Name: *r.FullName,
 	})

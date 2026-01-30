@@ -9,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"google.golang.org/api/iterator"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 
 	filestore "cloud.google.com/go/filestore/apiv1"
 	"cloud.google.com/go/filestore/apiv1/filestorepb"
@@ -16,6 +17,7 @@ import (
 	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
+	"github.com/ekristen/libnuke/pkg/settings"
 	"github.com/ekristen/libnuke/pkg/types"
 
 	"github.com/ekristen/gcp-nuke/pkg/nuke"
@@ -29,6 +31,9 @@ func init() {
 		Scope:    nuke.Project,
 		Resource: &FilestoreInstance{},
 		Lister:   &FilestoreInstanceLister{},
+		Settings: []string{
+			"DisableDeletionProtection",
+		},
 	})
 }
 
@@ -96,6 +101,7 @@ func (l *FilestoreInstanceLister) Close() {
 type FilestoreInstance struct {
 	svc      *filestore.CloudFilestoreManagerClient
 	removeOp *filestore.DeleteInstanceOperation
+	settings *settings.Setting
 	project  *string
 	zone     *string
 	Name     *string
@@ -105,7 +111,28 @@ type FilestoreInstance struct {
 	Labels   map[string]string `property:"tagPrefix=label"`
 }
 
+func (r *FilestoreInstance) Settings(setting *settings.Setting) {
+	r.settings = setting
+}
+
 func (r *FilestoreInstance) Remove(ctx context.Context) (err error) {
+	if r.settings.GetBool("DisableDeletionProtection") {
+		updateOp, updateErr := r.svc.UpdateInstance(ctx, &filestorepb.UpdateInstanceRequest{
+			Instance: &filestorepb.Instance{
+				Name:                      *r.FullName,
+				DeletionProtectionEnabled: false,
+			},
+			UpdateMask: &fieldmaskpb.FieldMask{
+				Paths: []string{"deletion_protection_enabled"},
+			},
+		})
+		if updateErr != nil {
+			logrus.WithError(updateErr).WithField("instance", *r.Name).Trace("failed to disable deletion protection")
+		} else if updateOp != nil {
+			_, _ = updateOp.Wait(ctx)
+		}
+	}
+
 	r.removeOp, err = r.svc.DeleteInstance(ctx, &filestorepb.DeleteInstanceRequest{
 		Name:  *r.FullName,
 		Force: true,

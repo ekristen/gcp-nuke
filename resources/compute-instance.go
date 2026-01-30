@@ -14,6 +14,7 @@ import (
 
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
+	"github.com/ekristen/libnuke/pkg/settings"
 	"github.com/ekristen/libnuke/pkg/types"
 
 	"github.com/ekristen/gcp-nuke/pkg/nuke"
@@ -27,6 +28,9 @@ func init() {
 		Scope:    nuke.Project,
 		Resource: &ComputeInstance{},
 		Lister:   &ComputeInstanceLister{},
+		Settings: []string{
+			"DisableDeletionProtection",
+		},
 	})
 }
 
@@ -90,6 +94,7 @@ func (l *ComputeInstanceLister) List(ctx context.Context, o interface{}) ([]reso
 
 type ComputeInstance struct {
 	svc               *compute.InstancesClient
+	settings          *settings.Setting
 	Project           *string
 	Region            *string
 	Name              *string
@@ -98,7 +103,25 @@ type ComputeInstance struct {
 	Labels            map[string]string `property:"tagPrefix=label"`
 }
 
+func (r *ComputeInstance) Settings(setting *settings.Setting) {
+	r.settings = setting
+}
+
 func (r *ComputeInstance) Remove(ctx context.Context) error {
+	if r.settings.GetBool("DisableDeletionProtection") {
+		op, err := r.svc.SetDeletionProtection(ctx, &computepb.SetDeletionProtectionInstanceRequest{
+			Project:            *r.Project,
+			Zone:               *r.Zone,
+			Resource:           *r.Name,
+			DeletionProtection: ptr.Bool(false),
+		})
+		if err != nil {
+			logrus.WithError(err).WithField("instance", *r.Name).Trace("failed to disable deletion protection")
+		} else if op != nil {
+			_ = op.Wait(ctx)
+		}
+	}
+
 	_, err := r.svc.Delete(ctx, &computepb.DeleteInstanceRequest{
 		Project:  *r.Project,
 		Zone:     *r.Zone,
