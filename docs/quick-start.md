@@ -92,10 +92,22 @@ accounts: # i.e. Google Cloud projects
           value: 'my-dns-zone'
           invert: true
 
+      # Protect secrets with name containing "prod"
+      SecretManagerSecret:
+        - property: Name
+          type: contains
+          value: 'prod'
+
+      # Protect KMS keys with prefix
+      KMSKey:
+        - property: Name
+          type: glob
+          value: 'prod-*'
+
 presets:
   common:
     filters:
-      VPC:
+      VPCNetwork:
         - default
 ```
 

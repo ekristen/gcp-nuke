@@ -16,6 +16,53 @@ Remove all resources from a GCP Project.
 **gcp-nuke** is in beta, but it is likely that not all GCP resources are covered by it. Be encouraged to add missing
 resources and create a Pull Request or to create an [Issue](https://github.com/ekristen/gcp-nuke/issues/new).
 
+## Quick Start (Docker)
+
+**1. Create config file** (`nuke-config.yaml`):
+
+```yaml
+regions:
+  - global # Nuke global resources
+  - us-east1 # Nuke resources in the us-east1 region
+
+blocklist:
+  - production-12345 # Never nuke this project
+
+accounts:
+  playground-12345: {} # Nuke all resources in the playground-12345 project
+```
+
+**2. Authenticate:**
+
+```bash
+gcloud auth application-default login
+```
+
+**3. Dry run (preview what will be deleted):**
+
+```bash
+docker run --rm -it \
+  -v "${HOME}/.config/gcloud:/root/.config/gcloud:ro" \
+  -v "$(pwd)/nuke-config.yaml:/nuke-config.yaml:ro" \
+  ghcr.io/ekristen/gcp-nuke:v1.12.0 run \
+  --config /nuke-config.yaml \
+  --disable-deletion-protection \
+  --project-id playground-12345
+```
+
+**4. Nuke everything (DESTRUCTIVE):**
+
+```bash
+docker run --rm -it \
+  -v "${HOME}/.config/gcloud:/root/.config/gcloud:ro" \
+  -v "$(pwd)/nuke-config.yaml:/nuke-config.yaml:ro" \
+  ghcr.io/ekristen/gcp-nuke:v1.12.0 run \
+  --config /nuke-config.yaml \
+  --project-id playground-12345 \
+  --disable-deletion-protection \
+  --no-dry-run
+```
+
 ## Documentation
 
 All documentation is in the [docs/](docs) directory and is built using [Material for Mkdocs](https://squidfunk.github.io/mkdocs-material/).
@@ -32,31 +79,6 @@ on [rebuy-de/aws-nuke](https://github.com/rebuy-de/aws-nuke).
 This tool is licensed under the MIT license as well. See the [LICENSE](LICENSE) file for more information. Reference
 was made to [dshelley66/gcp-nuke](https://github.com/dshelley66/gcp-nuke) during the creation of this tool therefore I
 included them in the license copyright although no direct code was used.
-
-## Usage
-
-**Note:** All CLI flags can also be expressed as environment variables.
-
-**By default, no destructive actions will be taken.**
-
-### Example - Dry Run only
-
-```bash
-gcp-nuke run \
-  --config test-config.yaml \
-  --project-id playground-12345
-```
-
-### Example - No Dry Run (DESTRUCTIVE)
-
-To actually destroy you must add the `--no-dry-run` cli parameter.
-
-```bash
-gcp-nuke run \
-  --config=test-config.yaml \
-  --project-id playground-12345 \
-  --no-dry-run
-```
 
 ## Authentication
 
@@ -108,7 +130,7 @@ resource-types:
 blocklist:
   - production-12345 # Never nuke this project
 
-accounts: # i.e. Google Cloud projects
+accounts: # i.e. Google Cloud projects to nuke
   playground-12345:
     presets:
       - common
@@ -137,9 +159,21 @@ accounts: # i.e. Google Cloud projects
           value: 'my-dns-zone'
           invert: true
 
+      # Protect secrets with name containing "prod"
+      SecretManagerSecret:
+        - property: Name
+          type: contains
+          value: 'prod'
+
+      # Protect KMS keys with prefix
+      KMSKey:
+        - property: Name
+          type: glob
+          value: 'prod-*'
+
 presets:
   common:
     filters:
-      VPC:
+      VPCNetwork:
         - default
 ```
