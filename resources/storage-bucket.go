@@ -101,10 +101,9 @@ func (l *StorageBucketLister) List(ctx context.Context, o interface{}) ([]resour
 			"region":   *opts.Region,
 		}).Debug("bucket details")
 
-		isMultiRegion := false
+		isMultiRegion := bucket.LocationType == "multi-region" || bucket.LocationType == "dual-region"
 		isAccountedFor := false
-		if bucket.Location == "US" {
-			isMultiRegion = true
+		if isMultiRegion {
 			if _, ok := l.multiRegion[bucket.Name]; !ok {
 				l.multiRegion[bucket.Name] = loc
 			} else {
@@ -242,6 +241,9 @@ func (r *StorageBucket) removeObjects(ctx context.Context) error {
 			break
 		}
 		if err != nil {
+			if strings.Contains(err.Error(), "Soft delete policy is required") {
+				break
+			}
 			return err
 		}
 		objects = append(objects, objectToDelete{
