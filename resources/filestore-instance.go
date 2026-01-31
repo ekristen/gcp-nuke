@@ -101,6 +101,7 @@ func (l *FilestoreInstanceLister) Close() {
 
 type FilestoreInstance struct {
 	svc                       *filestore.CloudFilestoreManagerClient
+	updateOp                  *filestore.UpdateInstanceOperation
 	removeOp                  *filestore.DeleteInstanceOperation
 	settings                  *settings.Setting
 	disableDeletionProtection bool
@@ -119,7 +120,7 @@ func (r *FilestoreInstance) Settings(setting *settings.Setting) {
 
 func (r *FilestoreInstance) Remove(ctx context.Context) (err error) {
 	if r.settings.GetBool("DisableDeletionProtection") || r.disableDeletionProtection {
-		updateOp, updateErr := r.svc.UpdateInstance(ctx, &filestorepb.UpdateInstanceRequest{
+		r.updateOp, err = r.svc.UpdateInstance(ctx, &filestorepb.UpdateInstanceRequest{
 			Instance: &filestorepb.Instance{
 				Name:                      *r.FullName,
 				DeletionProtectionEnabled: false,
@@ -128,10 +129,10 @@ func (r *FilestoreInstance) Remove(ctx context.Context) (err error) {
 				Paths: []string{"deletion_protection_enabled"},
 			},
 		})
-		if updateErr != nil {
-			logrus.WithError(updateErr).WithField("instance", *r.Name).Trace("failed to disable deletion protection")
-		} else if updateOp != nil {
-			_, _ = updateOp.Wait(ctx)
+		if err != nil {
+			logrus.WithError(err).WithField("instance", *r.Name).Trace("failed to disable deletion protection")
+		} else if r.updateOp != nil {
+			return nil
 		}
 	}
 
@@ -155,6 +156,27 @@ func (r *FilestoreInstance) String() string {
 }
 
 func (r *FilestoreInstance) HandleWait(ctx context.Context) error {
+	if r.updateOp != nil {
+		if _, err := r.updateOp.Poll(ctx); err != nil {
+			logrus.WithError(err).Trace("update op polling encountered error")
+			return liberror.ErrWaitResource(fmt.Sprintf("poll failed: %v", err))
+		}
+		if !r.updateOp.Done() {
+			return liberror.ErrWaitResource("waiting for deletion protection to be disabled")
+		}
+		r.updateOp = nil
+		var err error
+		r.removeOp, err = r.svc.DeleteInstance(ctx, &filestorepb.DeleteInstanceRequest{
+			Name:  *r.FullName,
+			Force: true,
+		})
+		if err != nil {
+			logrus.WithError(err).WithField("instance", *r.Name).Trace("filestore delete error")
+			return err
+		}
+		return liberror.ErrWaitResource("waiting for instance deletion")
+	}
+
 	if r.removeOp == nil {
 		return nil
 	}
@@ -165,7 +187,7 @@ func (r *FilestoreInstance) HandleWait(ctx context.Context) error {
 	}
 
 	if !r.removeOp.Done() {
-		return liberror.ErrWaitResource("waiting for operation to complete")
+		return liberror.ErrWaitResource("waiting for instance deletion")
 	}
 
 	return nil

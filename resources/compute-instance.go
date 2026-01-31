@@ -12,6 +12,7 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 
+	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/settings"
@@ -95,6 +96,8 @@ func (l *ComputeInstanceLister) List(ctx context.Context, o interface{}) ([]reso
 
 type ComputeInstance struct {
 	svc                       *compute.InstancesClient
+	updateOp                  *compute.Operation
+	removeOp                  *compute.Operation
 	settings                  *settings.Setting
 	disableDeletionProtection bool
 	Project                   *string
@@ -120,11 +123,13 @@ func (r *ComputeInstance) Remove(ctx context.Context) error {
 		if err != nil {
 			logrus.WithError(err).WithField("instance", *r.Name).Trace("failed to disable deletion protection")
 		} else if op != nil {
-			_ = op.Wait(ctx)
+			r.updateOp = op
+			return nil
 		}
 	}
 
-	_, err := r.svc.Delete(ctx, &computepb.DeleteInstanceRequest{
+	var err error
+	r.removeOp, err = r.svc.Delete(ctx, &computepb.DeleteInstanceRequest{
 		Project:  *r.Project,
 		Zone:     *r.Zone,
 		Instance: *r.Name,
@@ -138,4 +143,42 @@ func (r *ComputeInstance) Properties() types.Properties {
 
 func (r *ComputeInstance) String() string {
 	return *r.Name
+}
+
+func (r *ComputeInstance) HandleWait(ctx context.Context) error {
+	if r.updateOp != nil {
+		if err := r.updateOp.Poll(ctx); err != nil {
+			logrus.WithError(err).Trace("update op polling encountered error")
+			return err
+		}
+		if !r.updateOp.Done() {
+			return liberror.ErrWaitResource("waiting for deletion protection to be disabled")
+		}
+		r.updateOp = nil
+		var err error
+		r.removeOp, err = r.svc.Delete(ctx, &computepb.DeleteInstanceRequest{
+			Project:  *r.Project,
+			Zone:     *r.Zone,
+			Instance: *r.Name,
+		})
+		if err != nil {
+			return err
+		}
+		return liberror.ErrWaitResource("waiting for instance deletion")
+	}
+
+	if r.removeOp == nil {
+		return nil
+	}
+
+	if err := r.removeOp.Poll(ctx); err != nil {
+		logrus.WithError(err).Trace("remove op polling encountered error")
+		return err
+	}
+
+	if !r.removeOp.Done() {
+		return liberror.ErrWaitResource("waiting for instance deletion")
+	}
+
+	return nil
 }

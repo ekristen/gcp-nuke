@@ -99,6 +99,7 @@ func (l *MemorystoreValkeyInstanceLister) Close() {
 
 type MemorystoreValkeyInstance struct {
 	svc                       *memorystore.Client
+	updateOp                  *memorystore.UpdateInstanceOperation
 	removeOp                  *memorystore.DeleteInstanceOperation
 	settings                  *settings.Setting
 	disableDeletionProtection bool
@@ -117,7 +118,7 @@ func (r *MemorystoreValkeyInstance) Settings(setting *settings.Setting) {
 
 func (r *MemorystoreValkeyInstance) Remove(ctx context.Context) (err error) {
 	if r.settings.GetBool("DisableDeletionProtection") || r.disableDeletionProtection {
-		updateOp, updateErr := r.svc.UpdateInstance(ctx, &memorystorepb.UpdateInstanceRequest{
+		r.updateOp, err = r.svc.UpdateInstance(ctx, &memorystorepb.UpdateInstanceRequest{
 			Instance: &memorystorepb.Instance{
 				Name:                      *r.FullName,
 				DeletionProtectionEnabled: ptr.Bool(false),
@@ -126,10 +127,10 @@ func (r *MemorystoreValkeyInstance) Remove(ctx context.Context) (err error) {
 				Paths: []string{"deletion_protection_enabled"},
 			},
 		})
-		if updateErr != nil {
-			logrus.WithError(updateErr).WithField("instance", *r.Name).Trace("failed to disable deletion protection")
-		} else if updateOp != nil {
-			_, _ = updateOp.Wait(ctx)
+		if err != nil {
+			logrus.WithError(err).WithField("instance", *r.Name).Trace("failed to disable deletion protection")
+		} else if r.updateOp != nil {
+			return nil
 		}
 	}
 
@@ -148,6 +149,25 @@ func (r *MemorystoreValkeyInstance) String() string {
 }
 
 func (r *MemorystoreValkeyInstance) HandleWait(ctx context.Context) error {
+	if r.updateOp != nil {
+		if _, err := r.updateOp.Poll(ctx); err != nil {
+			logrus.WithError(err).Trace("update op polling encountered error")
+			return err
+		}
+		if !r.updateOp.Done() {
+			return liberror.ErrWaitResource("waiting for deletion protection to be disabled")
+		}
+		r.updateOp = nil
+		var err error
+		r.removeOp, err = r.svc.DeleteInstance(ctx, &memorystorepb.DeleteInstanceRequest{
+			Name: *r.FullName,
+		})
+		if err != nil {
+			return err
+		}
+		return liberror.ErrWaitResource("waiting for instance deletion")
+	}
+
 	if r.removeOp == nil {
 		return nil
 	}
@@ -158,7 +178,7 @@ func (r *MemorystoreValkeyInstance) HandleWait(ctx context.Context) error {
 	}
 
 	if !r.removeOp.Done() {
-		return liberror.ErrWaitResource("waiting for operation to complete")
+		return liberror.ErrWaitResource("waiting for instance deletion")
 	}
 
 	return nil

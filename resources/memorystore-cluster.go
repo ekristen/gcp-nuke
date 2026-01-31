@@ -98,6 +98,7 @@ func (l *MemorystoreClusterLister) Close() {
 
 type MemorystoreCluster struct {
 	svc                       *cluster.CloudRedisClusterClient
+	updateOp                  *cluster.UpdateClusterOperation
 	removeOp                  *cluster.DeleteClusterOperation
 	settings                  *settings.Setting
 	disableDeletionProtection bool
@@ -115,7 +116,7 @@ func (r *MemorystoreCluster) Settings(setting *settings.Setting) {
 
 func (r *MemorystoreCluster) Remove(ctx context.Context) (err error) {
 	if r.settings.GetBool("DisableDeletionProtection") || r.disableDeletionProtection {
-		updateOp, updateErr := r.svc.UpdateCluster(ctx, &clusterpb.UpdateClusterRequest{
+		r.updateOp, err = r.svc.UpdateCluster(ctx, &clusterpb.UpdateClusterRequest{
 			Cluster: &clusterpb.Cluster{
 				Name:                      *r.FullName,
 				DeletionProtectionEnabled: ptr.Bool(false),
@@ -124,10 +125,10 @@ func (r *MemorystoreCluster) Remove(ctx context.Context) (err error) {
 				Paths: []string{"deletion_protection_enabled"},
 			},
 		})
-		if updateErr != nil {
-			logrus.WithError(updateErr).WithField("cluster", *r.Name).Trace("failed to disable deletion protection")
-		} else if updateOp != nil {
-			_, _ = updateOp.Wait(ctx)
+		if err != nil {
+			logrus.WithError(err).WithField("cluster", *r.Name).Trace("failed to disable deletion protection")
+		} else if r.updateOp != nil {
+			return nil
 		}
 	}
 
@@ -146,6 +147,25 @@ func (r *MemorystoreCluster) String() string {
 }
 
 func (r *MemorystoreCluster) HandleWait(ctx context.Context) error {
+	if r.updateOp != nil {
+		if _, err := r.updateOp.Poll(ctx); err != nil {
+			logrus.WithError(err).Trace("update op polling encountered error")
+			return err
+		}
+		if !r.updateOp.Done() {
+			return liberror.ErrWaitResource("waiting for deletion protection to be disabled")
+		}
+		r.updateOp = nil
+		var err error
+		r.removeOp, err = r.svc.DeleteCluster(ctx, &clusterpb.DeleteClusterRequest{
+			Name: *r.FullName,
+		})
+		if err != nil {
+			return err
+		}
+		return liberror.ErrWaitResource("waiting for cluster deletion")
+	}
+
 	if r.removeOp == nil {
 		return nil
 	}
@@ -156,7 +176,7 @@ func (r *MemorystoreCluster) HandleWait(ctx context.Context) error {
 	}
 
 	if !r.removeOp.Done() {
-		return liberror.ErrWaitResource("waiting for operation to complete")
+		return liberror.ErrWaitResource("waiting for cluster deletion")
 	}
 
 	return nil
