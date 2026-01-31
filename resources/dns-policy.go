@@ -75,9 +75,11 @@ type DNSPolicy struct {
 }
 
 func (r *DNSPolicy) Remove(ctx context.Context) error {
-	_, _ = r.svc.Policies.Patch(*r.project, *r.Name, &dns.Policy{
-		Networks: []*dns.PolicyNetwork{},
-	}).Do()
+	policy, err := r.svc.Policies.Get(*r.project, *r.Name).Do()
+	if err == nil {
+		policy.Networks = nil
+		_, _ = r.svc.Policies.Update(*r.project, *r.Name, policy).Do()
+	}
 
 	return r.svc.Policies.Delete(*r.project, *r.Name).Do()
 }
