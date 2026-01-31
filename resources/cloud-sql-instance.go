@@ -20,10 +20,11 @@ const CloudSQLInstanceResource = "CloudSQLInstance"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:     CloudSQLInstanceResource,
-		Scope:    nuke.Project,
-		Resource: &CloudSQLInstance{},
-		Lister:   &CloudSQLInstanceLister{},
+		Name:      CloudSQLInstanceResource,
+		Scope:     nuke.Project,
+		Resource:  &CloudSQLInstance{},
+		Lister:    &CloudSQLInstanceLister{},
+		DependsOn: []string{CloudSQLBackupResource},
 		Settings: []string{
 			"DisableDeletionProtection",
 		},
