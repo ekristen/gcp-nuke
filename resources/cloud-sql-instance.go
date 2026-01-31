@@ -114,7 +114,7 @@ func (r *CloudSQLInstance) Remove(ctx context.Context) (err error) {
 		return nil
 	}
 
-	r.deleteOp, err = r.svc.Instances.Delete(*r.project, *r.Name).EnableFinalBackup(false).Context(ctx).Do()
+	r.deleteOp, err = r.svc.Instances.Delete(*r.project, *r.Name).Context(ctx).Do()
 	return err
 }
 
@@ -145,7 +145,7 @@ func (r *CloudSQLInstance) HandleWait(ctx context.Context) error {
 	if r.deleteOp == nil {
 		logrus.WithField("instance", *r.Name).Trace("starting delete operation")
 		var err error
-		r.deleteOp, err = r.svc.Instances.Delete(*r.project, *r.Name).EnableFinalBackup(false).Context(ctx).Do()
+		r.deleteOp, err = r.svc.Instances.Delete(*r.project, *r.Name).Context(ctx).Do()
 		if err != nil {
 			logrus.WithError(err).WithField("instance", *r.Name).Trace("failed to start delete, will retry")
 			return liberror.ErrWaitResource(fmt.Sprintf("delete pending: %v", err))
