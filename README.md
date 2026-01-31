@@ -16,6 +16,42 @@ Remove all resources from a GCP Project.
 **gcp-nuke** is in beta, but it is likely that not all GCP resources are covered by it. Be encouraged to add missing
 resources and create a Pull Request or to create an [Issue](https://github.com/ekristen/gcp-nuke/issues/new).
 
+## Documentation
+
+All documentation is in the [docs/](docs) directory and is built using [Material for Mkdocs](https://squidfunk.github.io/mkdocs-material/).
+
+It is hosted at [https://ekristen.github.io/gcp-nuke/](https://ekristen.github.io/gcp-nuke/).
+
+## Authentication
+
+Authentication uses [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/application-default-credentials). The following methods are supported:
+
+### gcloud CLI (Recommended for local development)
+
+```bash
+gcloud auth application-default login
+```
+
+### Service Account Key (File Path)
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
+```
+
+### Service Account Key (JSON String)
+
+For CI/CD pipelines and containerized environments where you want to pass credentials directly without creating a file:
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS_JSON='{"type":"service_account","project_id":"...","private_key":"..."}'
+```
+
+If both `GOOGLE_APPLICATION_CREDENTIALS` and `GOOGLE_APPLICATION_CREDENTIALS_JSON` are set, `GOOGLE_APPLICATION_CREDENTIALS_JSON` takes precedence.
+
+### Workload Identity (GKE, Cloud Run, etc.)
+
+When running on GCP infrastructure, credentials are automatically provided via the attached service account.
+
 ## Quick Start (Docker)
 
 **1. Create config file** (`nuke-config.yaml`):
@@ -25,11 +61,45 @@ regions:
   - global # Nuke global resources
   - us-east1 # Nuke resources in the us-east1 region
 
+resource-types:
+  excludes:
+    - StorageBucketObject # Exclude Storage Bucket Objects
+
 blocklist:
   - production-12345 # Never nuke this project
 
-accounts:
-  playground-12345: {} # Nuke all resources in the playground-12345 project
+accounts: # i.e. Google Cloud projects to nuke
+  playground-12345:
+    filters:
+      # Protect specific service accounts by email
+      IAMServiceAccount:
+        - 'admin@playground-12345.iam.gserviceaccount.com'
+
+      # Protect service account keys by service account email
+      IAMServiceAccountKey:
+        - property: ServiceAccountEmail
+          value: 'admin@playground-12345.iam.gserviceaccount.com'
+
+      # Protect IAM policy bindings for specific users
+      IAMPolicyBinding:
+        - property: Member
+          value: 'admin@playground-12345.iam.gserviceaccount.com'
+
+      # Protect a DNS zone from deletion
+      DNSManagedZone:
+        - 'my-dns-zone'
+
+      # Protect secrets with name containing "prod"
+      SecretManagerSecret:
+        - property: Name
+          type: contains
+          value: 'prod'
+
+      # Protect KMS keys with prefix
+      KMSKey:
+        - property: Name
+          type: glob
+          value: 'prod-*'
 ```
 
 **2. Authenticate:**
@@ -63,12 +133,6 @@ docker run --rm -it \
   --no-dry-run
 ```
 
-## Documentation
-
-All documentation is in the [docs/](docs) directory and is built using [Material for Mkdocs](https://squidfunk.github.io/mkdocs-material/).
-
-It is hosted at [https://ekristen.github.io/gcp-nuke/](https://ekristen.github.io/gcp-nuke/).
-
 ## Attribution, License, and Copyright
 
 This tool was written using [libnuke](https://github.com/ekristen/libnuke) at it's core. It shares similarities and commonalities with [aws-nuke](https://github.com/ekristen/aws-nuke)
@@ -79,101 +143,3 @@ on [rebuy-de/aws-nuke](https://github.com/rebuy-de/aws-nuke).
 This tool is licensed under the MIT license as well. See the [LICENSE](LICENSE) file for more information. Reference
 was made to [dshelley66/gcp-nuke](https://github.com/dshelley66/gcp-nuke) during the creation of this tool therefore I
 included them in the license copyright although no direct code was used.
-
-## Authentication
-
-Authentication uses [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/application-default-credentials). The following methods are supported:
-
-### gcloud CLI (Recommended for local development)
-
-```bash
-gcloud auth application-default login
-```
-
-### Service Account Key (File Path)
-
-```bash
-export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
-```
-
-### Service Account Key (JSON String)
-
-For CI/CD pipelines and containerized environments where you want to pass credentials directly without creating a file:
-
-```bash
-export GOOGLE_APPLICATION_CREDENTIALS_JSON='{"type":"service_account","project_id":"...","private_key":"..."}'
-```
-
-If both `GOOGLE_APPLICATION_CREDENTIALS` and `GOOGLE_APPLICATION_CREDENTIALS_JSON` are set, `GOOGLE_APPLICATION_CREDENTIALS_JSON` takes precedence.
-
-### Workload Identity (GKE, Cloud Run, etc.)
-
-When running on GCP infrastructure, credentials are automatically provided via the attached service account.
-
-## Configuring
-
-The entire configuration of the tool is done via a single YAML file.
-
-### Example Configuration
-
-**Note:** you must add at least one entry to the blocklist.
-
-```yaml
-regions:
-  - global # Nuke global resources
-  - us-east1 # Nuke resources in the us-east1 region
-
-resource-types:
-  excludes:
-    - StorageBucketObject # Exclude Storage Bucket Objects
-
-blocklist:
-  - production-12345 # Never nuke this project
-
-accounts: # i.e. Google Cloud projects to nuke
-  playground-12345:
-    presets:
-      - common
-    filters:
-      # Protect specific service accounts by email
-      IAMServiceAccount:
-        - 'custom-service-account@playground-12345.iam.gserviceaccount.com'
-
-      # Protect service account keys by service account email
-      IAMServiceAccountKey:
-        - property: ServiceAccountEmail
-          value: 'custom-service-account@playground-12345.iam.gserviceaccount.com'
-
-      # Protect a DNS zone from deletion
-      DNSManagedZone:
-        - 'my-dns-zone'
-
-      # Protect IAM policy bindings for specific users
-      IAMPolicyBinding:
-        - property: Member
-          value: 'user:admin@example.com'
-
-      # Delete DNS records only in a specific zone
-      DNSRecordSet:
-        - property: Zone
-          value: 'my-dns-zone'
-          invert: true
-
-      # Protect secrets with name containing "prod"
-      SecretManagerSecret:
-        - property: Name
-          type: contains
-          value: 'prod'
-
-      # Protect KMS keys with prefix
-      KMSKey:
-        - property: Name
-          type: glob
-          value: 'prod-*'
-
-presets:
-  common:
-    filters:
-      VPCNetwork:
-        - default
-```
