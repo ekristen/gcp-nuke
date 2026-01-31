@@ -23,14 +23,16 @@ func init() {
 		Scope:    nuke.Project,
 		Resource: &CloudSQLBackup{},
 		Lister: &CloudSQLBackupLister{
-			multiRegion: make(map[string]string),
+			multiRegion:             make(map[string]string),
+			instancesWithBackupRuns: make(map[string]struct{}),
 		},
 	})
 }
 
 type CloudSQLBackupLister struct {
-	svc         *sqladmin.Service
-	multiRegion map[string]string
+	svc                     *sqladmin.Service
+	multiRegion             map[string]string
+	instancesWithBackupRuns map[string]struct{}
 }
 
 func isMultiRegionLocation(location string) bool {
@@ -81,6 +83,8 @@ func (l *CloudSQLBackupLister) List(ctx context.Context, o interface{}) ([]resou
 			continue
 		}
 
+		l.instancesWithBackupRuns[backup.Instance] = struct{}{}
+
 		resources = append(resources, &CloudSQLBackup{
 			svc:           l.svc,
 			project:       opts.Project,
@@ -100,6 +104,14 @@ func (l *CloudSQLBackupLister) List(ctx context.Context, o interface{}) ([]resou
 	}
 
 	for _, backup := range backups.Backups {
+		// Skip non-FINAL backups for instances that have backup runs
+		// (they're already covered by BackupRuns API)
+		if backup.Type != "FINAL" {
+			if _, hasBackupRuns := l.instancesWithBackupRuns[backup.Instance]; hasBackupRuns {
+				continue
+			}
+		}
+
 		loc := strings.ToLower(backup.Location)
 		isMultiRegion := isMultiRegionLocation(backup.Location)
 		isAccountedFor := false

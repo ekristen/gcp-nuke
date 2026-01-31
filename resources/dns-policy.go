@@ -75,8 +75,6 @@ type DNSPolicy struct {
 }
 
 func (r *DNSPolicy) Remove(ctx context.Context) error {
-	// First detach the policy from all networks to avoid deletion failure
-	// if networks are deleted before the policy
 	_, _ = r.svc.Policies.Patch(*r.project, *r.Name, &dns.Policy{
 		Networks: []*dns.PolicyNetwork{},
 	}).Do()
