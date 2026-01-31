@@ -101,10 +101,9 @@ func (l *StorageBucketLister) List(ctx context.Context, o interface{}) ([]resour
 			"region":   *opts.Region,
 		}).Debug("bucket details")
 
-		isMultiRegion := false
+		isMultiRegion := bucket.LocationType == "multi-region" || bucket.LocationType == "dual-region"
 		isAccountedFor := false
-		if bucket.Location == "US" {
-			isMultiRegion = true
+		if isMultiRegion {
 			if _, ok := l.multiRegion[bucket.Name]; !ok {
 				l.multiRegion[bucket.Name] = loc
 			} else {
@@ -121,12 +120,13 @@ func (l *StorageBucketLister) List(ctx context.Context, o interface{}) ([]resour
 		}
 
 		resources = append(resources, &StorageBucket{
-			svc:         l.svc,
-			project:     opts.Project,
-			region:      ptr.String(loc),
-			Name:        ptr.String(bucket.Name),
-			Labels:      bucket.Labels,
-			MultiRegion: ptr.Bool(isMultiRegion),
+			svc:                       l.svc,
+			disableDeletionProtection: opts.DisableDeletionProtection,
+			project:                   opts.Project,
+			region:                    ptr.String(loc),
+			Name:                      ptr.String(bucket.Name),
+			Labels:                    bucket.Labels,
+			MultiRegion:               ptr.Bool(isMultiRegion),
 		})
 	}
 
@@ -134,13 +134,14 @@ func (l *StorageBucketLister) List(ctx context.Context, o interface{}) ([]resour
 }
 
 type StorageBucket struct {
-	svc         *storage.Client
-	settings    *settings.Setting
-	project     *string
-	region      *string
-	Name        *string
-	Labels      map[string]string `property:"tagPrefix=label"`
-	MultiRegion *bool
+	svc                       *storage.Client
+	settings                  *settings.Setting
+	disableDeletionProtection bool
+	project                   *string
+	region                    *string
+	Name                      *string
+	Labels                    map[string]string `property:"tagPrefix=label"`
+	MultiRegion               *bool
 }
 
 func (r *StorageBucket) Filter() error {
@@ -162,7 +163,7 @@ func (r *StorageBucket) Filter() error {
 }
 
 func (r *StorageBucket) Remove(ctx context.Context) error {
-	if r.settings.GetBool("DisableDeletionProtection") {
+	if r.settings.GetBool("DisableDeletionProtection") || r.disableDeletionProtection {
 		if _, err := r.svc.Bucket(*r.Name).Update(ctx, storage.BucketAttrsToUpdate{
 			RetentionPolicy: &storage.RetentionPolicy{
 				RetentionPeriod: 0,
@@ -223,6 +224,26 @@ func (r *StorageBucket) removeObjects(ctx context.Context) error {
 			break
 		}
 		if err != nil {
+			return err
+		}
+		objects = append(objects, objectToDelete{
+			name:       resp.Name,
+			generation: resp.Generation,
+		})
+	}
+
+	softDeletedIt := r.svc.Bucket(*r.Name).Objects(ctx, &storage.Query{
+		SoftDeleted: true,
+	})
+	for {
+		resp, err := softDeletedIt.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			if strings.Contains(err.Error(), "Soft delete policy is required") {
+				break
+			}
 			return err
 		}
 		objects = append(objects, objectToDelete{
