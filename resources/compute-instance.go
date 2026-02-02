@@ -80,9 +80,8 @@ func (l *ComputeInstanceLister) List(ctx context.Context, o interface{}) ([]reso
 			}
 
 			resources = append(resources, &ComputeInstance{
-				svc:                       l.svc,
-				disableDeletionProtection: opts.DisableDeletionProtection,
-				Name:                      resp.Name,
+				svc:  l.svc,
+				Name: resp.Name,
 				Project:                   opts.Project,
 				Zone:                      ptr.String(zone),
 				CreationTimestamp:         resp.CreationTimestamp,
@@ -95,12 +94,11 @@ func (l *ComputeInstanceLister) List(ctx context.Context, o interface{}) ([]reso
 }
 
 type ComputeInstance struct {
-	svc                       *compute.InstancesClient
-	updateOp                  *compute.Operation
-	removeOp                  *compute.Operation
-	settings                  *settings.Setting
-	disableDeletionProtection bool
-	Project                   *string
+	svc      *compute.InstancesClient
+	updateOp *compute.Operation
+	removeOp *compute.Operation
+	settings *settings.Setting
+	Project  *string
 	Region                    *string
 	Name                      *string
 	Zone                      *string
@@ -113,7 +111,7 @@ func (r *ComputeInstance) Settings(setting *settings.Setting) {
 }
 
 func (r *ComputeInstance) Remove(ctx context.Context) error {
-	if r.settings.GetBool("DisableDeletionProtection") || r.disableDeletionProtection {
+	if r.settings.GetBool("DisableDeletionProtection") {
 		op, err := r.svc.SetDeletionProtection(ctx, &computepb.SetDeletionProtectionInstanceRequest{
 			Project:            *r.Project,
 			Zone:               *r.Zone,

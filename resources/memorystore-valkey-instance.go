@@ -76,9 +76,8 @@ func (l *MemorystoreValkeyInstanceLister) List(ctx context.Context, o interface{
 		name := nameParts[len(nameParts)-1]
 
 		resources = append(resources, &MemorystoreValkeyInstance{
-			svc:                       l.svc,
-			disableDeletionProtection: opts.DisableDeletionProtection,
-			project:                   opts.Project,
+			svc:     l.svc,
+			project: opts.Project,
 			region:                    opts.Region,
 			Name:                      &name,
 			FullName:                  &resp.Name,
@@ -98,12 +97,11 @@ func (l *MemorystoreValkeyInstanceLister) Close() {
 }
 
 type MemorystoreValkeyInstance struct {
-	svc                       *memorystore.Client
-	updateOp                  *memorystore.UpdateInstanceOperation
-	removeOp                  *memorystore.DeleteInstanceOperation
-	settings                  *settings.Setting
-	disableDeletionProtection bool
-	project                   *string
+	svc      *memorystore.Client
+	updateOp *memorystore.UpdateInstanceOperation
+	removeOp *memorystore.DeleteInstanceOperation
+	settings *settings.Setting
+	project  *string
 	region                    *string
 	Name                      *string
 	FullName                  *string
@@ -117,7 +115,7 @@ func (r *MemorystoreValkeyInstance) Settings(setting *settings.Setting) {
 }
 
 func (r *MemorystoreValkeyInstance) Remove(ctx context.Context) (err error) {
-	if r.settings.GetBool("DisableDeletionProtection") || r.disableDeletionProtection {
+	if r.settings.GetBool("DisableDeletionProtection") {
 		r.updateOp, err = r.svc.UpdateInstance(ctx, &memorystorepb.UpdateInstanceRequest{
 			Instance: &memorystorepb.Instance{
 				Name:                      *r.FullName,

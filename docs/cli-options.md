@@ -6,33 +6,18 @@ This is not a comprehensive list of options, but rather a list of features that 
 
 gcp-nuke supports the following environment variables for authentication:
 
-| Variable | Description |
-|----------|-------------|
-| `GOOGLE_APPLICATION_CREDENTIALS` | Path to a service account JSON key file |
+| Variable                              | Description                                             |
+| ------------------------------------- | ------------------------------------------------------- |
+| `GOOGLE_APPLICATION_CREDENTIALS`      | Path to a service account JSON key file                 |
 | `GOOGLE_APPLICATION_CREDENTIALS_JSON` | Service account JSON key as a string (takes precedence) |
 
 The `GOOGLE_APPLICATION_CREDENTIALS_JSON` variable is useful for CI/CD pipelines and containerized environments where you want to pass credentials directly without creating a file on disk.
 
 Example:
+
 ```bash
 export GOOGLE_APPLICATION_CREDENTIALS_JSON='{"type":"service_account","project_id":"...","private_key":"..."}'
 gcp-nuke run --config config.yaml --project-id playground-12345
-```
-
-## Disable Deletion Protection
-
-`--disable-deletion-protection` will automatically disable deletion protection on resources before deleting them. This applies to resources that support deletion protection such as Cloud SQL instances, Compute instances, Storage buckets, Filestore instances, and Memorystore clusters/instances.
-
-This flag can also be set via the `GCP_NUKE_DISABLE_DELETION_PROTECTION` environment variable.
-
-Alternatively, you can enable this behavior per-resource type using the `DisableDeletionProtection` setting in the config file:
-
-```yaml
-settings:
-  CloudSQLInstance:
-    DisableDeletionProtection: true
-  ComputeInstance:
-    DisableDeletionProtection: true
 ```
 
 ## Wait on Dependencies

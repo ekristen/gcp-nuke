@@ -76,9 +76,8 @@ func (l *MemorystoreClusterLister) List(ctx context.Context, o interface{}) ([]r
 		name := nameParts[len(nameParts)-1]
 
 		resources = append(resources, &MemorystoreCluster{
-			svc:                       l.svc,
-			disableDeletionProtection: opts.DisableDeletionProtection,
-			project:                   opts.Project,
+			svc:     l.svc,
+			project: opts.Project,
 			region:                    opts.Region,
 			Name:                      &name,
 			FullName:                  &resp.Name,
@@ -97,12 +96,11 @@ func (l *MemorystoreClusterLister) Close() {
 }
 
 type MemorystoreCluster struct {
-	svc                       *cluster.CloudRedisClusterClient
-	updateOp                  *cluster.UpdateClusterOperation
-	removeOp                  *cluster.DeleteClusterOperation
-	settings                  *settings.Setting
-	disableDeletionProtection bool
-	project                   *string
+	svc      *cluster.CloudRedisClusterClient
+	updateOp *cluster.UpdateClusterOperation
+	removeOp *cluster.DeleteClusterOperation
+	settings *settings.Setting
+	project  *string
 	region                    *string
 	Name                      *string
 	FullName                  *string
@@ -115,7 +113,7 @@ func (r *MemorystoreCluster) Settings(setting *settings.Setting) {
 }
 
 func (r *MemorystoreCluster) Remove(ctx context.Context) (err error) {
-	if r.settings.GetBool("DisableDeletionProtection") || r.disableDeletionProtection {
+	if r.settings.GetBool("DisableDeletionProtection") {
 		r.updateOp, err = r.svc.UpdateCluster(ctx, &clusterpb.UpdateClusterRequest{
 			Cluster: &clusterpb.Cluster{
 				Name:                      *r.FullName,

@@ -65,6 +65,10 @@ resource-types:
   excludes:
     - StorageBucketObject # Exclude Storage Bucket Objects
 
+settings:
+  CloudSQLInstance:
+    DisableDeletionProtection: true # Disable deletion protection for all Cloud SQL instances
+
 blocklist:
   - production-12345 # Never nuke this project
 
@@ -116,7 +120,6 @@ docker run --rm -it \
   -v "$(pwd)/nuke-config.yaml:/nuke-config.yaml:ro" \
   ghcr.io/ekristen/gcp-nuke:v1.12.0 run \
   --config /nuke-config.yaml \
-  --disable-deletion-protection \
   --project-id playground-12345
 ```
 
@@ -129,7 +132,6 @@ docker run --rm -it \
   ghcr.io/ekristen/gcp-nuke:v1.12.0 run \
   --config /nuke-config.yaml \
   --project-id playground-12345 \
-  --disable-deletion-protection \
   --no-dry-run
 ```
 

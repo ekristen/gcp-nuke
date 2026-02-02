@@ -6,14 +6,14 @@ First you need to create a config file for _gcp-nuke_. This is a minimal one:
 
 ```yaml
 regions:
-  - global
-  - us-east1
+  - global # Nuke global resources
+  - us-east1 # Nuke resources in the us-east1 region
 
 blocklist:
-  - production-12345
+  - production-12345 # Never nuke this project
 
-accounts:
-  playground-12345: {} # gcp-nuke-example
+accounts: # i.e. Google Cloud projects
+  playground-12345: {} # Nuke this project
 ```
 
 ## First Run (Dry Run)
@@ -49,7 +49,9 @@ Scan complete: 333 total, 205 nukeable, 128 filtered.
 The above resources would be deleted with the supplied configuration. Provide --no-dry-run to actually destroy resources.
 ```
 
-As we see, _gcp-nuke_ only lists all found resources and exits. This is because the `--no-dry-run` flag is missing.
+Without `--no-dry-run`, _gcp-nuke_ only lists all found resources and exits. Use filters, excludes, and settings in the config to control which resources are deleted.
+
+Example config:
 
 ```yaml
 regions:
@@ -59,6 +61,10 @@ regions:
 resource-types:
   excludes:
     - StorageBucketObject # Exclude Storage Bucket Objects
+
+settings:
+  CloudSQLInstance:
+    DisableDeletionProtection: true # Disable deletion protection for all Cloud SQL instances
 
 blocklist:
   - production-12345 # Never nuke this project
@@ -70,12 +76,12 @@ accounts: # i.e. Google Cloud projects
     filters:
       # Protect specific service accounts by email
       IAMServiceAccount:
-        - 'custom-service-account@playground-12345.iam.gserviceaccount.com'
+        - 'admin@playground-12345.iam.gserviceaccount.com'
 
       # Protect service account keys by service account email
       IAMServiceAccountKey:
         - property: ServiceAccountEmail
-          value: 'custom-service-account@playground-12345.iam.gserviceaccount.com'
+          value: 'admin@playground-12345.iam.gserviceaccount.com'
 
       # Protect a DNS zone from deletion
       DNSManagedZone:

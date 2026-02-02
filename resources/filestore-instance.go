@@ -77,9 +77,8 @@ func (l *FilestoreInstanceLister) List(ctx context.Context, o interface{}) ([]re
 
 			zoneCopy := zone
 			resources = append(resources, &FilestoreInstance{
-				svc:                       l.svc,
-				disableDeletionProtection: opts.DisableDeletionProtection,
-				project:                   opts.Project,
+				svc:     l.svc,
+				project: opts.Project,
 				zone:                      &zoneCopy,
 				Name:                      &name,
 				FullName:                  &resp.Name,
@@ -100,12 +99,11 @@ func (l *FilestoreInstanceLister) Close() {
 }
 
 type FilestoreInstance struct {
-	svc                       *filestore.CloudFilestoreManagerClient
-	updateOp                  *filestore.UpdateInstanceOperation
-	removeOp                  *filestore.DeleteInstanceOperation
-	settings                  *settings.Setting
-	disableDeletionProtection bool
-	project                   *string
+	svc      *filestore.CloudFilestoreManagerClient
+	updateOp *filestore.UpdateInstanceOperation
+	removeOp *filestore.DeleteInstanceOperation
+	settings *settings.Setting
+	project  *string
 	zone                      *string
 	Name                      *string
 	FullName                  *string
@@ -119,7 +117,7 @@ func (r *FilestoreInstance) Settings(setting *settings.Setting) {
 }
 
 func (r *FilestoreInstance) Remove(ctx context.Context) (err error) {
-	if r.settings.GetBool("DisableDeletionProtection") || r.disableDeletionProtection {
+	if r.settings.GetBool("DisableDeletionProtection") {
 		r.updateOp, err = r.svc.UpdateInstance(ctx, &filestorepb.UpdateInstanceRequest{
 			Instance: &filestorepb.Instance{
 				Name:                      *r.FullName,

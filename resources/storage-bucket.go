@@ -120,9 +120,8 @@ func (l *StorageBucketLister) List(ctx context.Context, o interface{}) ([]resour
 		}
 
 		resources = append(resources, &StorageBucket{
-			svc:                       l.svc,
-			disableDeletionProtection: opts.DisableDeletionProtection,
-			project:                   opts.Project,
+			svc:     l.svc,
+			project: opts.Project,
 			region:                    ptr.String(loc),
 			Name:                      ptr.String(bucket.Name),
 			Labels:                    bucket.Labels,
@@ -134,10 +133,9 @@ func (l *StorageBucketLister) List(ctx context.Context, o interface{}) ([]resour
 }
 
 type StorageBucket struct {
-	svc                       *storage.Client
-	settings                  *settings.Setting
-	disableDeletionProtection bool
-	project                   *string
+	svc      *storage.Client
+	settings *settings.Setting
+	project  *string
 	region                    *string
 	Name                      *string
 	Labels                    map[string]string `property:"tagPrefix=label"`
@@ -163,7 +161,7 @@ func (r *StorageBucket) Filter() error {
 }
 
 func (r *StorageBucket) Remove(ctx context.Context) error {
-	if r.settings.GetBool("DisableDeletionProtection") || r.disableDeletionProtection {
+	if r.settings.GetBool("DisableDeletionProtection") {
 		if _, err := r.svc.Bucket(*r.Name).Update(ctx, storage.BucketAttrsToUpdate{
 			RetentionPolicy: &storage.RetentionPolicy{
 				RetentionPeriod: 0,

@@ -24,12 +24,11 @@ const (
 )
 
 type ListerOpts struct {
-	Project                   *string
-	Region                    *string
-	Zones                     []string
-	EnabledAPIs               []string
-	ClientOptions             []option.ClientOption
-	DisableDeletionProtection bool
+	Project       *string
+	Region        *string
+	Zones         []string
+	EnabledAPIs   []string
+	ClientOptions []option.ClientOption
 }
 
 func (o *ListerOpts) BeforeList(geo Geography, service string, resourceNames ...string) error {

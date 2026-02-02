@@ -44,7 +44,6 @@ OPTIONS:
    --no-prompt, --force                                                 disable prompting for verification to run (default: false)
    --prompt-delay value, --force-sleep value                            seconds to delay after prompt before running (minimum: 3 seconds) (default: 10)
    --wait-on-dependencies                                                wait for dependent resources to be deleted before deleting (default: false)
-   --disable-deletion-protection                                        disable deletion protection on resources before deleting (default: false) [$GCP_NUKE_DISABLE_DELETION_PROTECTION]
    --feature-flag value [ --feature-flag value ]                        enable experimental behaviors that may not be fully tested or supported
    --log-level value, -l value                                          Log Level (default: "info") [$LOGLEVEL]
    --log-caller                                                         log the caller (aka line number and file) (default: false)

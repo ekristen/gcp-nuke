@@ -63,9 +63,8 @@ func (l *CloudSQLInstanceLister) List(ctx context.Context, o interface{}) ([]res
 		}
 
 		resources = append(resources, &CloudSQLInstance{
-			svc:                      l.svc,
-			disableProtectionEnabled: opts.DisableDeletionProtection,
-			project:                  opts.Project,
+			svc:     l.svc,
+			project: opts.Project,
 			region:                   opts.Region,
 			Name:                     ptr.String(instance.Name),
 			State:                    ptr.String(instance.State),
@@ -80,13 +79,12 @@ func (l *CloudSQLInstanceLister) List(ctx context.Context, o interface{}) ([]res
 }
 
 type CloudSQLInstance struct {
-	svc                      *sqladmin.Service
-	updateOp                 *sqladmin.Operation
-	deleteOp                 *sqladmin.Operation
-	settings                 *settings.Setting
-	disableProtectionEnabled bool
+	svc      *sqladmin.Service
+	updateOp *sqladmin.Operation
+	deleteOp *sqladmin.Operation
+	settings *settings.Setting
 
-	project         *string
+	project *string
 	region          *string
 	Name            *string           `description:"Name of the Cloud SQL instance"`
 	State           *string           `description:"The current serving state of the Cloud SQL instance"`
@@ -102,7 +100,7 @@ func (r *CloudSQLInstance) Settings(setting *settings.Setting) {
 }
 
 func (r *CloudSQLInstance) Remove(ctx context.Context) (err error) {
-	if r.settings.GetBool("DisableDeletionProtection") || r.disableProtectionEnabled {
+	if r.settings.GetBool("DisableDeletionProtection") {
 		logrus.Trace("disabling deletion protection")
 		r.instanceSettings.DeletionProtectionEnabled = false
 		r.updateOp, err = r.svc.Instances.Update(*r.project, *r.Name, &sqladmin.DatabaseInstance{
