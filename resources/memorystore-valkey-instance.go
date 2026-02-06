@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gotidy/ptr"
 	"github.com/sirupsen/logrus"
 
 	"google.golang.org/api/iterator"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 
 	memorystore "cloud.google.com/go/memorystore/apiv1"
 	"cloud.google.com/go/memorystore/apiv1/memorystorepb"
@@ -16,6 +18,7 @@ import (
 	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
+	"github.com/ekristen/libnuke/pkg/settings"
 	"github.com/ekristen/libnuke/pkg/types"
 
 	"github.com/ekristen/gcp-nuke/pkg/nuke"
@@ -29,6 +32,9 @@ func init() {
 		Scope:    nuke.Project,
 		Resource: &MemorystoreValkeyInstance{},
 		Lister:   &MemorystoreValkeyInstanceLister{},
+		Settings: []string{
+			"DisableDeletionProtection",
+		},
 	})
 }
 
@@ -70,14 +76,14 @@ func (l *MemorystoreValkeyInstanceLister) List(ctx context.Context, o interface{
 		name := nameParts[len(nameParts)-1]
 
 		resources = append(resources, &MemorystoreValkeyInstance{
-			svc:        l.svc,
-			project:    opts.Project,
-			region:     opts.Region,
-			Name:       &name,
-			FullName:   &resp.Name,
-			State:      resp.State.String(),
-			ShardCount: resp.ShardCount,
-			Labels:     resp.Labels,
+			svc:     l.svc,
+			project: opts.Project,
+			region:                    opts.Region,
+			Name:                      &name,
+			FullName:                  &resp.Name,
+			State:                     resp.State.String(),
+			ShardCount:                resp.ShardCount,
+			Labels:                    resp.Labels,
 		})
 	}
 
@@ -91,18 +97,41 @@ func (l *MemorystoreValkeyInstanceLister) Close() {
 }
 
 type MemorystoreValkeyInstance struct {
-	svc        *memorystore.Client
-	removeOp   *memorystore.DeleteInstanceOperation
-	project    *string
-	region     *string
-	Name       *string
-	FullName   *string
-	State      string
-	ShardCount int32
-	Labels     map[string]string `property:"tagPrefix=label"`
+	svc      *memorystore.Client
+	updateOp *memorystore.UpdateInstanceOperation
+	removeOp *memorystore.DeleteInstanceOperation
+	settings *settings.Setting
+	project  *string
+	region                    *string
+	Name                      *string
+	FullName                  *string
+	State                     string
+	ShardCount                int32
+	Labels                    map[string]string `property:"tagPrefix=label"`
+}
+
+func (r *MemorystoreValkeyInstance) Settings(setting *settings.Setting) {
+	r.settings = setting
 }
 
 func (r *MemorystoreValkeyInstance) Remove(ctx context.Context) (err error) {
+	if r.settings.GetBool("DisableDeletionProtection") {
+		r.updateOp, err = r.svc.UpdateInstance(ctx, &memorystorepb.UpdateInstanceRequest{
+			Instance: &memorystorepb.Instance{
+				Name:                      *r.FullName,
+				DeletionProtectionEnabled: ptr.Bool(false),
+			},
+			UpdateMask: &fieldmaskpb.FieldMask{
+				Paths: []string{"deletion_protection_enabled"},
+			},
+		})
+		if err != nil {
+			logrus.WithError(err).WithField("instance", *r.Name).Trace("failed to disable deletion protection")
+		} else if r.updateOp != nil {
+			return nil
+		}
+	}
+
 	r.removeOp, err = r.svc.DeleteInstance(ctx, &memorystorepb.DeleteInstanceRequest{
 		Name: *r.FullName,
 	})
@@ -118,6 +147,25 @@ func (r *MemorystoreValkeyInstance) String() string {
 }
 
 func (r *MemorystoreValkeyInstance) HandleWait(ctx context.Context) error {
+	if r.updateOp != nil {
+		if _, err := r.updateOp.Poll(ctx); err != nil {
+			logrus.WithError(err).Trace("update op polling encountered error")
+			return err
+		}
+		if !r.updateOp.Done() {
+			return liberror.ErrWaitResource("waiting for deletion protection to be disabled")
+		}
+		r.updateOp = nil
+		var err error
+		r.removeOp, err = r.svc.DeleteInstance(ctx, &memorystorepb.DeleteInstanceRequest{
+			Name: *r.FullName,
+		})
+		if err != nil {
+			return err
+		}
+		return liberror.ErrWaitResource("waiting for instance deletion")
+	}
+
 	if r.removeOp == nil {
 		return nil
 	}
@@ -128,7 +176,7 @@ func (r *MemorystoreValkeyInstance) HandleWait(ctx context.Context) error {
 	}
 
 	if !r.removeOp.Done() {
-		return liberror.ErrWaitResource("waiting for operation to complete")
+		return liberror.ErrWaitResource("waiting for instance deletion")
 	}
 
 	return nil

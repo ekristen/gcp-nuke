@@ -9,18 +9,18 @@ The configuration is broken down into the following sections:
 - [blocklist](#blocklist)
 - [regions](#regions)
 - [accounts](#accounts)
-    - [presets](#presets)
-    - [filters](#filters)
-    - [resource-types](#resource-types)
-        - [includes](#includes)
-        - [excludes](#excludes)
-        - [cloud-control](#cloud-control)
-        - targets (deprecated, use includes)
-- [resource-types](#resource-types)
+  - [presets](#presets)
+  - [filters](#filters)
+  - [resource-types](#resource-types)
     - [includes](#includes)
     - [excludes](#excludes)
     - [cloud-control](#cloud-control)
     - targets (deprecated, use includes)
+- [resource-types](#resource-types)
+  - [includes](#includes)
+  - [excludes](#excludes)
+  - [cloud-control](#cloud-control)
+  - targets (deprecated, use includes)
 - [feature-flags](#feature-flags) (deprecated, use settings instead)
 - [settings](#settings)
 - [presets](#global-presets)
@@ -29,17 +29,17 @@ The configuration is broken down into the following sections:
 
 ```yaml
 blocklist:
-  - bootstrap-12345
+  - production-12345
 
 regions:
   - global
-  - us-central1
+  - us-east1
 
 accounts:
   playground-12345:
     filters:
       IAMRole:
-        - "admin"
+        - 'admin'
 
 resource-types:
   includes:
@@ -64,17 +64,17 @@ provided.
 ### All Regions
 
 You may specify the special region `all` to run against all enabled regions. This will run against all regions that are
-enabled in the account. It will not run against regions that are disabled. It will also automatically include the 
+enabled in the account. It will not run against regions that are disabled. It will also automatically include the
 special region `global` which is for specific global resources.
 
 !!! important
-    The use of `all` will ignore all other regions specified in the configuration. It will only run against regions
-    that are enabled in the account.
+The use of `all` will ignore all other regions specified in the configuration. It will only run against regions
+that are enabled in the account.
 
 ## Projects
 
 !!! important
-    Projects uses the `accounts` key in the configuration. This is due to the commonality of libnuke between tools.
+Projects uses the `accounts` key in the configuration. This is due to the commonality of libnuke between tools.
 
 The accounts section is a map of GCP Project IDs to their configuration. The ID is the key and the value is the
 configuration for that project.
@@ -84,8 +84,8 @@ The configuration for each project is broken down into the following sections:
 - presets
 - filters
 - resource-types
-    - includes
-    - excludes
+  - includes
+  - excludes
 
 ### Presets
 

@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gotidy/ptr"
 	"github.com/sirupsen/logrus"
 
 	"google.golang.org/api/iterator"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 
 	cluster "cloud.google.com/go/redis/cluster/apiv1"
 	"cloud.google.com/go/redis/cluster/apiv1/clusterpb"
@@ -16,6 +18,7 @@ import (
 	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
+	"github.com/ekristen/libnuke/pkg/settings"
 	"github.com/ekristen/libnuke/pkg/types"
 
 	"github.com/ekristen/gcp-nuke/pkg/nuke"
@@ -29,6 +32,9 @@ func init() {
 		Scope:    nuke.Project,
 		Resource: &MemorystoreCluster{},
 		Lister:   &MemorystoreClusterLister{},
+		Settings: []string{
+			"DisableDeletionProtection",
+		},
 	})
 }
 
@@ -70,13 +76,13 @@ func (l *MemorystoreClusterLister) List(ctx context.Context, o interface{}) ([]r
 		name := nameParts[len(nameParts)-1]
 
 		resources = append(resources, &MemorystoreCluster{
-			svc:        l.svc,
-			project:    opts.Project,
-			region:     opts.Region,
-			Name:       &name,
-			FullName:   &resp.Name,
-			State:      resp.State.String(),
-			ShardCount: resp.ShardCount,
+			svc:     l.svc,
+			project: opts.Project,
+			region:                    opts.Region,
+			Name:                      &name,
+			FullName:                  &resp.Name,
+			State:                     resp.State.String(),
+			ShardCount:                resp.ShardCount,
 		})
 	}
 
@@ -90,17 +96,40 @@ func (l *MemorystoreClusterLister) Close() {
 }
 
 type MemorystoreCluster struct {
-	svc        *cluster.CloudRedisClusterClient
-	removeOp   *cluster.DeleteClusterOperation
-	project    *string
-	region     *string
-	Name       *string
-	FullName   *string
-	State      string
-	ShardCount *int32
+	svc      *cluster.CloudRedisClusterClient
+	updateOp *cluster.UpdateClusterOperation
+	removeOp *cluster.DeleteClusterOperation
+	settings *settings.Setting
+	project  *string
+	region                    *string
+	Name                      *string
+	FullName                  *string
+	State                     string
+	ShardCount                *int32
+}
+
+func (r *MemorystoreCluster) Settings(setting *settings.Setting) {
+	r.settings = setting
 }
 
 func (r *MemorystoreCluster) Remove(ctx context.Context) (err error) {
+	if r.settings.GetBool("DisableDeletionProtection") {
+		r.updateOp, err = r.svc.UpdateCluster(ctx, &clusterpb.UpdateClusterRequest{
+			Cluster: &clusterpb.Cluster{
+				Name:                      *r.FullName,
+				DeletionProtectionEnabled: ptr.Bool(false),
+			},
+			UpdateMask: &fieldmaskpb.FieldMask{
+				Paths: []string{"deletion_protection_enabled"},
+			},
+		})
+		if err != nil {
+			logrus.WithError(err).WithField("cluster", *r.Name).Trace("failed to disable deletion protection")
+		} else if r.updateOp != nil {
+			return nil
+		}
+	}
+
 	r.removeOp, err = r.svc.DeleteCluster(ctx, &clusterpb.DeleteClusterRequest{
 		Name: *r.FullName,
 	})
@@ -116,6 +145,25 @@ func (r *MemorystoreCluster) String() string {
 }
 
 func (r *MemorystoreCluster) HandleWait(ctx context.Context) error {
+	if r.updateOp != nil {
+		if _, err := r.updateOp.Poll(ctx); err != nil {
+			logrus.WithError(err).Trace("update op polling encountered error")
+			return err
+		}
+		if !r.updateOp.Done() {
+			return liberror.ErrWaitResource("waiting for deletion protection to be disabled")
+		}
+		r.updateOp = nil
+		var err error
+		r.removeOp, err = r.svc.DeleteCluster(ctx, &clusterpb.DeleteClusterRequest{
+			Name: *r.FullName,
+		})
+		if err != nil {
+			return err
+		}
+		return liberror.ErrWaitResource("waiting for cluster deletion")
+	}
+
 	if r.removeOp == nil {
 		return nil
 	}
@@ -126,7 +174,7 @@ func (r *MemorystoreCluster) HandleWait(ctx context.Context) error {
 	}
 
 	if !r.removeOp.Done() {
-		return liberror.ErrWaitResource("waiting for operation to complete")
+		return liberror.ErrWaitResource("waiting for cluster deletion")
 	}
 
 	return nil

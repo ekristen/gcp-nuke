@@ -12,8 +12,10 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 
+	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
+	"github.com/ekristen/libnuke/pkg/settings"
 	"github.com/ekristen/libnuke/pkg/types"
 
 	"github.com/ekristen/gcp-nuke/pkg/nuke"
@@ -27,6 +29,9 @@ func init() {
 		Scope:    nuke.Project,
 		Resource: &ComputeInstance{},
 		Lister:   &ComputeInstanceLister{},
+		Settings: []string{
+			"DisableDeletionProtection",
+		},
 	})
 }
 
@@ -75,12 +80,12 @@ func (l *ComputeInstanceLister) List(ctx context.Context, o interface{}) ([]reso
 			}
 
 			resources = append(resources, &ComputeInstance{
-				svc:               l.svc,
-				Name:              resp.Name,
-				Project:           opts.Project,
-				Zone:              ptr.String(zone),
-				CreationTimestamp: resp.CreationTimestamp,
-				Labels:            resp.Labels,
+				svc:  l.svc,
+				Name: resp.Name,
+				Project:                   opts.Project,
+				Zone:                      ptr.String(zone),
+				CreationTimestamp:         resp.CreationTimestamp,
+				Labels:                    resp.Labels,
 			})
 		}
 	}
@@ -89,17 +94,40 @@ func (l *ComputeInstanceLister) List(ctx context.Context, o interface{}) ([]reso
 }
 
 type ComputeInstance struct {
-	svc               *compute.InstancesClient
-	Project           *string
-	Region            *string
-	Name              *string
-	Zone              *string
-	CreationTimestamp *string
-	Labels            map[string]string `property:"tagPrefix=label"`
+	svc      *compute.InstancesClient
+	updateOp *compute.Operation
+	removeOp *compute.Operation
+	settings *settings.Setting
+	Project  *string
+	Region                    *string
+	Name                      *string
+	Zone                      *string
+	CreationTimestamp         *string
+	Labels                    map[string]string `property:"tagPrefix=label"`
+}
+
+func (r *ComputeInstance) Settings(setting *settings.Setting) {
+	r.settings = setting
 }
 
 func (r *ComputeInstance) Remove(ctx context.Context) error {
-	_, err := r.svc.Delete(ctx, &computepb.DeleteInstanceRequest{
+	if r.settings.GetBool("DisableDeletionProtection") {
+		op, err := r.svc.SetDeletionProtection(ctx, &computepb.SetDeletionProtectionInstanceRequest{
+			Project:            *r.Project,
+			Zone:               *r.Zone,
+			Resource:           *r.Name,
+			DeletionProtection: ptr.Bool(false),
+		})
+		if err != nil {
+			logrus.WithError(err).WithField("instance", *r.Name).Trace("failed to disable deletion protection")
+		} else if op != nil {
+			r.updateOp = op
+			return nil
+		}
+	}
+
+	var err error
+	r.removeOp, err = r.svc.Delete(ctx, &computepb.DeleteInstanceRequest{
 		Project:  *r.Project,
 		Zone:     *r.Zone,
 		Instance: *r.Name,
@@ -113,4 +141,42 @@ func (r *ComputeInstance) Properties() types.Properties {
 
 func (r *ComputeInstance) String() string {
 	return *r.Name
+}
+
+func (r *ComputeInstance) HandleWait(ctx context.Context) error {
+	if r.updateOp != nil {
+		if err := r.updateOp.Poll(ctx); err != nil {
+			logrus.WithError(err).Trace("update op polling encountered error")
+			return err
+		}
+		if !r.updateOp.Done() {
+			return liberror.ErrWaitResource("waiting for deletion protection to be disabled")
+		}
+		r.updateOp = nil
+		var err error
+		r.removeOp, err = r.svc.Delete(ctx, &computepb.DeleteInstanceRequest{
+			Project:  *r.Project,
+			Zone:     *r.Zone,
+			Instance: *r.Name,
+		})
+		if err != nil {
+			return err
+		}
+		return liberror.ErrWaitResource("waiting for instance deletion")
+	}
+
+	if r.removeOp == nil {
+		return nil
+	}
+
+	if err := r.removeOp.Poll(ctx); err != nil {
+		logrus.WithError(err).Trace("remove op polling encountered error")
+		return err
+	}
+
+	if !r.removeOp.Done() {
+		return liberror.ErrWaitResource("waiting for instance deletion")
+	}
+
+	return nil
 }
