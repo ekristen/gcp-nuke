@@ -16,6 +16,7 @@ import (
 
 	"cloud.google.com/go/storage"
 
+	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/settings"
@@ -120,12 +121,12 @@ func (l *StorageBucketLister) List(ctx context.Context, o interface{}) ([]resour
 		}
 
 		resources = append(resources, &StorageBucket{
-			svc:     l.svc,
-			project: opts.Project,
-			region:                    ptr.String(loc),
-			Name:                      ptr.String(bucket.Name),
-			Labels:                    bucket.Labels,
-			MultiRegion:               ptr.Bool(isMultiRegion),
+			svc:         l.svc,
+			project:     opts.Project,
+			region:      ptr.String(loc),
+			Name:        ptr.String(bucket.Name),
+			Labels:      bucket.Labels,
+			MultiRegion: ptr.Bool(isMultiRegion),
 		})
 	}
 
@@ -133,13 +134,13 @@ func (l *StorageBucketLister) List(ctx context.Context, o interface{}) ([]resour
 }
 
 type StorageBucket struct {
-	svc      *storage.Client
-	settings *settings.Setting
-	project  *string
-	region                    *string
-	Name                      *string
-	Labels                    map[string]string `property:"tagPrefix=label"`
-	MultiRegion               *bool
+	svc         *storage.Client
+	settings    *settings.Setting
+	project     *string
+	region      *string
+	Name        *string
+	Labels      map[string]string `property:"tagPrefix=label"`
+	MultiRegion *bool
 }
 
 func (r *StorageBucket) Filter() error {
@@ -176,20 +177,24 @@ func (r *StorageBucket) Remove(ctx context.Context) error {
 			VersioningEnabled: false,
 		}); err != nil {
 			logrus.WithError(err).Error("encountered error while updating bucket attrs")
-			return err
+			return liberror.ErrWaitResource(fmt.Sprintf("updating bucket attrs: %v", err))
 		}
 	}
 
 	if err := r.removeObjects(ctx); err != nil {
 		logrus.WithError(err).Error("encountered error while emptying bucket")
-		return err
+		return liberror.ErrWaitResource(fmt.Sprintf("emptying bucket: %v", err))
 	}
 
 	err := r.svc.Bucket(*r.Name).Delete(ctx)
 	if err != nil {
+		if errors.Is(err, storage.ErrBucketNotExist) {
+			return nil
+		}
 		logrus.WithError(err).Error("encountered error while removing bucket")
+		return liberror.ErrWaitResource(fmt.Sprintf("deleting bucket: %v", err))
 	}
-	return err
+	return nil
 }
 
 func (r *StorageBucket) Properties() types.Properties {
@@ -202,6 +207,31 @@ func (r *StorageBucket) String() string {
 
 func (r *StorageBucket) Settings(settings *settings.Setting) {
 	r.settings = settings
+}
+
+func (r *StorageBucket) HandleWait(ctx context.Context) error {
+	_, err := r.svc.Bucket(*r.Name).Attrs(ctx)
+	if err != nil {
+		if errors.Is(err, storage.ErrBucketNotExist) {
+			return nil
+		}
+		return liberror.ErrWaitResource(fmt.Sprintf("checking bucket: %v", err))
+	}
+
+	logrus.WithField("bucket", *r.Name).Debug("bucket still exists, retrying deletion")
+
+	if err := r.removeObjects(ctx); err != nil {
+		return liberror.ErrWaitResource(fmt.Sprintf("emptying bucket: %v", err))
+	}
+
+	if err := r.svc.Bucket(*r.Name).Delete(ctx); err != nil {
+		if errors.Is(err, storage.ErrBucketNotExist) {
+			return nil
+		}
+		return liberror.ErrWaitResource(fmt.Sprintf("deleting bucket: %v", err))
+	}
+
+	return nil
 }
 
 type objectToDelete struct {
