@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/aiplatform v1.115.0
 	cloud.google.com/go/alloydb v1.20.0
 	cloud.google.com/go/artifactregistry v1.19.0
-	cloud.google.com/go/bigquery v1.73.0
+	cloud.google.com/go/bigquery v1.73.1
 	cloud.google.com/go/bigtable v1.42.0
 	cloud.google.com/go/certificatemanager v1.9.6
 	cloud.google.com/go/cloudtasks v1.13.7
