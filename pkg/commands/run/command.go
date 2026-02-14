@@ -96,7 +96,6 @@ func execute(ctx context.Context, cmd *cli.Command) error {
 		nil,
 	)
 
-	// GCP rest clients have to be closed, this ensures that they are closed properly
 	defer func() {
 		for _, l := range registry.GetListers() {
 			lc, ok := l.(registry.ListerWithClose)

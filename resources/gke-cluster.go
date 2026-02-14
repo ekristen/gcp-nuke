@@ -8,7 +8,7 @@ import (
 	"github.com/gotidy/ptr"
 	"github.com/sirupsen/logrus"
 
-	"cloud.google.com/go/container/apiv1"
+	container "cloud.google.com/go/container/apiv1"
 	"cloud.google.com/go/container/apiv1/containerpb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -146,7 +146,22 @@ func (r *GKECluster) String() string {
 
 func (r *GKECluster) HandleWait(ctx context.Context) error {
 	if r.removeOp == nil {
-		return nil
+		location := r.Region
+		if *r.Zone != "" {
+			location = r.Zone
+		}
+		var err error
+		r.removeOp, err = r.svc.DeleteCluster(ctx, &containerpb.DeleteClusterRequest{
+			Name: fmt.Sprintf("projects/%s/locations/%s/clusters/%s", *r.Project, *location, *r.Name),
+		})
+		if err != nil {
+			if status.Code(err) == codes.NotFound {
+				return nil
+			}
+			logrus.WithError(err).WithField("cluster", *r.Name).Debug("delete request failed, will retry")
+			return liberror.ErrWaitResource(fmt.Sprintf("delete pending: %v", err))
+		}
+		return liberror.ErrWaitResource("delete operation started")
 	}
 
 	var err error
@@ -167,7 +182,12 @@ func (r *GKECluster) HandleWait(ctx context.Context) error {
 	}
 
 	if r.removeOp.GetError() != nil {
-		return fmt.Errorf("operation failed: %v", r.removeOp.GetError())
+		logrus.WithFields(logrus.Fields{
+			"cluster": *r.Name,
+			"error":   r.removeOp.GetError().String(),
+		}).Warn("delete operation failed, will retry")
+		r.removeOp = nil
+		return liberror.ErrWaitResource("delete operation failed, retrying")
 	}
 
 	return nil

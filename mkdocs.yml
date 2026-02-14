@@ -107,6 +107,7 @@ nav:
       - Cloud Function 2: resources/cloud-function-2.md
       - Cloud Run: resources/cloud-run.md
       - Cloud Run Job: resources/cloud-run-job.md
+      - Cloud SQL Backup: resources/cloud-sql-backup.md
       - Cloud SQL Instance: resources/cloud-sql-instance.md
       - Cloud Scheduler Job: resources/cloud-scheduler-job.md
       - Cloud Tasks Queue: resources/cloud-tasks-queue.md
