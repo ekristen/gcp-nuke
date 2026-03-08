@@ -129,6 +129,20 @@ func (r *CloudSQLBackup) String() string {
 	return *r.backupID
 }
 
+func (r *CloudSQLBackup) Filter() error {
+	switch *r.State {
+	case "FAILED":
+		return fmt.Errorf("backup is in FAILED state")
+	case "DELETED":
+		return fmt.Errorf("backup is already deleted")
+	case "DELETION_PENDING":
+		return fmt.Errorf("backup deletion is already pending")
+	case "DELETION_FAILED":
+		return fmt.Errorf("backup deletion previously failed")
+	}
+	return nil
+}
+
 func (r *CloudSQLBackup) HandleWait(ctx context.Context) error {
 	if r.deleteOp == nil {
 		return nil
