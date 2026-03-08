@@ -8,6 +8,7 @@ import (
 	"github.com/gotidy/ptr"
 	sqladmin "google.golang.org/api/sqladmin/v1beta4"
 
+	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/types"
@@ -133,14 +134,17 @@ func (r *CloudSQLBackup) HandleWait(ctx context.Context) error {
 		return nil
 	}
 
-	if op, err := r.svc.Operations.Get(*r.project, r.deleteOp.Name).Context(ctx).Do(); err == nil {
-		if op.Status == "DONE" {
-			if op.Error != nil {
-				return fmt.Errorf("delete error on '%s': %s", op.TargetLink, op.Error.Errors[0].Message)
-			}
-		}
-	} else {
+	op, err := r.svc.Operations.Get(*r.project, r.deleteOp.Name).Context(ctx).Do()
+	if err != nil {
 		return err
+	}
+
+	if op.Status != "DONE" {
+		return liberror.ErrWaitResource("waiting for backup deletion")
+	}
+
+	if op.Error != nil {
+		return fmt.Errorf("delete error on '%s': %s", op.TargetLink, op.Error.Errors[0].Message)
 	}
 
 	return nil

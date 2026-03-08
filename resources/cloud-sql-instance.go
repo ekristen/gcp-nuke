@@ -63,15 +63,15 @@ func (l *CloudSQLInstanceLister) List(ctx context.Context, o interface{}) ([]res
 		}
 
 		resources = append(resources, &CloudSQLInstance{
-			svc:     l.svc,
-			project: opts.Project,
-			region:                   opts.Region,
-			Name:                     ptr.String(instance.Name),
-			State:                    ptr.String(instance.State),
-			Labels:                   instance.Settings.UserLabels,
-			CreationDate:             ptr.String(instance.CreateTime),
-			DatabaseVersion:          ptr.String(instance.DatabaseVersion),
-			instanceSettings:         instance.Settings,
+			svc:              l.svc,
+			project:          opts.Project,
+			region:           opts.Region,
+			Name:             ptr.String(instance.Name),
+			State:            ptr.String(instance.State),
+			Labels:           instance.Settings.UserLabels,
+			CreationDate:     ptr.String(instance.CreateTime),
+			DatabaseVersion:  ptr.String(instance.DatabaseVersion),
+			instanceSettings: instance.Settings,
 		})
 	}
 
@@ -84,7 +84,7 @@ type CloudSQLInstance struct {
 	deleteOp *sqladmin.Operation
 	settings *settings.Setting
 
-	project *string
+	project         *string
 	region          *string
 	Name            *string           `description:"Name of the Cloud SQL instance"`
 	State           *string           `description:"The current serving state of the Cloud SQL instance"`
@@ -107,6 +107,7 @@ func (r *CloudSQLInstance) Remove(ctx context.Context) (err error) {
 			Settings: r.instanceSettings,
 		}).Context(ctx).Do()
 		if err != nil {
+			logrus.WithError(err).WithField("instance", *r.Name).Trace("failed to disable deletion protection")
 			return err
 		}
 		return nil

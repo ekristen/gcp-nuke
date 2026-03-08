@@ -80,12 +80,12 @@ func (l *ComputeInstanceLister) List(ctx context.Context, o interface{}) ([]reso
 			}
 
 			resources = append(resources, &ComputeInstance{
-				svc:  l.svc,
-				Name: resp.Name,
-				Project:                   opts.Project,
-				Zone:                      ptr.String(zone),
-				CreationTimestamp:         resp.CreationTimestamp,
-				Labels:                    resp.Labels,
+				svc:               l.svc,
+				Name:              resp.Name,
+				Project:           opts.Project,
+				Zone:              ptr.String(zone),
+				CreationTimestamp: resp.CreationTimestamp,
+				Labels:            resp.Labels,
 			})
 		}
 	}
@@ -94,16 +94,16 @@ func (l *ComputeInstanceLister) List(ctx context.Context, o interface{}) ([]reso
 }
 
 type ComputeInstance struct {
-	svc      *compute.InstancesClient
-	updateOp *compute.Operation
-	removeOp *compute.Operation
-	settings *settings.Setting
-	Project  *string
-	Region                    *string
-	Name                      *string
-	Zone                      *string
-	CreationTimestamp         *string
-	Labels                    map[string]string `property:"tagPrefix=label"`
+	svc               *compute.InstancesClient
+	updateOp          *compute.Operation
+	removeOp          *compute.Operation
+	settings          *settings.Setting
+	Project           *string
+	Region            *string
+	Name              *string
+	Zone              *string
+	CreationTimestamp *string
+	Labels            map[string]string `property:"tagPrefix=label"`
 }
 
 func (r *ComputeInstance) Settings(setting *settings.Setting) {
@@ -120,7 +120,9 @@ func (r *ComputeInstance) Remove(ctx context.Context) error {
 		})
 		if err != nil {
 			logrus.WithError(err).WithField("instance", *r.Name).Trace("failed to disable deletion protection")
-		} else if op != nil {
+			return err
+		}
+		if op != nil {
 			r.updateOp = op
 			return nil
 		}

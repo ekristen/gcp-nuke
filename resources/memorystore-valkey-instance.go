@@ -76,14 +76,14 @@ func (l *MemorystoreValkeyInstanceLister) List(ctx context.Context, o interface{
 		name := nameParts[len(nameParts)-1]
 
 		resources = append(resources, &MemorystoreValkeyInstance{
-			svc:     l.svc,
-			project: opts.Project,
-			region:                    opts.Region,
-			Name:                      &name,
-			FullName:                  &resp.Name,
-			State:                     resp.State.String(),
-			ShardCount:                resp.ShardCount,
-			Labels:                    resp.Labels,
+			svc:        l.svc,
+			project:    opts.Project,
+			region:     opts.Region,
+			Name:       &name,
+			FullName:   &resp.Name,
+			State:      resp.State.String(),
+			ShardCount: resp.ShardCount,
+			Labels:     resp.Labels,
 		})
 	}
 
@@ -97,17 +97,17 @@ func (l *MemorystoreValkeyInstanceLister) Close() {
 }
 
 type MemorystoreValkeyInstance struct {
-	svc      *memorystore.Client
-	updateOp *memorystore.UpdateInstanceOperation
-	removeOp *memorystore.DeleteInstanceOperation
-	settings *settings.Setting
-	project  *string
-	region                    *string
-	Name                      *string
-	FullName                  *string
-	State                     string
-	ShardCount                int32
-	Labels                    map[string]string `property:"tagPrefix=label"`
+	svc        *memorystore.Client
+	updateOp   *memorystore.UpdateInstanceOperation
+	removeOp   *memorystore.DeleteInstanceOperation
+	settings   *settings.Setting
+	project    *string
+	region     *string
+	Name       *string
+	FullName   *string
+	State      string
+	ShardCount int32
+	Labels     map[string]string `property:"tagPrefix=label"`
 }
 
 func (r *MemorystoreValkeyInstance) Settings(setting *settings.Setting) {

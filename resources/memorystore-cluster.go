@@ -76,13 +76,13 @@ func (l *MemorystoreClusterLister) List(ctx context.Context, o interface{}) ([]r
 		name := nameParts[len(nameParts)-1]
 
 		resources = append(resources, &MemorystoreCluster{
-			svc:     l.svc,
-			project: opts.Project,
-			region:                    opts.Region,
-			Name:                      &name,
-			FullName:                  &resp.Name,
-			State:                     resp.State.String(),
-			ShardCount:                resp.ShardCount,
+			svc:        l.svc,
+			project:    opts.Project,
+			region:     opts.Region,
+			Name:       &name,
+			FullName:   &resp.Name,
+			State:      resp.State.String(),
+			ShardCount: resp.ShardCount,
 		})
 	}
 
@@ -96,16 +96,16 @@ func (l *MemorystoreClusterLister) Close() {
 }
 
 type MemorystoreCluster struct {
-	svc      *cluster.CloudRedisClusterClient
-	updateOp *cluster.UpdateClusterOperation
-	removeOp *cluster.DeleteClusterOperation
-	settings *settings.Setting
-	project  *string
-	region                    *string
-	Name                      *string
-	FullName                  *string
-	State                     string
-	ShardCount                *int32
+	svc        *cluster.CloudRedisClusterClient
+	updateOp   *cluster.UpdateClusterOperation
+	removeOp   *cluster.DeleteClusterOperation
+	settings   *settings.Setting
+	project    *string
+	region     *string
+	Name       *string
+	FullName   *string
+	State      string
+	ShardCount *int32
 }
 
 func (r *MemorystoreCluster) Settings(setting *settings.Setting) {
