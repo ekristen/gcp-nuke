@@ -11,6 +11,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/iterator"
 
 	iamadmin "cloud.google.com/go/iam/admin/apiv1"
@@ -42,7 +43,8 @@ func init() {
 }
 
 type IAMServiceAccountLister struct {
-	svc *iamadmin.IamClient
+	svc    *iamadmin.IamClient
+	crmSvc *cloudresourcemanager.Service
 }
 
 func (l *IAMServiceAccountLister) Close() {
@@ -51,15 +53,29 @@ func (l *IAMServiceAccountLister) Close() {
 	}
 }
 
-func (l *IAMServiceAccountLister) ListServiceAccounts(
-	ctx context.Context, opts *nuke.ListerOpts,
-) ([]*adminpb.ServiceAccount, error) {
+func (l *IAMServiceAccountLister) ensureServices(ctx context.Context, opts *nuke.ListerOpts) error {
 	if l.svc == nil {
 		var err error
 		l.svc, err = iamadmin.NewIamClient(ctx, opts.ClientOptions...)
 		if err != nil {
-			return nil, err
+			return err
 		}
+	}
+	if l.crmSvc == nil {
+		var err error
+		l.crmSvc, err = cloudresourcemanager.NewService(ctx, opts.ClientOptions...)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (l *IAMServiceAccountLister) ListServiceAccounts(
+	ctx context.Context, opts *nuke.ListerOpts,
+) ([]*adminpb.ServiceAccount, error) {
+	if err := l.ensureServices(ctx, opts); err != nil {
+		return nil, err
 	}
 
 	var serviceAccounts []*adminpb.ServiceAccount
@@ -103,6 +119,7 @@ func (l *IAMServiceAccountLister) List(ctx context.Context, o interface{}) ([]re
 
 		resources = append(resources, &IAMServiceAccount{
 			svc:         l.svc,
+			crmSvc:      l.crmSvc,
 			project:     opts.Project,
 			fullName:    ptr.String(serviceAccount.Name),
 			ID:          ptr.String(serviceAccount.UniqueId),
@@ -116,6 +133,7 @@ func (l *IAMServiceAccountLister) List(ctx context.Context, o interface{}) ([]re
 
 type IAMServiceAccount struct {
 	svc         *iamadmin.IamClient
+	crmSvc      *cloudresourcemanager.Service
 	settings    *settings.Setting
 	project     *string
 	fullName    *string
@@ -146,9 +164,47 @@ func (r *IAMServiceAccount) Filter() error {
 }
 
 func (r *IAMServiceAccount) Remove(ctx context.Context) error {
+	// Remove IAM policy bindings for this service account before deletion
+	// to prevent orphaned "deleted:" bindings
+	if err := r.removeIAMBindings(ctx); err != nil {
+		logrus.WithError(err).WithField("serviceAccount", *r.Name).
+			Warn("failed to remove IAM bindings, continuing with deletion")
+	}
+
 	return r.svc.DeleteServiceAccount(ctx, &adminpb.DeleteServiceAccountRequest{
 		Name: *r.fullName,
 	})
+}
+
+func (r *IAMServiceAccount) removeIAMBindings(ctx context.Context) error {
+	policy, err := r.crmSvc.Projects.
+		GetIamPolicy(fmt.Sprintf("projects/%s", *r.project), &cloudresourcemanager.GetIamPolicyRequest{}).
+		Context(ctx).Do()
+	if err != nil {
+		return err
+	}
+
+	memberPrefix := fmt.Sprintf("serviceAccount:%s", *r.Name)
+	modified := false
+
+	for _, binding := range policy.Bindings {
+		for i := len(binding.Members) - 1; i >= 0; i-- {
+			if binding.Members[i] == memberPrefix {
+				binding.Members = append(binding.Members[:i], binding.Members[i+1:]...)
+				modified = true
+			}
+		}
+	}
+
+	if !modified {
+		return nil
+	}
+
+	_, err = r.crmSvc.Projects.
+		SetIamPolicy(fmt.Sprintf("projects/%s", *r.project), &cloudresourcemanager.SetIamPolicyRequest{
+			Policy: policy,
+		}).Context(ctx).Do()
+	return err
 }
 
 func (r *IAMServiceAccount) Properties() types.Properties {
