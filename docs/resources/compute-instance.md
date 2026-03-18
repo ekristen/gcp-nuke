@@ -13,3 +13,6 @@
 - **`Project`**: No description provided
 - **`Region`**: No description provided
 - **`Zone`**: No description provided
+## Settings
+
+- `DisableDeletionProtection`
