@@ -49,12 +49,12 @@ func (l *DNSPolicyLister) List(ctx context.Context, o interface{}) ([]resource.R
 	if err := req.Pages(ctx, func(page *dns.PoliciesListResponse) error {
 		for _, policy := range page.Policies {
 			resources = append(resources, &DNSPolicy{
-				svc:                      l.svc,
-				project:                  opts.Project,
-				Name:                     ptr.String(policy.Name),
-				Description:              ptr.String(policy.Description),
-				EnableInboundForwarding:  ptr.Bool(policy.EnableInboundForwarding),
-				EnableLogging:            ptr.Bool(policy.EnableLogging),
+				svc:                     l.svc,
+				project:                 opts.Project,
+				Name:                    ptr.String(policy.Name),
+				Description:             ptr.String(policy.Description),
+				EnableInboundForwarding: ptr.Bool(policy.EnableInboundForwarding),
+				EnableLogging:           ptr.Bool(policy.EnableLogging),
 			})
 		}
 		return nil
@@ -75,6 +75,12 @@ type DNSPolicy struct {
 }
 
 func (r *DNSPolicy) Remove(ctx context.Context) error {
+	policy, err := r.svc.Policies.Get(*r.project, *r.Name).Do()
+	if err == nil {
+		policy.Networks = nil
+		_, _ = r.svc.Policies.Update(*r.project, *r.Name, policy).Do()
+	}
+
 	return r.svc.Policies.Delete(*r.project, *r.Name).Do()
 }
 
