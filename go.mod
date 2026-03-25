@@ -37,7 +37,7 @@ require (
 	github.com/gotidy/ptr v1.4.0
 	github.com/iancoleman/strcase v0.3.0
 	github.com/sirupsen/logrus v1.9.4
-	github.com/urfave/cli/v3 v3.7.0
+	github.com/urfave/cli/v3 v3.8.0
 	golang.org/x/oauth2 v0.34.0
 	golang.org/x/sync v0.19.0
 	golang.org/x/text v0.33.0
