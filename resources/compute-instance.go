@@ -14,6 +14,7 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 
+	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/settings"
@@ -95,12 +96,14 @@ func (l *ComputeInstanceLister) List(ctx context.Context, o interface{}) ([]reso
 }
 
 type ComputeInstance struct {
-	svc               *compute.InstancesClient
-	settings          *settings.Setting
-	Project           *string
-	Region            *string
-	Name              *string
-	Zone              *string
+	svc          *compute.InstancesClient
+	settings     *settings.Setting
+	protectionOp *compute.Operation
+	removeOp     *compute.Operation
+	Project      *string
+	Region       *string
+	Name         *string
+	Zone         *string
 	CreationTimestamp *string
 	Labels            map[string]string `property:"tagPrefix=label"`
 }
@@ -110,16 +113,69 @@ func (r *ComputeInstance) Settings(setting *settings.Setting) {
 }
 
 func (r *ComputeInstance) Remove(ctx context.Context) error {
-	if err := r.disableDeletionProtection(ctx); err != nil {
-		return err
+	if r.settings != nil && r.settings.GetBool("DisableDeletionProtection") {
+		var err error
+		r.protectionOp, err = r.svc.SetDeletionProtection(ctx, &computepb.SetDeletionProtectionInstanceRequest{
+			Project:            *r.Project,
+			Zone:               *r.Zone,
+			Resource:           *r.Name,
+			DeletionProtection: proto.Bool(false),
+		})
+		if err != nil {
+			return fmt.Errorf("unable to disable deletion protection: %w", err)
+		}
+		return nil
 	}
 
-	_, err := r.svc.Delete(ctx, &computepb.DeleteInstanceRequest{
+	return r.delete(ctx)
+}
+
+func (r *ComputeInstance) delete(ctx context.Context) (err error) {
+	r.removeOp, err = r.svc.Delete(ctx, &computepb.DeleteInstanceRequest{
 		Project:  *r.Project,
 		Zone:     *r.Zone,
 		Instance: *r.Name,
 	})
 	return err
+}
+
+func (r *ComputeInstance) HandleWait(ctx context.Context) error {
+	if r.protectionOp != nil {
+		if err := r.protectionOp.Poll(ctx); err != nil {
+			logrus.WithError(err).Trace("protection op polling encountered error")
+			return err
+		}
+		if !r.protectionOp.Done() {
+			return liberror.ErrWaitResource("waiting for deletion protection to be disabled")
+		}
+		if r.protectionOp.Proto().GetError() != nil {
+			return fmt.Errorf("disable deletion protection error on '%s': %s",
+				r.protectionOp.Proto().GetTargetLink(), r.protectionOp.Proto().GetHttpErrorMessage())
+		}
+		r.protectionOp = nil
+
+		if err := r.delete(context.TODO()); err != nil {
+			return err
+		}
+	}
+
+	if r.removeOp == nil {
+		return nil
+	}
+
+	if err := r.removeOp.Poll(ctx); err != nil {
+		logrus.WithError(err).Trace("remove op polling encountered error")
+		return err
+	}
+	if !r.removeOp.Done() {
+		return liberror.ErrWaitResource("waiting for instance to be deleted")
+	}
+	if r.removeOp.Proto().GetError() != nil {
+		return fmt.Errorf("delete error on '%s': %s",
+			r.removeOp.Proto().GetTargetLink(), r.removeOp.Proto().GetHttpErrorMessage())
+	}
+
+	return nil
 }
 
 func (r *ComputeInstance) Properties() types.Properties {
@@ -130,24 +186,3 @@ func (r *ComputeInstance) String() string {
 	return *r.Name
 }
 
-func (r *ComputeInstance) disableDeletionProtection(ctx context.Context) error {
-	if r.settings == nil || !r.settings.GetBool("DisableDeletionProtection") {
-		return nil
-	}
-
-	op, err := r.svc.SetDeletionProtection(ctx, &computepb.SetDeletionProtectionInstanceRequest{
-		Project:            *r.Project,
-		Zone:               *r.Zone,
-		Resource:           *r.Name,
-		DeletionProtection: proto.Bool(false),
-	})
-	if err != nil {
-		return fmt.Errorf("unable to disable deletion protection: %w", err)
-	}
-
-	if err := op.Wait(ctx); err != nil {
-		return fmt.Errorf("unable to wait for deletion protection update operation: %w", err)
-	}
-
-	return nil
-}
