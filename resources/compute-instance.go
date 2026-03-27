@@ -154,7 +154,7 @@ func (r *ComputeInstance) HandleWait(ctx context.Context) error {
 		}
 		r.protectionOp = nil
 
-		if err := r.delete(context.TODO()); err != nil {
+		if err := r.delete(ctx); err != nil {
 			return err
 		}
 	}

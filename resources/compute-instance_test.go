@@ -28,22 +28,26 @@ func TestComputeInstanceRegistrationIncludesDisableDeletionProtection(t *testing
 	}
 }
 
-func TestComputeInstanceRemoveSkipsProtectionWhenSettingDisabled(t *testing.T) {
+func TestComputeInstanceInitialStateHasNoOps(t *testing.T) {
 	r := &ComputeInstance{}
 	r.Settings(&settings.Setting{"DisableDeletionProtection": false})
 
-	// svc is nil so delete would panic if called; no panic means protection was skipped correctly
-	// but delete() will still be called, so we just verify no panic on the protection path
 	if r.protectionOp != nil {
-		t.Fatal("expected protectionOp to be nil")
+		t.Fatal("expected protectionOp to be nil at initial state")
+	}
+	if r.removeOp != nil {
+		t.Fatal("expected removeOp to be nil at initial state")
 	}
 }
 
-func TestComputeInstanceRemoveSkipsProtectionWhenSettingsNil(t *testing.T) {
+func TestComputeInstanceInitialStateHasNoOpsWhenSettingsNil(t *testing.T) {
 	r := &ComputeInstance{}
 
 	if r.protectionOp != nil {
-		t.Fatal("expected protectionOp to be nil")
+		t.Fatal("expected protectionOp to be nil at initial state")
+	}
+	if r.removeOp != nil {
+		t.Fatal("expected removeOp to be nil at initial state")
 	}
 }
 
