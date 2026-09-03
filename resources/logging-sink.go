@@ -77,9 +77,9 @@ type LoggingSink struct {
 }
 
 func (r *LoggingSink) Filter() error {
-	// The _Required sink is created by Cloud Logging and cannot be deleted.
-	if *r.Name == "_Required" {
-		return fmt.Errorf("cannot delete the _Required logging sink")
+	// The _Required and _Default sinks are created by Cloud Logging and cannot be deleted.
+	if *r.Name == "_Required" || *r.Name == "_Default" {
+		return fmt.Errorf("cannot delete the %s logging sink", *r.Name)
 	}
 	return nil
 }
