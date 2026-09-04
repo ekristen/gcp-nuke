@@ -99,8 +99,11 @@ func (r *FirebaseAuthProvider) Remove(ctx context.Context) error {
 		return fmt.Errorf("unknown firebase auth provider: %s", ptr.ToString(r.Name))
 	}
 
-	_, err := r.svc.UpdateProjectConfig(ctx, *r.project, baseCfg)
-	return err
+	if _, err := r.svc.UpdateProjectConfig(ctx, *r.project, baseCfg); err != nil {
+		return fmt.Errorf("disabling firebase auth provider %s: %w", ptr.ToString(r.Name), err)
+	}
+
+	return nil
 }
 
 func (r *FirebaseAuthProvider) Properties() types.Properties {
