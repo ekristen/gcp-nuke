@@ -39,7 +39,7 @@ require (
 	github.com/sirupsen/logrus v1.9.4
 	github.com/urfave/cli/v3 v3.9.0
 	golang.org/x/oauth2 v0.36.0
-	golang.org/x/sync v0.20.0
+	golang.org/x/sync v0.22.0
 	golang.org/x/text v0.37.0
 	google.golang.org/api v0.279.0
 	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7
