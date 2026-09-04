@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/sirupsen/logrus"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 	htransport "google.golang.org/api/transport/http"
 )
@@ -74,8 +75,8 @@ func (s *IdentityPlatformService) GetProjectConfig(ctx context.Context, projectI
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API request error: status %d", resp.StatusCode)
+	if err := googleapi.CheckResponse(resp); err != nil {
+		return nil, fmt.Errorf("error getting project config: %w", err)
 	}
 
 	var config ProjectConfig
@@ -107,8 +108,8 @@ func (s *IdentityPlatformService) UpdateProjectConfig(ctx context.Context, proje
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API request error: status %d", resp.StatusCode)
+	if err := googleapi.CheckResponse(resp); err != nil {
+		return nil, fmt.Errorf("error updating project config: %w", err)
 	}
 
 	var updatedConfig ProjectConfig
@@ -157,8 +158,8 @@ func (s *IdentityPlatformService) ListDefaultSupportedOAuthIdpConfigs(ctx contex
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API request error: status %d", resp.StatusCode)
+	if err := googleapi.CheckResponse(resp); err != nil {
+		return nil, fmt.Errorf("error listing default supported OAuth IDP configs: %w", err)
 	}
 
 	var configs *ListDefaultSupportedOAuthIdpConfigsResponse
@@ -184,8 +185,8 @@ func (s *IdentityPlatformService) DeleteDefaultSupportedOAuthIdpConfig(ctx conte
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("API request error: status %d", resp.StatusCode)
+	if err := googleapi.CheckResponse(resp); err != nil {
+		return fmt.Errorf("error deleting default supported OAuth IDP config: %w", err)
 	}
 
 	return nil
@@ -207,8 +208,8 @@ func (s *IdentityPlatformService) ListOAuthIdpConfigs(ctx context.Context, proje
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API request error: status %d", resp.StatusCode)
+	if err := googleapi.CheckResponse(resp); err != nil {
+		return nil, fmt.Errorf("error listing OAuth IDP configs: %w", err)
 	}
 
 	var configs *ListOAuthIdpConfigsResponse
@@ -234,8 +235,8 @@ func (s *IdentityPlatformService) DeleteOAuthIdpConfig(ctx context.Context, proj
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("API request error: status %d", resp.StatusCode)
+	if err := googleapi.CheckResponse(resp); err != nil {
+		return fmt.Errorf("error deleting OAuth IDP config: %w", err)
 	}
 
 	return nil
