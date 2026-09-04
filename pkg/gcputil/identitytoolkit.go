@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	netURL "net/url"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	"google.golang.org/api/googleapi"
@@ -17,8 +19,10 @@ const identityPlatformBasePath = "https://identitytoolkit.googleapis.com/admin/v
 
 // ProjectConfig represents the configuration of a project in Identity Platform
 type ProjectConfig struct {
-	Name                     string        `json:"name"`
-	AutoDeleteAnonymousUsers bool          `json:"autodeleteAnonymousUsers"`
+	// Name is output-only; the API rejects or ignores it on write, so it must
+	// never be included in an update body.
+	Name                     string        `json:"name,omitempty"`
+	AutoDeleteAnonymousUsers bool          `json:"autodeleteAnonymousUsers,omitempty"`
 	SignIn                   *SignInConfig `json:"signIn,omitempty"`
 	MFA                      *MFAConfig    `json:"mfa,omitempty"`
 }
@@ -86,17 +90,55 @@ func (s *IdentityPlatformService) GetProjectConfig(ctx context.Context, projectI
 	return &config, nil
 }
 
+// updateMaskFor derives the updateMask for a project config PATCH from the fields
+// that are actually set on cfg. Without a mask the backend treats the request as a
+// write of the entire project config and validates fields we never intended to touch
+// (most visibly the email templates, which fail with EMAIL_TEMPLATE_UPDATE_NOT_ALLOWED
+// on projects whose templates are managed elsewhere). The paths use the API field
+// names, which is why phone is addressed as signIn.phoneNumber.
+func updateMaskFor(config *ProjectConfig) (string, error) {
+	var paths []string
+
+	if config.SignIn != nil {
+		if config.SignIn.Anonymous != nil {
+			paths = append(paths, "signIn.anonymous.enabled")
+		}
+		if config.SignIn.Email != nil {
+			paths = append(paths, "signIn.email.enabled")
+		}
+		if config.SignIn.Phone != nil {
+			paths = append(paths, "signIn.phoneNumber.enabled")
+		}
+	}
+	if config.MFA != nil {
+		paths = append(paths, "mfa.state")
+	}
+
+	if len(paths) == 0 {
+		return "", fmt.Errorf("no updatable fields set on project config")
+	}
+
+	return strings.Join(paths, ","), nil
+}
+
 // UpdateProjectConfig updates the configuration of a project
 func (s *IdentityPlatformService) UpdateProjectConfig(ctx context.Context, projectID string, config *ProjectConfig) (*ProjectConfig, error) {
-	url := fmt.Sprintf("%sprojects/%s/config", s.BasePath, projectID)
-	logrus.Tracef("url: %s", url)
+	mask, err := updateMaskFor(config)
+	if err != nil {
+		return nil, err
+	}
+
+	query := netURL.Values{}
+	query.Set("updateMask", mask)
+	reqURL := fmt.Sprintf("%sprojects/%s/config?%s", s.BasePath, projectID, query.Encode())
+	logrus.Tracef("url: %s", reqURL)
 
 	body, err := json.Marshal(config)
 	if err != nil {
 		return nil, fmt.Errorf("error marshaling request body: %v", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPatch, url, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPatch, reqURL, bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %v", err)
 	}
