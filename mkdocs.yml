@@ -125,6 +125,7 @@ nav:
       - Compute Network Endpoint Group: resources/compute-network-endpoint-group.md
       - Compute Packet Mirroring: resources/compute-packet-mirroring.md
       - Compute SSL Certificate: resources/compute-ssl-certificate.md
+      - Compute SSL Policy: resources/compute-ssl-policy.md
       - Compute Security Policy: resources/compute-security-policy.md
       - Compute Target GRPC Proxy: resources/compute-target-grpc-proxy.md
       - Compute Target HTTP Proxy: resources/compute-target-http-proxy.md
