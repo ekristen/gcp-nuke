@@ -17,7 +17,6 @@ require (
 	cloud.google.com/go/firestore v1.25.0
 	cloud.google.com/go/functions v1.25.0
 	cloud.google.com/go/iam v1.13.0
-	cloud.google.com/go/kms v1.33.0
 	cloud.google.com/go/memcache v1.17.0
 	cloud.google.com/go/memorystore v1.3.0
 	cloud.google.com/go/networkconnectivity v1.28.0

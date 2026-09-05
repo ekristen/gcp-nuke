@@ -39,8 +39,6 @@ cloud.google.com/go/functions v1.25.0 h1:ndUtLkam3XF9b0t2zVACH9D/EgFBISbVuQFqRz/
 cloud.google.com/go/functions v1.25.0/go.mod h1:b/tqakoKeAkj9RspEjqswWf5299Lkz9C/742QUD3OEk=
 cloud.google.com/go/iam v1.13.0 h1:ufT3FPT5rFFXu6UtLkNoxaOaV5EuA1dsSkmemCSTo6U=
 cloud.google.com/go/iam v1.13.0/go.mod h1:gHXdDEiPDvqd1q1KwBDGQlgZY/BwY760zU2LhOZS5w0=
-cloud.google.com/go/kms v1.33.0 h1:pG0X78m212b2pv9N4fdMoUO69LuZGQ9kSvn8sHBOFAo=
-cloud.google.com/go/kms v1.33.0/go.mod h1:CSGvW6GnMQbY+1nOHcIzhMtHSbExXlOmCKjWtYVjcpA=
 cloud.google.com/go/logging v1.19.1 h1:7SsLhyTDBDrJw+Ll6Ns3I2mByqHXvJUc3rGjSlwiWgU=
 cloud.google.com/go/logging v1.19.1/go.mod h1:2IkQ/d8jVJqV2qW8ZUGUiMjdZG1gkLD2JReGbZ8isqg=
 cloud.google.com/go/longrunning v1.2.0 h1:WjYH3YHBGCxGJP9M4dWGHBfXr/cFIjMkNgWcJj7/iMM=

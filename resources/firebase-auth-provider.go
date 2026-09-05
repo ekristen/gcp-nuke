@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gotidy/ptr"
 
@@ -85,18 +86,24 @@ type FirebaseAuthProvider struct {
 }
 
 func (r *FirebaseAuthProvider) Remove(ctx context.Context) error {
-	baseCfg := &gcputil.ProjectConfig{}
+	baseCfg := &gcputil.ProjectConfig{SignIn: &gcputil.SignInConfig{}}
 
-	if r.Name == ptr.String("email") {
+	switch ptr.ToString(r.Name) {
+	case "email":
 		baseCfg.SignIn.Email = &gcputil.ProviderConfig{Enabled: false}
-	} else if r.Name == ptr.String("phone") {
+	case "phone":
 		baseCfg.SignIn.Phone = &gcputil.ProviderConfig{Enabled: false}
-	} else if r.Name == ptr.String("anonymous") {
+	case "anonymous":
 		baseCfg.SignIn.Anonymous = &gcputil.ProviderConfig{Enabled: false}
+	default:
+		return fmt.Errorf("unknown firebase auth provider: %s", ptr.ToString(r.Name))
 	}
 
-	_, err := r.svc.UpdateProjectConfig(ctx, *r.project, baseCfg)
-	return err
+	if _, err := r.svc.UpdateProjectConfig(ctx, *r.project, baseCfg); err != nil {
+		return fmt.Errorf("disabling firebase auth provider %s: %w", ptr.ToString(r.Name), err)
+	}
+
+	return nil
 }
 
 func (r *FirebaseAuthProvider) Properties() types.Properties {
