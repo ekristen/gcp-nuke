@@ -97,12 +97,29 @@ func (l *KMSKeyRingLister) List(ctx context.Context, o interface{}) ([]resource.
 		return nil, err
 	}
 
+	// A key ring can only be deleted once it holds no keys. A key that is itself removable this run
+	// does not block the ring, since DependsOn deletes the keys first and libnuke then re-attempts
+	// the ring; only a key blocked on the destruction period does.
+	cryptoKeyLister := &KMSCryptoKeyLister{}
+	cryptoKeys, err := cryptoKeyLister.ListCryptoKeys(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	blockedKeys := make(map[string]int)
+	for _, cryptoKey := range cryptoKeys {
+		if cryptoKey.blockedBy() != "" {
+			blockedKeys[kmsKeyRingOf(cryptoKey.key.Name)]++
+		}
+	}
+
 	for _, keyRing := range keyRings {
 		resources = append(resources, &KMSKeyRing{
-			svc:       l.svc,
-			fullName:  ptr.String(keyRing.Name),
-			Name:      ptr.String(kmsShortName(keyRing.Name)),
-			CreatedAt: ptr.String(keyRing.CreateTime),
+			svc:         l.svc,
+			fullName:    ptr.String(keyRing.Name),
+			blockedKeys: blockedKeys[kmsShortName(keyRing.Name)],
+			Name:        ptr.String(kmsShortName(keyRing.Name)),
+			CreatedAt:   ptr.String(keyRing.CreateTime),
 		})
 	}
 
@@ -110,10 +127,18 @@ func (l *KMSKeyRingLister) List(ctx context.Context, o interface{}) ([]resource.
 }
 
 type KMSKeyRing struct {
-	svc       *cloudkms.Service
-	fullName  *string
-	Name      *string
-	CreatedAt *string
+	svc         *cloudkms.Service
+	fullName    *string
+	blockedKeys int
+	Name        *string
+	CreatedAt   *string
+}
+
+func (r *KMSKeyRing) Filter() error {
+	if r.blockedKeys > 0 {
+		return fmt.Errorf("key ring has %d key(s) that cannot be deleted yet", r.blockedKeys)
+	}
+	return nil
 }
 
 // Remove deletes the key ring. Cloud KMS only permits this once every crypto key and import job in

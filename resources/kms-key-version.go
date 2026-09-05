@@ -76,26 +76,19 @@ func (l *KMSKeyVersionLister) List(ctx context.Context, o interface{}) ([]resour
 	l.svc = cryptoKeyLister.svc
 
 	for _, cryptoKey := range cryptoKeys {
-		err := l.svc.Projects.Locations.KeyRings.CryptoKeys.CryptoKeyVersions.List(cryptoKey.Name).
-			Pages(ctx, func(page *cloudkms.ListCryptoKeyVersionsResponse) error {
-				for _, keyVersion := range page.CryptoKeyVersions {
-					resources = append(resources, &KMSKeyVersion{
-						svc:      l.svc,
-						fullName: ptr.String(keyVersion.Name),
-						imported: keyVersion.ImportTime != "",
-						Name:     ptr.String(kmsShortName(cryptoKey.Name)),
-						Keyring:  ptr.String(kmsKeyRingOf(keyVersion.Name)),
-						Version:  ptr.String(kmsShortName(keyVersion.Name)),
-						State:    ptr.String(keyVersion.State),
-					})
-				}
-				return nil
+		for _, keyVersion := range cryptoKey.versions {
+			resources = append(resources, &KMSKeyVersion{
+				svc:         l.svc,
+				fullName:    ptr.String(keyVersion.Name),
+				keyName:     cryptoKey.key.Name,
+				keyRotation: cryptoKey.key.RotationPeriod,
+				imported:    keyVersion.ImportTime != "",
+				Name:        ptr.String(kmsShortName(cryptoKey.key.Name)),
+				Keyring:     ptr.String(kmsKeyRingOf(keyVersion.Name)),
+				Version:     ptr.String(kmsShortName(keyVersion.Name)),
+				State:       ptr.String(keyVersion.State),
+				DestroyTime: ptr.String(keyVersion.DestroyTime),
 			})
-		if err != nil {
-			// One unreadable key should not discard the versions found on the others.
-			logrus.WithError(err).WithField("key", cryptoKey.Name).
-				Error("unable to list kms key versions")
-			continue
 		}
 	}
 
@@ -103,22 +96,30 @@ func (l *KMSKeyVersionLister) List(ctx context.Context, o interface{}) ([]resour
 }
 
 type KMSKeyVersion struct {
-	svc      *cloudkms.Service
-	fullName *string
-	imported bool
-	Name     *string
-	Keyring  *string
-	Version  *string
-	State    *string
+	svc         *cloudkms.Service
+	fullName    *string
+	keyName     string
+	keyRotation string
+	imported    bool
+	Name        *string
+	Keyring     *string
+	Version     *string
+	State       *string
+	DestroyTime *string
 }
 
-// deletable reports whether the version is in a state Cloud KMS allows to be deleted outright.
-func (r *KMSKeyVersion) deletable() bool {
-	switch *r.State {
+// kmsVersionDeletable reports whether a version state is one Cloud KMS allows to be deleted
+// outright. Any other state has to be destroyed first, which cannot complete in the same run.
+func kmsVersionDeletable(state string) bool {
+	switch state {
 	case kmsStateDestroyed, kmsStateImportFailed, kmsStateGenerationFailed:
 		return true
 	}
 	return false
+}
+
+func (r *KMSKeyVersion) deletable() bool {
+	return kmsVersionDeletable(*r.State)
 }
 
 // Remove advances the version towards removal. A live version must first be destroyed, which
@@ -131,15 +132,43 @@ func (r *KMSKeyVersion) Remove(ctx context.Context) error {
 		return err
 	}
 
+	// Destroying only schedules the version, and the wait is at least 24 hours. Automatic rotation
+	// can create a replacement version during that window -- and the minimum rotation period is
+	// also 24 hours -- which would restart the wait and keep the key from ever being deleted. So
+	// the schedule is cleared on the parent key before the destroy is requested.
+	if err := r.clearKeyRotation(ctx); err != nil {
+		return err
+	}
+
 	_, err := r.svc.Projects.Locations.KeyRings.CryptoKeys.CryptoKeyVersions.
 		Destroy(*r.fullName, &cloudkms.DestroyCryptoKeyVersionRequest{}).Context(ctx).Do()
 	return err
 }
 
+// clearKeyRotation removes the automatic rotation schedule from the version's parent key. The API
+// clears fields that are named in the update mask but left unset in the body.
+func (r *KMSKeyVersion) clearKeyRotation(ctx context.Context) error {
+	if r.keyRotation == "" {
+		return nil
+	}
+
+	if _, err := r.svc.Projects.Locations.KeyRings.CryptoKeys.
+		Patch(r.keyName, &cloudkms.CryptoKey{}).
+		UpdateMask("rotationPeriod,nextRotationTime").
+		Context(ctx).Do(); err != nil {
+		return fmt.Errorf("unable to clear rotation schedule on %s: %w", r.keyName, err)
+	}
+
+	logrus.WithField("key", r.keyName).Debug("cleared rotation schedule before destroying version")
+	return nil
+}
+
 func (r *KMSKeyVersion) Filter() error {
 	switch *r.State {
 	case kmsStateDestroyScheduled:
-		return fmt.Errorf("key version is already scheduled for destruction")
+		// The destruction period is fixed when the key is created and cannot be shortened, so
+		// nothing can be done until it elapses.
+		return fmt.Errorf("key version is scheduled for destruction on %s", *r.DestroyTime)
 	case kmsStatePendingGeneration, kmsStatePendingImport:
 		return fmt.Errorf("key version is still being generated or imported")
 	case kmsStatePendingExternalDestruction:

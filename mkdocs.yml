@@ -159,6 +159,8 @@ nav:
       - KMS Crypto Key: resources/kms-crypto-key.md
       - KMS Key Ring: resources/kms-key-ring.md
       - KMS Key Version: resources/kms-key-version.md
+      - Logging Bucket: resources/logging-bucket.md
+      - Logging Sink: resources/logging-sink.md
       - Memorystore Cluster: resources/memorystore-cluster.md
       - Memorystore Memcached Instance: resources/memorystore-memcached-instance.md
       - Memorystore Redis Instance: resources/memorystore-redis-instance.md
