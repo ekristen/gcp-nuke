@@ -16,6 +16,7 @@ import (
 
 	"cloud.google.com/go/storage"
 
+	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/settings"
@@ -101,10 +102,9 @@ func (l *StorageBucketLister) List(ctx context.Context, o interface{}) ([]resour
 			"region":   *opts.Region,
 		}).Debug("bucket details")
 
-		isMultiRegion := false
+		isMultiRegion := bucket.LocationType == "multi-region" || bucket.LocationType == "dual-region"
 		isAccountedFor := false
-		if bucket.Location == "US" {
-			isMultiRegion = true
+		if isMultiRegion {
 			if _, ok := l.multiRegion[bucket.Name]; !ok {
 				l.multiRegion[bucket.Name] = loc
 			} else {
@@ -188,9 +188,13 @@ func (r *StorageBucket) Remove(ctx context.Context) error {
 
 	err := r.svc.Bucket(*r.Name).Delete(ctx)
 	if err != nil {
+		if errors.Is(err, storage.ErrBucketNotExist) {
+			return nil
+		}
 		logrus.WithError(err).Error("encountered error while removing bucket")
+		return err
 	}
-	return err
+	return nil
 }
 
 func (r *StorageBucket) Properties() types.Properties {
@@ -203,6 +207,17 @@ func (r *StorageBucket) String() string {
 
 func (r *StorageBucket) Settings(settings *settings.Setting) {
 	r.settings = settings
+}
+
+func (r *StorageBucket) HandleWait(ctx context.Context) error {
+	if _, err := r.svc.Bucket(*r.Name).Attrs(ctx); err != nil {
+		if errors.Is(err, storage.ErrBucketNotExist) {
+			return nil
+		}
+		return err
+	}
+
+	return liberror.ErrWaitResource("waiting for bucket deletion")
 }
 
 type objectToDelete struct {
@@ -223,6 +238,26 @@ func (r *StorageBucket) removeObjects(ctx context.Context) error {
 			break
 		}
 		if err != nil {
+			return err
+		}
+		objects = append(objects, objectToDelete{
+			name:       resp.Name,
+			generation: resp.Generation,
+		})
+	}
+
+	softDeletedIt := r.svc.Bucket(*r.Name).Objects(ctx, &storage.Query{
+		SoftDeleted: true,
+	})
+	for {
+		resp, err := softDeletedIt.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			if strings.Contains(err.Error(), "Soft delete policy is required") {
+				break
+			}
 			return err
 		}
 		objects = append(objects, objectToDelete{

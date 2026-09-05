@@ -4,13 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/ekristen/libnuke/pkg/settings"
 	"github.com/gotidy/ptr"
 
 	"github.com/sirupsen/logrus"
 
+	"google.golang.org/api/cloudresourcemanager/v3"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iterator"
 
 	iamadmin "cloud.google.com/go/iam/admin/apiv1"
@@ -42,7 +46,8 @@ func init() {
 }
 
 type IAMServiceAccountLister struct {
-	svc *iamadmin.IamClient
+	svc    *iamadmin.IamClient
+	crmSvc *cloudresourcemanager.Service
 }
 
 func (l *IAMServiceAccountLister) Close() {
@@ -51,15 +56,29 @@ func (l *IAMServiceAccountLister) Close() {
 	}
 }
 
-func (l *IAMServiceAccountLister) ListServiceAccounts(
-	ctx context.Context, opts *nuke.ListerOpts,
-) ([]*adminpb.ServiceAccount, error) {
+func (l *IAMServiceAccountLister) ensureServices(ctx context.Context, opts *nuke.ListerOpts) error {
 	if l.svc == nil {
 		var err error
 		l.svc, err = iamadmin.NewIamClient(ctx, opts.ClientOptions...)
 		if err != nil {
-			return nil, err
+			return err
 		}
+	}
+	if l.crmSvc == nil {
+		var err error
+		l.crmSvc, err = cloudresourcemanager.NewService(ctx, opts.ClientOptions...)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (l *IAMServiceAccountLister) ListServiceAccounts(
+	ctx context.Context, opts *nuke.ListerOpts,
+) ([]*adminpb.ServiceAccount, error) {
+	if err := l.ensureServices(ctx, opts); err != nil {
+		return nil, err
 	}
 
 	var serviceAccounts []*adminpb.ServiceAccount
@@ -103,6 +122,7 @@ func (l *IAMServiceAccountLister) List(ctx context.Context, o interface{}) ([]re
 
 		resources = append(resources, &IAMServiceAccount{
 			svc:         l.svc,
+			crmSvc:      l.crmSvc,
 			project:     opts.Project,
 			fullName:    ptr.String(serviceAccount.Name),
 			ID:          ptr.String(serviceAccount.UniqueId),
@@ -116,6 +136,7 @@ func (l *IAMServiceAccountLister) List(ctx context.Context, o interface{}) ([]re
 
 type IAMServiceAccount struct {
 	svc         *iamadmin.IamClient
+	crmSvc      *cloudresourcemanager.Service
 	settings    *settings.Setting
 	project     *string
 	fullName    *string
@@ -146,9 +167,91 @@ func (r *IAMServiceAccount) Filter() error {
 }
 
 func (r *IAMServiceAccount) Remove(ctx context.Context) error {
+	// Remove IAM policy bindings for this service account before deletion
+	// to prevent orphaned "deleted:" bindings
+	if err := r.removeIAMBindings(ctx); err != nil {
+		// Naming the permissions here rather than in the docs: the generated resource pages are
+		// overwritten by tools/generate-docs, and this is the moment the operator needs to know.
+		logrus.WithError(err).WithField("serviceAccount", *r.Name).
+			Warn("failed to remove project IAM bindings (requires " +
+				"resourcemanager.projects.getIamPolicy and resourcemanager.projects.setIamPolicy), " +
+				"continuing with deletion")
+	}
+
 	return r.svc.DeleteServiceAccount(ctx, &adminpb.DeleteServiceAccountRequest{
 		Name: *r.fullName,
 	})
+}
+
+// iamPolicyMu serializes the read-modify-write cycle on the project IAM policy. Service accounts
+// are deleted in parallel but all share one project-level policy, so without this their
+// SetIamPolicy calls collide on the etag and all but one lose their binding removal.
+var iamPolicyMu sync.Mutex
+
+// iamPolicyMaxAttempts bounds the retries for an etag conflict caused by a writer outside this
+// process, which the mutex cannot prevent.
+const iamPolicyMaxAttempts = 5
+
+func (r *IAMServiceAccount) removeIAMBindings(ctx context.Context) error {
+	iamPolicyMu.Lock()
+	defer iamPolicyMu.Unlock()
+
+	resourceName := fmt.Sprintf("projects/%s", *r.project)
+	member := fmt.Sprintf("serviceAccount:%s", *r.Name)
+
+	var lastErr error
+	for attempt := 1; attempt <= iamPolicyMaxAttempts; attempt++ {
+		// The policy is re-fetched on every attempt so the etag matches the current state.
+		policy, err := r.crmSvc.Projects.
+			GetIamPolicy(resourceName, &cloudresourcemanager.GetIamPolicyRequest{}).
+			Context(ctx).Do()
+		if err != nil {
+			return err
+		}
+
+		modified := false
+		for _, binding := range policy.Bindings {
+			for i := len(binding.Members) - 1; i >= 0; i-- {
+				if binding.Members[i] == member {
+					binding.Members = append(binding.Members[:i], binding.Members[i+1:]...)
+					modified = true
+				}
+			}
+		}
+
+		if !modified {
+			return nil
+		}
+
+		_, err = r.crmSvc.Projects.
+			SetIamPolicy(resourceName, &cloudresourcemanager.SetIamPolicyRequest{
+				Policy: policy,
+			}).Context(ctx).Do()
+		if err == nil {
+			return nil
+		}
+
+		if !isIAMPolicyConflict(err) {
+			return err
+		}
+
+		lastErr = err
+		logrus.WithError(err).WithField("serviceAccount", *r.Name).
+			WithField("attempt", attempt).Debug("iam policy changed concurrently, retrying")
+	}
+
+	return fmt.Errorf("iam policy still conflicting after %d attempts: %w",
+		iamPolicyMaxAttempts, lastErr)
+}
+
+// isIAMPolicyConflict reports whether the error is the etag conflict returned when the policy was
+// changed between the read and the write.
+func isIAMPolicyConflict(err error) bool {
+	var apiErr *googleapi.Error
+	if errors.As(err, &apiErr) {
+		return apiErr.Code == http.StatusConflict || apiErr.Code == http.StatusPreconditionFailed
+	}
+	return false
 }
 
 func (r *IAMServiceAccount) Properties() types.Properties {

@@ -1,20 +1,19 @@
-# VPC Network
+# KMS Crypto Key
 
 ## Details
 
-- **Type:** `VPCNetwork`
+- **Type:** `KMSCryptoKey`
 - **Scope:** project
 
 ## Properties
 
+- **`Keyring`**: No description provided
 - **`Name`**: No description provided
+- **`Purpose`**: No description provided
+- **`Rotation`**: No description provided
 ## Depends On
 
 !!! Experimental Feature
     This is an **experimental** feature, please read more about it here <>. This feature attempts to remove all resources in one resource type before moving onto the dependent resource type
 
-- [DNS Policy](dns-policy.md)
-- [VPC Global IP Address](vpc-global-ip-address.md)
-- [VPCIP Address](vpcip-address.md)
-- [VPC Route](vpc-route.md)
-- [VPC Subnet](vpc-subnet.md)
+- [KMS Key Version](kms-key-version.md)
