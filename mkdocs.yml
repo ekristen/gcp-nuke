@@ -156,7 +156,9 @@ nav:
       - IAM Service Account Key: resources/iam-service-account-key.md
       - IAM Workload Identity Pool: resources/iam-workload-identity-pool.md
       - IAM Workload Identity Pool Provider: resources/iam-workload-identity-pool-provider.md
-      - KMS Key: resources/kms-key.md
+      - KMS Crypto Key: resources/kms-crypto-key.md
+      - KMS Key Ring: resources/kms-key-ring.md
+      - KMS Key Version: resources/kms-key-version.md
       - Memorystore Cluster: resources/memorystore-cluster.md
       - Memorystore Memcached Instance: resources/memorystore-memcached-instance.md
       - Memorystore Redis Instance: resources/memorystore-redis-instance.md
