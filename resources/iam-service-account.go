@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/ekristen/libnuke/pkg/settings"
 	"github.com/gotidy/ptr"
@@ -12,6 +14,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"google.golang.org/api/cloudresourcemanager/v3"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iterator"
 
 	iamadmin "cloud.google.com/go/iam/admin/apiv1"
@@ -167,8 +170,12 @@ func (r *IAMServiceAccount) Remove(ctx context.Context) error {
 	// Remove IAM policy bindings for this service account before deletion
 	// to prevent orphaned "deleted:" bindings
 	if err := r.removeIAMBindings(ctx); err != nil {
+		// Naming the permissions here rather than in the docs: the generated resource pages are
+		// overwritten by tools/generate-docs, and this is the moment the operator needs to know.
 		logrus.WithError(err).WithField("serviceAccount", *r.Name).
-			Warn("failed to remove IAM bindings, continuing with deletion")
+			Warn("failed to remove project IAM bindings (requires " +
+				"resourcemanager.projects.getIamPolicy and resourcemanager.projects.setIamPolicy), " +
+				"continuing with deletion")
 	}
 
 	return r.svc.DeleteServiceAccount(ctx, &adminpb.DeleteServiceAccountRequest{
@@ -176,35 +183,75 @@ func (r *IAMServiceAccount) Remove(ctx context.Context) error {
 	})
 }
 
+// iamPolicyMu serializes the read-modify-write cycle on the project IAM policy. Service accounts
+// are deleted in parallel but all share one project-level policy, so without this their
+// SetIamPolicy calls collide on the etag and all but one lose their binding removal.
+var iamPolicyMu sync.Mutex
+
+// iamPolicyMaxAttempts bounds the retries for an etag conflict caused by a writer outside this
+// process, which the mutex cannot prevent.
+const iamPolicyMaxAttempts = 5
+
 func (r *IAMServiceAccount) removeIAMBindings(ctx context.Context) error {
-	policy, err := r.crmSvc.Projects.
-		GetIamPolicy(fmt.Sprintf("projects/%s", *r.project), &cloudresourcemanager.GetIamPolicyRequest{}).
-		Context(ctx).Do()
-	if err != nil {
-		return err
-	}
+	iamPolicyMu.Lock()
+	defer iamPolicyMu.Unlock()
 
-	memberPrefix := fmt.Sprintf("serviceAccount:%s", *r.Name)
-	modified := false
+	resourceName := fmt.Sprintf("projects/%s", *r.project)
+	member := fmt.Sprintf("serviceAccount:%s", *r.Name)
 
-	for _, binding := range policy.Bindings {
-		for i := len(binding.Members) - 1; i >= 0; i-- {
-			if binding.Members[i] == memberPrefix {
-				binding.Members = append(binding.Members[:i], binding.Members[i+1:]...)
-				modified = true
+	var lastErr error
+	for attempt := 1; attempt <= iamPolicyMaxAttempts; attempt++ {
+		// The policy is re-fetched on every attempt so the etag matches the current state.
+		policy, err := r.crmSvc.Projects.
+			GetIamPolicy(resourceName, &cloudresourcemanager.GetIamPolicyRequest{}).
+			Context(ctx).Do()
+		if err != nil {
+			return err
+		}
+
+		modified := false
+		for _, binding := range policy.Bindings {
+			for i := len(binding.Members) - 1; i >= 0; i-- {
+				if binding.Members[i] == member {
+					binding.Members = append(binding.Members[:i], binding.Members[i+1:]...)
+					modified = true
+				}
 			}
 		}
+
+		if !modified {
+			return nil
+		}
+
+		_, err = r.crmSvc.Projects.
+			SetIamPolicy(resourceName, &cloudresourcemanager.SetIamPolicyRequest{
+				Policy: policy,
+			}).Context(ctx).Do()
+		if err == nil {
+			return nil
+		}
+
+		if !isIAMPolicyConflict(err) {
+			return err
+		}
+
+		lastErr = err
+		logrus.WithError(err).WithField("serviceAccount", *r.Name).
+			WithField("attempt", attempt).Debug("iam policy changed concurrently, retrying")
 	}
 
-	if !modified {
-		return nil
-	}
+	return fmt.Errorf("iam policy still conflicting after %d attempts: %w",
+		iamPolicyMaxAttempts, lastErr)
+}
 
-	_, err = r.crmSvc.Projects.
-		SetIamPolicy(fmt.Sprintf("projects/%s", *r.project), &cloudresourcemanager.SetIamPolicyRequest{
-			Policy: policy,
-		}).Context(ctx).Do()
-	return err
+// isIAMPolicyConflict reports whether the error is the etag conflict returned when the policy was
+// changed between the read and the write.
+func isIAMPolicyConflict(err error) bool {
+	var apiErr *googleapi.Error
+	if errors.As(err, &apiErr) {
+		return apiErr.Code == http.StatusConflict || apiErr.Code == http.StatusPreconditionFailed
+	}
+	return false
 }
 
 func (r *IAMServiceAccount) Properties() types.Properties {

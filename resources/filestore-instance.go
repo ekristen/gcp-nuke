@@ -142,7 +142,7 @@ func (r *FilestoreInstance) Remove(ctx context.Context) (err error) {
 	})
 	if err != nil {
 		logrus.WithError(err).WithField("instance", *r.Name).Trace("filestore delete error")
-		return liberror.ErrWaitResource(fmt.Sprintf("delete failed: %v", err))
+		return err
 	}
 	return nil
 }
@@ -159,7 +159,7 @@ func (r *FilestoreInstance) HandleWait(ctx context.Context) error {
 	if r.updateOp != nil {
 		if _, err := r.updateOp.Poll(ctx); err != nil {
 			logrus.WithError(err).Trace("update op polling encountered error")
-			return liberror.ErrWaitResource(fmt.Sprintf("poll failed: %v", err))
+			return err
 		}
 		if !r.updateOp.Done() {
 			return liberror.ErrWaitResource("waiting for deletion protection to be disabled")
@@ -183,7 +183,7 @@ func (r *FilestoreInstance) HandleWait(ctx context.Context) error {
 
 	if err := r.removeOp.Poll(ctx); err != nil {
 		logrus.WithError(err).Trace("remove op polling encountered error")
-		return liberror.ErrWaitResource(fmt.Sprintf("poll failed: %v", err))
+		return err
 	}
 
 	if !r.removeOp.Done() {

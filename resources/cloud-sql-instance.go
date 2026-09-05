@@ -52,27 +52,35 @@ func (l *CloudSQLInstanceLister) List(ctx context.Context, o interface{}) ([]res
 		}
 	}
 
-	resp, err := l.svc.Instances.List(*opts.Project).Context(ctx).Do()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, instance := range resp.Items {
-		if instance.Region != *opts.Region {
-			continue
+	call := l.svc.Instances.List(*opts.Project).Context(ctx)
+	for {
+		resp, err := call.Do()
+		if err != nil {
+			return nil, err
 		}
 
-		resources = append(resources, &CloudSQLInstance{
-			svc:              l.svc,
-			project:          opts.Project,
-			region:           opts.Region,
-			Name:             ptr.String(instance.Name),
-			State:            ptr.String(instance.State),
-			Labels:           instance.Settings.UserLabels,
-			CreationDate:     ptr.String(instance.CreateTime),
-			DatabaseVersion:  ptr.String(instance.DatabaseVersion),
-			instanceSettings: instance.Settings,
-		})
+		for _, instance := range resp.Items {
+			if instance.Region != *opts.Region {
+				continue
+			}
+
+			resources = append(resources, &CloudSQLInstance{
+				svc:              l.svc,
+				project:          opts.Project,
+				region:           opts.Region,
+				Name:             ptr.String(instance.Name),
+				State:            ptr.String(instance.State),
+				Labels:           instance.Settings.UserLabels,
+				CreationDate:     ptr.String(instance.CreateTime),
+				DatabaseVersion:  ptr.String(instance.DatabaseVersion),
+				instanceSettings: instance.Settings,
+			})
+		}
+
+		if resp.NextPageToken == "" {
+			break
+		}
+		call = call.PageToken(resp.NextPageToken)
 	}
 
 	return resources, nil
@@ -146,8 +154,8 @@ func (r *CloudSQLInstance) HandleWait(ctx context.Context) error {
 		var err error
 		r.deleteOp, err = r.svc.Instances.Delete(*r.project, *r.Name).Context(ctx).Do()
 		if err != nil {
-			logrus.WithError(err).WithField("instance", *r.Name).Trace("failed to start delete, will retry")
-			return liberror.ErrWaitResource(fmt.Sprintf("delete pending: %v", err))
+			logrus.WithError(err).WithField("instance", *r.Name).Trace("failed to start delete")
+			return err
 		}
 	}
 

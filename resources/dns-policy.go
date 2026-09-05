@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/gotidy/ptr"
+	"github.com/sirupsen/logrus"
 
 	"google.golang.org/api/dns/v1"
 
@@ -78,7 +79,12 @@ func (r *DNSPolicy) Remove(ctx context.Context) error {
 	policy, err := r.svc.Policies.Get(*r.project, *r.Name).Do()
 	if err == nil {
 		policy.Networks = nil
-		_, _ = r.svc.Policies.Update(*r.project, *r.Name, policy).Do()
+		if _, updateErr := r.svc.Policies.Update(*r.project, *r.Name, policy).Do(); updateErr != nil {
+			// Not fatal on its own, but without this the delete below fails with a confusing
+			// "still in use" error and no indication that detaching the networks is what failed.
+			logrus.WithError(updateErr).WithField("policy", *r.Name).
+				Debug("unable to detach networks from dns policy")
+		}
 	}
 
 	return r.svc.Policies.Delete(*r.project, *r.Name).Do()

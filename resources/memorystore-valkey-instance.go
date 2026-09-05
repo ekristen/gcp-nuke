@@ -127,7 +127,9 @@ func (r *MemorystoreValkeyInstance) Remove(ctx context.Context) (err error) {
 		})
 		if err != nil {
 			logrus.WithError(err).WithField("instance", *r.Name).Trace("failed to disable deletion protection")
-		} else if r.updateOp != nil {
+			return err
+		}
+		if r.updateOp != nil {
 			return nil
 		}
 	}

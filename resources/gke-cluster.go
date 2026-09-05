@@ -131,7 +131,7 @@ func (r *GKECluster) Remove(ctx context.Context) error {
 	})
 	if err != nil {
 		logrus.WithError(err).WithField("cluster", *r.Name).Trace("gke cluster delete error")
-		return liberror.ErrWaitResource(fmt.Sprintf("delete failed: %v", err))
+		return err
 	}
 	return nil
 }
@@ -158,8 +158,8 @@ func (r *GKECluster) HandleWait(ctx context.Context) error {
 			if status.Code(err) == codes.NotFound {
 				return nil
 			}
-			logrus.WithError(err).WithField("cluster", *r.Name).Debug("delete request failed, will retry")
-			return liberror.ErrWaitResource(fmt.Sprintf("delete pending: %v", err))
+			logrus.WithError(err).WithField("cluster", *r.Name).Debug("delete request failed")
+			return err
 		}
 		return liberror.ErrWaitResource("delete operation started")
 	}
@@ -174,7 +174,7 @@ func (r *GKECluster) HandleWait(ctx context.Context) error {
 			return nil
 		}
 		logrus.WithError(err).WithField("cluster", *r.Name).Trace("failed to get operation status")
-		return liberror.ErrWaitResource(fmt.Sprintf("poll failed: %v", err))
+		return err
 	}
 
 	if r.removeOp.Status != containerpb.Operation_DONE {
@@ -182,12 +182,7 @@ func (r *GKECluster) HandleWait(ctx context.Context) error {
 	}
 
 	if r.removeOp.GetError() != nil {
-		logrus.WithFields(logrus.Fields{
-			"cluster": *r.Name,
-			"error":   r.removeOp.GetError().String(),
-		}).Warn("delete operation failed, will retry")
-		r.removeOp = nil
-		return liberror.ErrWaitResource("delete operation failed, retrying")
+		return fmt.Errorf("delete error on cluster '%s': %s", *r.Name, r.removeOp.GetError().String())
 	}
 
 	return nil

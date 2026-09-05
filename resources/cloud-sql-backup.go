@@ -55,46 +55,56 @@ func (l *CloudSQLBackupLister) List(ctx context.Context, o interface{}) ([]resou
 		}
 	}
 
+	// Automated backups accumulate daily, so the list is unbounded and must be paginated -- without
+	// this only the first page is ever deleted while the run still reports success.
 	parent := fmt.Sprintf("projects/%s", *opts.Project)
-	backups, err := l.svc.Backups.ListBackups(parent).Context(ctx).Do()
-	if err != nil {
-		return nil, err
-	}
+	call := l.svc.Backups.ListBackups(parent).Context(ctx)
+	for {
+		resp, err := call.Do()
+		if err != nil {
+			return nil, err
+		}
 
-	for _, backup := range backups.Backups {
-		loc := strings.ToLower(backup.Location)
-		isMultiRegion := isMultiRegionLocation(backup.Location)
-		isAccountedFor := false
+		for _, backup := range resp.Backups {
+			loc := strings.ToLower(backup.Location)
+			isMultiRegion := isMultiRegionLocation(backup.Location)
+			isAccountedFor := false
 
-		nameParts := strings.Split(backup.Name, "/")
-		backupID := nameParts[len(nameParts)-1]
+			nameParts := strings.Split(backup.Name, "/")
+			backupID := nameParts[len(nameParts)-1]
 
-		if isMultiRegion {
-			key := fmt.Sprintf("backup-%s", backupID)
-			if _, ok := l.multiRegion[key]; !ok {
-				l.multiRegion[key] = loc
-			} else {
-				isAccountedFor = true
+			if isMultiRegion {
+				key := fmt.Sprintf("backup-%s", backupID)
+				if _, ok := l.multiRegion[key]; !ok {
+					l.multiRegion[key] = loc
+				} else {
+					isAccountedFor = true
+				}
 			}
+
+			if !isMultiRegion && loc != *opts.Region {
+				continue
+			}
+
+			if isMultiRegion && isAccountedFor {
+				continue
+			}
+
+			resources = append(resources, &CloudSQLBackup{
+				svc:      l.svc,
+				project:  opts.Project,
+				backupID: ptr.String(backupID),
+				Instance: ptr.String(backup.Instance),
+				State:    ptr.String(backup.State),
+				Type:     ptr.String(backup.Type),
+				Location: ptr.String(backup.Location),
+			})
 		}
 
-		if !isMultiRegion && loc != *opts.Region {
-			continue
+		if resp.NextPageToken == "" {
+			break
 		}
-
-		if isMultiRegion && isAccountedFor {
-			continue
-		}
-
-		resources = append(resources, &CloudSQLBackup{
-			svc:      l.svc,
-			project:  opts.Project,
-			backupID: ptr.String(backupID),
-			Instance: ptr.String(backup.Instance),
-			State:    ptr.String(backup.State),
-			Type:     ptr.String(backup.Type),
-			Location: ptr.String(backup.Location),
-		})
+		call = call.PageToken(resp.NextPageToken)
 	}
 
 	return resources, nil

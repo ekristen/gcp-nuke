@@ -177,13 +177,13 @@ func (r *StorageBucket) Remove(ctx context.Context) error {
 			VersioningEnabled: false,
 		}); err != nil {
 			logrus.WithError(err).Error("encountered error while updating bucket attrs")
-			return liberror.ErrWaitResource(fmt.Sprintf("updating bucket attrs: %v", err))
+			return err
 		}
 	}
 
 	if err := r.removeObjects(ctx); err != nil {
 		logrus.WithError(err).Error("encountered error while emptying bucket")
-		return liberror.ErrWaitResource(fmt.Sprintf("emptying bucket: %v", err))
+		return err
 	}
 
 	err := r.svc.Bucket(*r.Name).Delete(ctx)
@@ -192,7 +192,7 @@ func (r *StorageBucket) Remove(ctx context.Context) error {
 			return nil
 		}
 		logrus.WithError(err).Error("encountered error while removing bucket")
-		return liberror.ErrWaitResource(fmt.Sprintf("deleting bucket: %v", err))
+		return err
 	}
 	return nil
 }
@@ -210,28 +210,14 @@ func (r *StorageBucket) Settings(settings *settings.Setting) {
 }
 
 func (r *StorageBucket) HandleWait(ctx context.Context) error {
-	_, err := r.svc.Bucket(*r.Name).Attrs(ctx)
-	if err != nil {
+	if _, err := r.svc.Bucket(*r.Name).Attrs(ctx); err != nil {
 		if errors.Is(err, storage.ErrBucketNotExist) {
 			return nil
 		}
-		return liberror.ErrWaitResource(fmt.Sprintf("checking bucket: %v", err))
+		return err
 	}
 
-	logrus.WithField("bucket", *r.Name).Debug("bucket still exists, retrying deletion")
-
-	if err := r.removeObjects(ctx); err != nil {
-		return liberror.ErrWaitResource(fmt.Sprintf("emptying bucket: %v", err))
-	}
-
-	if err := r.svc.Bucket(*r.Name).Delete(ctx); err != nil {
-		if errors.Is(err, storage.ErrBucketNotExist) {
-			return nil
-		}
-		return liberror.ErrWaitResource(fmt.Sprintf("deleting bucket: %v", err))
-	}
-
-	return nil
+	return liberror.ErrWaitResource("waiting for bucket deletion")
 }
 
 type objectToDelete struct {
