@@ -1,6 +1,6 @@
 module github.com/ekristen/gcp-nuke
 
-go 1.25.6
+go 1.26.0
 
 require (
 	cloud.google.com/go/aiplatform v1.125.0
@@ -38,8 +38,8 @@ require (
 	github.com/iancoleman/strcase v0.3.0
 	github.com/sirupsen/logrus v1.9.4
 	github.com/urfave/cli/v3 v3.9.0
-	golang.org/x/oauth2 v0.36.0
-	golang.org/x/sync v0.20.0
+	golang.org/x/oauth2 v0.37.0
+	golang.org/x/sync v0.23.0
 	golang.org/x/text v0.37.0
 	google.golang.org/api v0.279.0
 	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7
