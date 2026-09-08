@@ -36,6 +36,7 @@ func init() {
 		Resource: &VPCNetwork{},
 		Lister:   &VPCNetworkLister{},
 		DependsOn: []string{
+			DNSPolicyResource,
 			VPCGlobalIPAddressResource,
 			VPCIPAddressResource,
 			VPCRouteResource,

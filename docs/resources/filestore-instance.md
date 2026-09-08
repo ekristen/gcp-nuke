@@ -12,3 +12,6 @@
 - **`Name`**: No description provided
 - **`State`**: No description provided
 - **`Tier`**: No description provided
+## Settings
+
+- `DisableDeletionProtection`

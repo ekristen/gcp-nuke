@@ -1,9 +1,9 @@
 # Presets
 
-It might be the case that some filters are the same across multiple accounts. This especially could happen, if
+It might be the case that some filters are the same across multiple projects. This especially could happen, if
 provisioning tools like Terraform are used or if IAM resources follow the same pattern.
 
-For this case *gcp-nuke* supports presets of filters, that can applied on multiple accounts.
+For this case *gcp-nuke* supports presets of filters, that can applied on multiple projects.
 
 `Presets` are defined globally. They can then be referenced in the `accounts` section of the configuration.
 
@@ -13,13 +13,13 @@ A preset configuration could look like this:
 presets:
   common:
     filters:
-      IAMAccountSettingPasswordPolicy:
-        - custom
       IAMRole:
-        - "OrganizationAccountAccessRole"
+        - custom-role
+      VPCNetwork:
+        - default
 ```
 
-An account referencing a preset would then look something like this:
+A project referencing a preset would then look something like this:
 
 ```yaml
 accounts:
@@ -32,22 +32,22 @@ Putting it all together it would look something like this:
 
 ```yaml
 blocklist:
-  - 0012345678
+  - production-12345
 
 regions:
   - global
-  - us-east-1
+  - us-east1
 
 accounts:
-  1234567890:
+  playground-12345:
     presets:
       - common
 
 presets:
   common:
     filters:
-      IAMAccountSettingPasswordPolicy:
-        - custom
       IAMRole:
-        - OrganizationAccountAccessRole
+        - custom-role
+      VPCNetwork:
+        - default
 ```

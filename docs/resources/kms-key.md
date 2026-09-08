@@ -1,29 +1,14 @@
 # KMS Key
 
-## Details
+!!! warning "Renamed"
+    `KMSKey` has been renamed to [`KMSKeyVersion`](kms-key-version.md), because it has always
+    operated on a Cloud KMS *key version* rather than on the key itself.
 
-- **Type:** `KMSKey`
-- **Scope:** project
+    `KMSKey` still resolves as a deprecated alias, so existing configuration keeps working, but it
+    should be updated to `KMSKeyVersion`.
 
-## Properties
+Cloud KMS resources are now covered by three resource types, which must be removed in this order:
 
-- **`Keyring`**: No description provided
-- **`Name`**: No description provided
-- **`State`**: No description provided
-## Depends On
-
-!!! Experimental Feature
-    This is an **experimental** feature, please read more about it here <>. This feature attempts to remove all resources in one resource type before moving onto the dependent resource type
-
-- [Alloy DB Cluster](alloy-db-cluster.md)
-- [Artifact Registry Repository](artifact-registry-repository.md)
-- [Big Query Dataset](big-query-dataset.md)
-- [Cloud SQL Instance](cloud-sql-instance.md)
-- [Composer Environment](composer-environment.md)
-- [Compute Disk](compute-disk.md)
-- [Dataproc Cluster](dataproc-cluster.md)
-- [Filestore Instance](filestore-instance.md)
-- [GKE Cluster](gke-cluster.md)
-- [Secret Manager Secret](secret-manager-secret.md)
-- [Spanner Database](spanner-database.md)
-- [Storage Bucket](storage-bucket.md)
+- [KMS Key Version](kms-key-version.md) — destroys, then deletes, key versions
+- [KMS Crypto Key](kms-crypto-key.md) — deletes keys once all their versions are gone
+- [KMS Key Ring](kms-key-ring.md) — deletes key rings once all their keys are gone

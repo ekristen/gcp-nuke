@@ -12,3 +12,6 @@
 - **`Name`**: No description provided
 - **`ShardCount`**: No description provided
 - **`State`**: No description provided
+## Settings
+
+- `DisableDeletionProtection`

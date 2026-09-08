@@ -8,7 +8,7 @@ import (
 	"github.com/gotidy/ptr"
 	"github.com/sirupsen/logrus"
 
-	"cloud.google.com/go/container/apiv1"
+	container "cloud.google.com/go/container/apiv1"
 	"cloud.google.com/go/container/apiv1/containerpb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -119,6 +119,14 @@ type GKECluster struct {
 	Labels            map[string]string `property:"tagPrefix=label"`
 }
 
+func isTerminalCode(code codes.Code) bool {
+	switch code {
+	case codes.PermissionDenied, codes.Unauthenticated, codes.InvalidArgument, codes.Unimplemented:
+		return true
+	}
+	return false
+}
+
 func (r *GKECluster) Remove(ctx context.Context) error {
 	var err error
 	location := r.Region
@@ -131,6 +139,9 @@ func (r *GKECluster) Remove(ctx context.Context) error {
 	})
 	if err != nil {
 		logrus.WithError(err).WithField("cluster", *r.Name).Trace("gke cluster delete error")
+		if isTerminalCode(status.Code(err)) {
+			return err
+		}
 		return liberror.ErrWaitResource(fmt.Sprintf("delete failed: %v", err))
 	}
 	return nil
@@ -146,7 +157,25 @@ func (r *GKECluster) String() string {
 
 func (r *GKECluster) HandleWait(ctx context.Context) error {
 	if r.removeOp == nil {
-		return nil
+		location := r.Region
+		if *r.Zone != "" {
+			location = r.Zone
+		}
+		var err error
+		r.removeOp, err = r.svc.DeleteCluster(ctx, &containerpb.DeleteClusterRequest{
+			Name: fmt.Sprintf("projects/%s/locations/%s/clusters/%s", *r.Project, *location, *r.Name),
+		})
+		if err != nil {
+			if status.Code(err) == codes.NotFound {
+				return nil
+			}
+			if isTerminalCode(status.Code(err)) {
+				return err
+			}
+			logrus.WithError(err).WithField("cluster", *r.Name).Debug("delete request failed, will retry")
+			return liberror.ErrWaitResource(fmt.Sprintf("delete pending: %v", err))
+		}
+		return liberror.ErrWaitResource("delete operation started")
 	}
 
 	var err error
@@ -158,6 +187,9 @@ func (r *GKECluster) HandleWait(ctx context.Context) error {
 			logrus.WithField("cluster", *r.Name).Trace("operation not found, assuming completed")
 			return nil
 		}
+		if isTerminalCode(status.Code(err)) {
+			return err
+		}
 		logrus.WithError(err).WithField("cluster", *r.Name).Trace("failed to get operation status")
 		return liberror.ErrWaitResource(fmt.Sprintf("poll failed: %v", err))
 	}
@@ -167,7 +199,15 @@ func (r *GKECluster) HandleWait(ctx context.Context) error {
 	}
 
 	if r.removeOp.GetError() != nil {
-		return fmt.Errorf("operation failed: %v", r.removeOp.GetError())
+		if isTerminalCode(codes.Code(r.removeOp.GetError().GetCode())) {
+			return fmt.Errorf("delete error on cluster '%s': %s", *r.Name, r.removeOp.GetError().String())
+		}
+		logrus.WithFields(logrus.Fields{
+			"cluster": *r.Name,
+			"error":   r.removeOp.GetError().String(),
+		}).Warn("delete operation failed, will retry")
+		r.removeOp = nil
+		return liberror.ErrWaitResource("delete operation failed, retrying")
 	}
 
 	return nil

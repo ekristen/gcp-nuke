@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ekristen/libnuke/pkg/settings"
 	"github.com/gotidy/ptr"
 	"github.com/sirupsen/logrus"
 	sqladmin "google.golang.org/api/sqladmin/v1beta4"
 
+	liberror "github.com/ekristen/libnuke/pkg/errors"
 	"github.com/ekristen/libnuke/pkg/registry"
 	"github.com/ekristen/libnuke/pkg/resource"
+	"github.com/ekristen/libnuke/pkg/settings"
 	"github.com/ekristen/libnuke/pkg/types"
 
 	"github.com/ekristen/gcp-nuke/pkg/nuke"
@@ -20,10 +21,11 @@ const CloudSQLInstanceResource = "CloudSQLInstance"
 
 func init() {
 	registry.Register(&registry.Registration{
-		Name:     CloudSQLInstanceResource,
-		Scope:    nuke.Project,
-		Resource: &CloudSQLInstance{},
-		Lister:   &CloudSQLInstanceLister{},
+		Name:      CloudSQLInstanceResource,
+		Scope:     nuke.Project,
+		Resource:  &CloudSQLInstance{},
+		Lister:    &CloudSQLInstanceLister{},
+		DependsOn: []string{CloudSQLBackupResource},
 		Settings: []string{
 			"DisableDeletionProtection",
 		},
@@ -50,27 +52,35 @@ func (l *CloudSQLInstanceLister) List(ctx context.Context, o interface{}) ([]res
 		}
 	}
 
-	resp, err := l.svc.Instances.List(*opts.Project).Context(ctx).Do()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, instance := range resp.Items {
-		if instance.Region != *opts.Region {
-			continue
+	call := l.svc.Instances.List(*opts.Project).Context(ctx)
+	for {
+		resp, err := call.Do()
+		if err != nil {
+			return nil, err
 		}
 
-		resources = append(resources, &CloudSQLInstance{
-			svc:              l.svc,
-			project:          opts.Project,
-			region:           opts.Region,
-			Name:             ptr.String(instance.Name),
-			State:            ptr.String(instance.State),
-			Labels:           instance.Settings.UserLabels,
-			CreationDate:     ptr.String(instance.CreateTime),
-			DatabaseVersion:  ptr.String(instance.DatabaseVersion),
-			instanceSettings: instance.Settings,
-		})
+		for _, instance := range resp.Items {
+			if instance.Region != *opts.Region {
+				continue
+			}
+
+			resources = append(resources, &CloudSQLInstance{
+				svc:              l.svc,
+				project:          opts.Project,
+				region:           opts.Region,
+				Name:             ptr.String(instance.Name),
+				State:            ptr.String(instance.State),
+				Labels:           instance.Settings.UserLabels,
+				CreationDate:     ptr.String(instance.CreateTime),
+				DatabaseVersion:  ptr.String(instance.DatabaseVersion),
+				instanceSettings: instance.Settings,
+			})
+		}
+
+		if resp.NextPageToken == "" {
+			break
+		}
+		call = call.PageToken(resp.NextPageToken)
 	}
 
 	return resources, nil
@@ -78,6 +88,7 @@ func (l *CloudSQLInstanceLister) List(ctx context.Context, o interface{}) ([]res
 
 type CloudSQLInstance struct {
 	svc      *sqladmin.Service
+	updateOp *sqladmin.Operation
 	deleteOp *sqladmin.Operation
 	settings *settings.Setting
 
@@ -97,8 +108,17 @@ func (r *CloudSQLInstance) Settings(setting *settings.Setting) {
 }
 
 func (r *CloudSQLInstance) Remove(ctx context.Context) (err error) {
-	if disableErr := r.disableDeletionProtection(ctx); disableErr != nil {
-		return disableErr
+	if r.settings.GetBool("DisableDeletionProtection") {
+		logrus.Trace("disabling deletion protection")
+		r.instanceSettings.DeletionProtectionEnabled = false
+		r.updateOp, err = r.svc.Instances.Update(*r.project, *r.Name, &sqladmin.DatabaseInstance{
+			Settings: r.instanceSettings,
+		}).Context(ctx).Do()
+		if err != nil {
+			logrus.WithError(err).WithField("instance", *r.Name).Trace("failed to disable deletion protection")
+			return err
+		}
+		return nil
 	}
 
 	r.deleteOp, err = r.svc.Instances.Delete(*r.project, *r.Name).Context(ctx).Do()
@@ -114,44 +134,41 @@ func (r *CloudSQLInstance) String() string {
 }
 
 func (r *CloudSQLInstance) HandleWait(ctx context.Context) error {
-	if r.deleteOp == nil {
-		return nil
-	}
-
-	if op, err := r.svc.Operations.Get(*r.project, r.deleteOp.Name).Context(ctx).Do(); err == nil {
-		if op.Status == "DONE" {
-			if op.Error != nil {
-				return fmt.Errorf("delete error on '%s': %s", op.TargetLink, op.Error.Errors[0].Message)
-			}
-		}
-	} else {
-		return err
-	}
-
-	return nil
-}
-
-func (r *CloudSQLInstance) disableDeletionProtection(ctx context.Context) error {
-	if r.settings.GetBool("DisableDeletionProtection") {
-		logrus.Trace("disabling deletion protection")
-
-		r.instanceSettings.DeletionProtectionEnabled = false
-		op, err := r.svc.Instances.Update(*r.project, *r.Name, &sqladmin.DatabaseInstance{
-			Settings: r.instanceSettings,
-		}).Context(ctx).Do()
+	if r.updateOp != nil {
+		op, err := r.svc.Operations.Get(*r.project, r.updateOp.Name).Context(ctx).Do()
 		if err != nil {
 			return err
 		}
+		if op.Status != "DONE" {
+			return liberror.ErrWaitResource("waiting for deletion protection to be disabled")
+		}
+		if op.Error != nil {
+			return fmt.Errorf("disable deletion protection error on '%s': %s", op.TargetLink, op.Error.Errors[0].Message)
+		}
+		logrus.WithField("instance", *r.Name).Trace("deletion protection disabled")
+		r.updateOp = nil
+	}
 
-		for {
-			op, err = r.svc.Operations.Get(*r.project, op.Name).Context(ctx).Do()
-			if err != nil {
-				return err
-			}
-			if op.Status == "DONE" {
-				break
-			}
+	if r.deleteOp == nil {
+		logrus.WithField("instance", *r.Name).Trace("starting delete operation")
+		var err error
+		r.deleteOp, err = r.svc.Instances.Delete(*r.project, *r.Name).Context(ctx).Do()
+		if err != nil {
+			logrus.WithError(err).WithField("instance", *r.Name).Trace("failed to start delete")
+			return err
 		}
 	}
+
+	op, err := r.svc.Operations.Get(*r.project, r.deleteOp.Name).Context(ctx).Do()
+	if err != nil {
+		return err
+	}
+	if op.Status != "DONE" {
+		return liberror.ErrWaitResource("waiting for instance deletion")
+	}
+	if op.Error != nil {
+		return fmt.Errorf("delete error on '%s': %s", op.TargetLink, op.Error.Errors[0].Message)
+	}
+
 	return nil
 }

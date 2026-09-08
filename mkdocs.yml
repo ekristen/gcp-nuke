@@ -107,6 +107,7 @@ nav:
       - Cloud Function 2: resources/cloud-function-2.md
       - Cloud Run: resources/cloud-run.md
       - Cloud Run Job: resources/cloud-run-job.md
+      - Cloud SQL Backup: resources/cloud-sql-backup.md
       - Cloud SQL Instance: resources/cloud-sql-instance.md
       - Cloud Scheduler Job: resources/cloud-scheduler-job.md
       - Cloud Tasks Queue: resources/cloud-tasks-queue.md
@@ -124,6 +125,7 @@ nav:
       - Compute Network Endpoint Group: resources/compute-network-endpoint-group.md
       - Compute Packet Mirroring: resources/compute-packet-mirroring.md
       - Compute SSL Certificate: resources/compute-ssl-certificate.md
+      - Compute SSL Policy: resources/compute-ssl-policy.md
       - Compute Security Policy: resources/compute-security-policy.md
       - Compute Target GRPC Proxy: resources/compute-target-grpc-proxy.md
       - Compute Target HTTP Proxy: resources/compute-target-http-proxy.md
@@ -154,7 +156,11 @@ nav:
       - IAM Service Account Key: resources/iam-service-account-key.md
       - IAM Workload Identity Pool: resources/iam-workload-identity-pool.md
       - IAM Workload Identity Pool Provider: resources/iam-workload-identity-pool-provider.md
-      - KMS Key: resources/kms-key.md
+      - KMS Crypto Key: resources/kms-crypto-key.md
+      - KMS Key Ring: resources/kms-key-ring.md
+      - KMS Key Version: resources/kms-key-version.md
+      - Logging Bucket: resources/logging-bucket.md
+      - Logging Sink: resources/logging-sink.md
       - Memorystore Cluster: resources/memorystore-cluster.md
       - Memorystore Memcached Instance: resources/memorystore-memcached-instance.md
       - Memorystore Redis Instance: resources/memorystore-redis-instance.md

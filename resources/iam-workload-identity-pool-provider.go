@@ -9,6 +9,7 @@ import (
 	"github.com/ekristen/libnuke/pkg/resource"
 	"github.com/ekristen/libnuke/pkg/types"
 	"github.com/gotidy/ptr"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/api/iam/v1"
 )
 
@@ -50,6 +51,14 @@ func (l *IAMWorkloadIdentityPoolProviderLister) List(ctx context.Context, o inte
 	}
 
 	for _, workloadIdentityPool := range workloadIdentityPools {
+		// GKE creates a managed pool named <project>.svc.id.goog for workload identity. It is not
+		// user-manageable and does not support the providers list RPC, so skip it.
+		if strings.HasSuffix(workloadIdentityPool.Name, ".svc.id.goog") {
+			logrus.WithField("pool", workloadIdentityPool.Name).
+				Debug("skipping GKE managed workload identity pool")
+			continue
+		}
+
 		var nextPageToken string
 
 		for {
@@ -60,7 +69,10 @@ func (l *IAMWorkloadIdentityPoolProviderLister) List(ctx context.Context, o inte
 
 			resp, err := call.Context(ctx).Do()
 			if err != nil {
-				return nil, err
+				// One unlistable pool should not discard the providers found in the others.
+				logrus.WithError(err).WithField("pool", workloadIdentityPool.Name).
+					Error("unable to list workload identity pool providers")
+				break
 			}
 
 			for _, provider := range resp.WorkloadIdentityPoolProviders {
