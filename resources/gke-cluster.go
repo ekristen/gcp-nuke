@@ -42,6 +42,12 @@ func (l *GKEClusterLister) Close() {
 	}
 }
 
+// isZone reports whether a GKE location is a zone (europe-west4-a) rather
+// than a region (europe-west4).
+func isZone(location string) bool {
+	return len(strings.Split(location, "-")) > 2
+}
+
 func (l *GKEClusterLister) ListClusters(ctx context.Context, project, location string) ([]resource.Resource, error) {
 	var resources []resource.Resource
 
@@ -51,13 +57,22 @@ func (l *GKEClusterLister) ListClusters(ctx context.Context, project, location s
 
 	resp, err := l.svc.ListClusters(ctx, req)
 	if err != nil {
+		// Compute lists zones that GKE does not serve, such as the AI zones
+		// europe-west4-ai1a and us-south1-ai1b, and GKE rejects them with
+		// InvalidArgument. Returning the error drops every cluster in the
+		// region, so skip only the rejected zone.
+		if isZone(location) && status.Code(err) == codes.InvalidArgument {
+			logrus.WithError(err).WithField("location", location).
+				Warn("skipping zone that GKE does not serve")
+			return nil, nil
+		}
 		return nil, fmt.Errorf("failed to list GKE clusters: %v", err)
 	}
 
 	for _, cluster := range resp.Clusters {
 		region := location
 		zone := ""
-		if len(strings.Split(location, "-")) > 2 {
+		if isZone(location) {
 			region = strings.Join(strings.Split(location, "-")[:2], "-")
 			zone = location
 		}
